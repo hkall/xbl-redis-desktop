@@ -183,15 +183,14 @@ const createWindow = () => {
       contextIsolation: true,
       nodeIntegration: false,
     },
-    title: 'Xbl Redis Desktop',
-    icon: path.join(__dirname, '../public/icon.ico')
+    title: 'Xbl Redis Desktop'
   })
 
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    mainWindow.loadFile(path.join(__dirname, 'index.html'))
   }
 
   mainWindow.on('closed', () => {

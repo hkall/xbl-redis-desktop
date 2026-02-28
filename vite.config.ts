@@ -6,8 +6,6 @@ import path from 'path'
 export default defineConfig({
   plugins: [
     react(),
-    // Note: For better Electron integration, consider using vite-plugin-electron renderer
-    // For now, we'll keep it simple for the dev server
   ],
   resolve: {
     alias: {
@@ -15,6 +13,27 @@ export default defineConfig({
     }
   },
   base: './',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true,
+    sourcemap: false,
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'redis-vendor': ['ioredis'],
+          'ui-vendor': ['lucide-react'],
+          'state-vendor': ['zustand'],
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
   server: {
     port: 5173
   }

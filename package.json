@@ -8,12 +8,13 @@
     "name": "hukun",
     "email": "1181929830@qq.com"
   },
-  "electronMirror": "https://npmmirror.com/mirrors/electron/",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "electron:dev": "concurrently \"npm run dev\" \"cross-env NODE_ENV=development electron .\" --names \"Vite,Electron\"",
-    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build": "npm run build && node scripts/copy-electron-to-dist.js && electron-builder --project=dist -p never",
+    "electron:build:win": "npm run build && node scripts/copy-electron-to-dist.js && electron-builder --project=dist -w -p never",
+    "electron:build:mac": "npm run build && node scripts/copy-electron-to-dist.js && electron-builder --project=dist -m -p never",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -27,6 +28,8 @@
   "devDependencies": {
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/ioredis": "^4.28.10",
+    "@types/node": "^20.0.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
     "concurrently": "^8.2.2",
@@ -43,13 +46,31 @@
   "build": {
     "appId": "com.xbl.redis-desktop",
     "productName": "Xbl Redis Desktop",
+    "artifactName": "${productName}-${os}-${version}.${ext}",
+    "copyright": "Copyright © 2024 hukun",
     "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json"
+      "**/*",
+      "!**/*.map",
+      "!**/*.ts",
+      "!**/*.spec.*",
+      "!**/*.test.*",
+      "!src/**/*",
+      "!.git/**/*",
+      "!.idea/**/*",
+      "!*.md",
+      "!*.yaml",
+      "!.gitignore",
+      "!scripts/**/*",
+      "!screenshots/**/*"
     ],
-    "compression": "maximum",
     "asar": true,
+    "asarUnpack": [
+      "node_modules/**/{test,tests,src,example,examples}/**",
+      "node_modules/**/.gitignore"
+    ],
+    "directories": {
+      "output": "build-apps"
+    },
     "win": {
       "target": [
         {
@@ -57,16 +78,18 @@
           "arch": [
             "x64"
           ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
         }
       ],
       "signAndEditExecutable": false,
       "signDlls": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
     },
     "mac": {
       "target": [
@@ -80,13 +103,23 @@
       ],
       "category": "public.app-category.developer-tools",
       "hardenedRuntime": false,
-      "gatekeeperAssess": false
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist"
     },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     }
   }
 }

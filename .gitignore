@@ -10,3 +10,4 @@ yarn-error.log*
 .env.local
 .vscode
 .idea
+build-apps
