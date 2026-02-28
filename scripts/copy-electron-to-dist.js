@@ -55,6 +55,13 @@ function copyNodeModules() {
     console.log('  Copying @ioredis...');
     copyRecursiveSync(ioredisInternalPath, path.join(distNodeModules, '@ioredis'));
   }
+
+  // Copy electron to dist/node_modules for electron-builder
+  const electronPath = path.join(rootNodeModules, 'electron');
+  if (fs.existsSync(electronPath)) {
+    console.log('  Copying electron...');
+    copyRecursiveSync(electronPath, path.join(distNodeModules, 'electron'));
+  }
 }
 
 // Copy all files from electron directory to dist, excluding ts files
@@ -101,6 +108,9 @@ const buildPackageJson = {
   dependencies: {
     'ioredis': rootPackageJson.dependencies.ioredis,
     'java-object-serialization': rootPackageJson.dependencies['java-object-serialization']
+  },
+  devDependencies: {
+    'electron': rootPackageJson.devDependencies.electron
   },
   build: rootPackageJson.build
 };
