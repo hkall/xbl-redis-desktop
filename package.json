@@ -13,7 +13,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "electron:dev": "concurrently \"npm run dev\" \"cross-env NODE_ENV=development electron .\" --names \"Vite,Electron\"",
-    "electron:build": "npm run build && electron-builder",
+    "electron:build:mac": "npm run build && electron-builder --mac",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -67,6 +67,20 @@
       ],
       "signAndEditExecutable": false,
       "signDlls": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "nsis": {
       "oneClick": false,
