@@ -7,8 +7,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   redisDisconnect: (id) => ipcRenderer.invoke('redis:disconnect', id),
 
   // Key operations
-  redisScan: (id, pattern, count) =>
-    ipcRenderer.invoke('redis:scan', id, pattern, count),
+  redisScan: (id, pattern, count, cursor) =>
+    ipcRenderer.invoke('redis:scan', id, pattern, count, cursor),
   redisKeyInfo: (id, key) => ipcRenderer.invoke('redis:keyInfo', id, key),
   redisGet: (id, key) => ipcRenderer.invoke('redis:get', id, key),
   redisSet: (id, key, type, value) =>
@@ -26,8 +26,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   redisInfo: (id) => ipcRenderer.invoke('redis:info', id),
   redisSelectDb: (id, db) => ipcRenderer.invoke('redis:selectDb', id, db),
 
+  // New features
+  redisExecuteCommand: (id, command) => ipcRenderer.invoke('redis:executeCommand', id, command),
+  redisGetServerInfo: (id, section) => ipcRenderer.invoke('redis:getServerInfo', id, section),
+
   // Java deserialization
   javaDeserialize: (byteArray) => ipcRenderer.invoke('java:deserialize', byteArray),
+
+  // Archive operations
+  createAndDownloadArchive: (options) => ipcRenderer.invoke('archive:createAndDownload', options),
 
   // Config storage (persistent file-based storage)
   saveConfig: (key, data) => ipcRenderer.invoke('config:save', key, data),

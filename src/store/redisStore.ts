@@ -156,18 +156,18 @@ export const useRedisStore = create<RedisStore>((set, get) => ({
       if (result && result.connections && result.connections.length > 0) {
         const connections = result.connections.map((c) => ({
           ...c,
-          id: crypto.randomUUID(),
+          id: c.id || crypto.randomUUID(), // Preserve existing ID or create new one
           connected: false,
           connecting: false,
           databaseInfo: {},
         })) as RedisConnection[]
+
         set({
           connections,
           activeConnectionId: result.activeConnectionId,
         })
       }
     } catch (error) {
-      console.error('Failed to load config:', error)
     }
   },
 
@@ -290,7 +290,7 @@ declare global {
       redisTest: (config: any) => Promise<any>
       redisConnect: (id: string, config: any) => Promise<any>
       redisDisconnect: (id: string) => Promise<any>
-      redisScan: (id: string, pattern?: string, count?: number) => Promise<any>
+      redisScan: (id: string, pattern?: string, count?: number, cursor?: string) => Promise<any>
       redisKeyInfo: (id: string, key: string) => Promise<any>
       redisGet: (id: string, key: string) => Promise<any>
       redisSet: (id: string, key: string, type: string, value: any) => Promise<any>
@@ -301,6 +301,8 @@ declare global {
       redisInfo: (id: string) => Promise<any>
       redisSelectDb: (id: string, db: number) => Promise<any>
       javaDeserialize: (byteArray: number[]) => Promise<any>
+      redisExecuteCommand: (id: string, command: string) => Promise<any>
+      redisGetServerInfo: (id: string, section?: string) => Promise<any>
     }
   }
 }

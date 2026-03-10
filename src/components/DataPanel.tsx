@@ -175,7 +175,6 @@ export default function DataPanel() {
         }
       }
     } catch (error) {
-      console.error('Failed to load key info:', error)
       setKeyInfo(null)
     } finally {
       setLoading(false)
@@ -184,7 +183,6 @@ export default function DataPanel() {
 
   const handleSetTTL = async () => {
     if (!activeConnectionId || !selectedKey) {
-      console.log('Missing connectionId or selectedKey')
       return
     }
 
@@ -217,7 +215,6 @@ export default function DataPanel() {
         setTtlInput(keyInfo?.ttl.toString() || '')
       }
     } catch (error) {
-      console.error('Failed to set TTL:', error)
       alert('Failed to set TTL: ' + (error instanceof Error ? error.message : 'Unknown error'))
       setEditingTTL(false)
       setTtlInput(keyInfo?.ttl.toString() || '')
@@ -240,7 +237,6 @@ export default function DataPanel() {
         setTtlInput('-1')
       }
     } catch (error) {
-      console.error('Failed to clear TTL:', error)
     }
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -253,7 +249,6 @@ export default function DataPanel() {
       setCopiedToClipboard(true)
       setTimeout(() => setCopiedToClipboard(false), 2000)
     } catch (error) {
-      console.error('Failed to copy:', error)
     }
   }
 
@@ -280,7 +275,6 @@ export default function DataPanel() {
             setKeyInfo(null)
           }
         } catch (error) {
-          console.error('Failed to delete key:', error)
         }
       },
       title: 'Delete Key',
@@ -323,7 +317,7 @@ export default function DataPanel() {
   return (
     <div className="w-full h-full flex flex-col bg-white dark:bg-gray-800">
       {/* Header */}
-      <div className="flex-shrink-0 px-3 h-10 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex-shrink-0 px-3 h-9 border-b border-black/10 dark:border-white/10">
         <div className="flex items-center justify-between gap-3">
           {/* Left: Key info */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -394,7 +388,7 @@ export default function DataPanel() {
       <div className="flex-1 overflow-hidden min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-gray-400 text-sm">Loading...</div>
+            <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
           </div>
         ) : keyInfo ? (
           <div className="h-full min-h-0">
@@ -415,9 +409,21 @@ export default function DataPanel() {
             )}
           </div>
         ) : (
-          <div className="text-center text-gray-400">
-            <p className="text-sm">Failed to load key</p>
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-400 dark:text-gray-500 text-sm">Failed to load key</p>
           </div>
+        )}
+      </div>
+
+      {/* Footer Status Bar */}
+      <div className="flex-shrink-0 h-[52px] px-2 border-t border-black/10 dark:border-white/10 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+        {keyInfo ? (
+          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+            <span>Type: {keyInfo.type}</span>
+            <span>TTL: {keyInfo.ttl < 0 ? '∞' : `${keyInfo.ttl}s`}</span>
+          </div>
+        ) : (
+          <div className="text-xs text-gray-400 dark:text-gray-500">No key selected</div>
         )}
       </div>
 

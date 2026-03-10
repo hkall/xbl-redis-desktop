@@ -4,6 +4,34 @@ const fs = require('fs').promises
 const Redis = require('ioredis')
 const jos = require('java-object-serialization')
 
+// Add debug logging function
+let debugLogStream = null
+async function setupDebugLogging() {
+  try {
+    const logDir = path.join(app.getPath('userData'), 'logs')
+    await fs.mkdir(logDir, { recursive: true })
+    const logFile = path.join(logDir, 'debug.log')
+    debugLogStream = require('fs').createWriteStream(logFile, { flags: 'a' })
+    console.log('[Debug] Logging to:', logFile)
+  } catch (error) {
+    console.error('[Debug] Failed to setup logging:', error)
+  }
+}
+
+function debugLog(...args) {
+  const message = args.map(arg =>
+    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+  ).join(' ')
+  const timestamp = new Date().toISOString()
+  const logMessage = `[${timestamp}] ${message}\n`
+  console.log(logMessage)
+  if (debugLogStream) {
+    // Flush immediately to ensure logs are written
+    debugLogStream.write(logMessage)
+    debugLogStream.flush()
+  }
+}
+
 // Get class references for instanceof checks
 const JavaObject = jos.JavaObject
 
@@ -187,8 +215,35 @@ const createWindow = () => {
   })
 
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools()
+    // Wait for Vite to be ready before loading
+    const loadWithRetry = async (retryCount = 0) => {
+      try {
+        // Test if Vite is ready - try multiple ports
+        const ports = [5173, 5174, 5175, 5176, 5177]
+        for (const port of ports) {
+          try {
+            const response = await fetch(`http://localhost:${port}`)
+            if (response.ok) {
+              mainWindow.loadURL(`http://localhost:${port}`)
+              mainWindow.webContents.openDevTools()
+              return
+            }
+          } catch (e) {
+            // Try next port
+          }
+        }
+        throw new Error('Server not ready')
+      } catch (error) {
+        if (retryCount < 60) { // Retry up to 60 times (30 seconds)
+          setTimeout(() => loadWithRetry(retryCount + 1), 500)
+        } else {
+          console.error('Failed to connect to Vite dev server after 30 seconds')
+          mainWindow.loadFile(path.join(__dirname, 'index.html'))
+        }
+      }
+    }
+
+    loadWithRetry()
   } else {
     mainWindow.loadFile(path.join(__dirname, 'index.html'))
   }
@@ -198,7 +253,10 @@ const createWindow = () => {
   })
 }
 
-app.whenReady().then(createWindow).then(() => {
+app.whenReady().then(async () => {
+  createWindow()
+  // Setup debug logging after window creation
+  await setupDebugLogging()
   // Hide menu bar on Windows
   if (process.platform === 'win32') {
     Menu.setApplicationMenu(null)
@@ -297,7 +355,8 @@ ipcMain.handle('redis:disconnect', async (_event, id) => {
   }
 })
 
-ipcMain.handle('redis:scan', async (_event, id, pattern = '*', count = 100) => {
+ipcMain.handle('redis:scan', async (_event, id, pattern = '*', count = 100, cursor = '0') => {
+  console.log('[redis:scan] Called with id:', id, 'pattern:', pattern, 'count:', count, 'cursor:', cursor)
   try {
     const client = redisConnections.get(id)
     if (!client) {
@@ -305,16 +364,20 @@ ipcMain.handle('redis:scan', async (_event, id, pattern = '*', count = 100) => {
     }
 
     const keys = []
-    let cursor = '0'
+    const [nextCursor, batch] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', count)
+    console.log('[redis:scan] Scan result - nextCursor:', nextCursor, 'batch length:', batch ? batch.length : 0)
+    // Convert buffers to strings
+    const keysFromBatch = batch.map(key => {
+      const str = key.toString()
+      console.log('[redis:scan] Key (Buffer):', key, '-> String:', str)
+      return str
+    })
+    keys.push(...keysFromBatch)
 
-    do {
-      const [nextCursor, batch] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', count)
-      keys.push(...batch)
-      cursor = nextCursor
-    } while (cursor !== '0')
-
-    return { success: true, data: keys }
+    console.log('[redis:scan] Returning', keys.length, 'keys')
+    return { success: true, data: keys, cursor: nextCursor }
   } catch (error) {
+    console.error('[redis:scan] Error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to scan keys',
@@ -665,4 +728,190 @@ ipcMain.handle('config:load', async (_event, key) => {
 
 ipcMain.handle('config:getUserDataPath', async () => {
   return { success: true, data: app.getPath('userData') }
+})
+
+// Execute custom Redis command
+ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
+  debugLog('[redis:executeCommand] Called with:', { id, command })
+
+  try {
+    const client = redisConnections.get(id)
+    if (!client) {
+      debugLog('[redis:executeCommand] No client found for id:', id)
+      throw new Error('Not connected to Redis')
+    }
+
+    const parts = command.trim().split(/\s+/)
+    const cmd = parts[0].toUpperCase()
+    const args = parts.slice(1)
+
+    // For GET commands, check for Java serialization and return byte array
+    if (cmd === 'GET' && args.length > 0) {
+      const key = args[0]
+
+      // Always use getBuffer for GET commands to detect Java serialization
+      const buffer = await client.getBuffer(key)
+
+      debugLog('[redis:executeCommand] GET result:', {
+        key,
+        bufferLength: buffer.length,
+        first10Bytes: Array.from(buffer.slice(0, 10)),
+        hex: Array.from(buffer.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' ')
+      })
+
+      // Check if it's a Java serialized object
+      const isJavaSerialization = buffer.length >= 2 &&
+                                   buffer[0] === 0xAC &&
+                                   buffer[1] === 0xED &&
+                                   buffer.length > 32
+
+      debugLog('[redis:executeCommand] Is Java serialization:', isJavaSerialization)
+
+      if (isJavaSerialization) {
+        debugLog('[redis:executeCommand] Returning Java binary data')
+        return {
+          success: true,
+          data: Array.from(buffer),
+          encoding: 'java-binary',
+          command: cmd
+        }
+      }
+
+      // For non-Java objects, return decoded string
+      debugLog('[redis:executeCommand] Not Java serialization, getting string value')
+      const value = buffer.toString('utf-8')
+      debugLog('[redis:executeCommand] Returning string value, length:', value?.length)
+      return {
+        success: true,
+        data: value,
+        command: cmd
+      }
+    }
+
+    // For other commands, execute normally
+    debugLog('[redis:executeCommand] Executing:', { cmd, args })
+
+    const result = await client.send_command(cmd, ...args)
+
+    debugLog('[redis:executeCommand] Result:', {
+      type: typeof result,
+      value: result
+    })
+
+    return {
+      success: true,
+      data: result,
+      command: cmd
+    }
+  } catch (error) {
+    debugLog('[redis:executeCommand] ERROR:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Command execution failed'
+    }
+  }
+})
+
+// Get Redis server info
+ipcMain.handle('redis:getServerInfo', async (_event, id, section = 'default') => {
+  try {
+    console.log('[redis:getServerInfo] Called with:', { id, section })
+
+    const client = redisConnections.get(id)
+    if (!client) {
+      console.error('[redis:getServerInfo] No client found for id:', id)
+      throw new Error('Not connected to Redis')
+    }
+
+    console.log('[redis:getServerInfo] Client found, calling INFO')
+    const info = await client.info(section)
+    console.log('[redis:getServerInfo] INFO result length:', info.length)
+    console.log('[redis:getServerInfo] INFO preview:', info.substring(0, 200))
+
+    // Parse INFO output into object
+    const parsedInfo = {}
+    let currentSection = 'default'
+    let lineCount = 0
+
+    for (const line of info.split('\n')) {
+      lineCount++
+      if (line.startsWith('#')) {
+        currentSection = line.slice(1).trim().toLowerCase()
+        console.log(`[redis:getServerInfo] Section ${lineCount}:`, currentSection)
+      } else if (line.includes(':')) {
+        const colonIndex = line.indexOf(':')
+        const key = line.substring(0, colonIndex)
+        const value = line.substring(colonIndex + 1).trim()
+        if (!parsedInfo[currentSection]) {
+          parsedInfo[currentSection] = {}
+        }
+        parsedInfo[currentSection][key] = value
+      }
+    }
+
+    console.log('[redis:getServerInfo] Parsed sections:', Object.keys(parsedInfo))
+    console.log('[redis:getServerInfo] Total lines processed:', lineCount)
+
+    return {
+      success: true,
+      data: parsedInfo
+    }
+  } catch (error) {
+    console.error('[redis:getServerInfo] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get server info'
+    }
+  }
+})
+// Archive operations - create and download zip archive
+ipcMain.handle('archive:createAndDownload', async (_event, options) => {
+  const { filename, files } = options
+  
+  if (!mainWindow) {
+    return {
+      success: false,
+      error: 'Window not available'
+    }
+  }
+
+  try {
+    // Use AdmZip to create the zip file
+    const AdmZip = require('adm-zip')
+    const zip = new AdmZip()
+    
+    // Add each file to the zip
+    for (const file of files) {
+      zip.addFile(file.name, Buffer.from(file.content, 'utf-8'))
+    }
+    
+    // Get the zip buffer
+    const zipBuffer = zip.toBuffer()
+    
+    // Create a temporary file path
+    const tempDir = path.join(app.getPath('temp'), 'redis-desktop-exports')
+    try {
+      await fs.mkdir(tempDir, { recursive: true })
+    } catch (e) {
+      // Directory already exists or error
+    }
+    
+    const tempFilePath = path.join(tempDir, filename)
+    
+    // Write the zip file
+    await fs.writeFile(tempFilePath, zipBuffer)
+    
+    // Trigger download via BrowserWindow
+    mainWindow.webContents.downloadURL(`file://${tempFilePath}`)
+    
+    return {
+      success: true
+    }
+  } catch (error) {
+    console.error('[archive:createAndDownload] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create archive'
+    }
+  }
 })

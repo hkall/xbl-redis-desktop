@@ -25,7 +25,6 @@ export default function JavaObjectViewer({ byteArray }: JavaObjectViewerProps) {
       if (window.electronAPI && window.electronAPI.javaDeserialize) {
         const result = await window.electronAPI.javaDeserialize(byteArray)
 
-        console.log('Java deserialization result:', result)
 
         if (result.success && result.data) {
           setData(result.data)
@@ -34,7 +33,6 @@ export default function JavaObjectViewer({ byteArray }: JavaObjectViewerProps) {
         }
       }
     } catch (e) {
-      console.error('Deserialization error:', e)
       setError(e instanceof Error ? e.message : 'Unknown error')
     } finally {
       setLoading(false)
@@ -109,7 +107,7 @@ export default function JavaObjectViewer({ byteArray }: JavaObjectViewerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400 text-sm">Deserializing</div>
+        <div className="text-gray-400 dark:text-gray-500 text-sm">Deserializing...</div>
       </div>
     )
   }

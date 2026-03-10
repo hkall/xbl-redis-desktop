@@ -375,28 +375,16 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
   }
 
   const handleDeleteField = async (field: string) => {
-    console.log('[handleDeleteField] Starting deletion for field:', field)
-    console.log('[handleDeleteField] connectionId:', connectionId, 'keyName:', keyName)
 
     if (!connectionId || !keyName) {
-      console.error('[handleDeleteField] Missing connectionId or keyName')
       return
     }
 
     setDeleteConfirm({
       isOpen: true,
       callback: async () => {
-        console.log('[handleDeleteField] Confirmed deletion, executing...')
         try {
-          console.log('[handleDeleteField] Calling redisSet with:', {
-            connectionId,
-            keyName,
-            type: 'hash',
-            value: { action: 'deleteField', field }
-          })
-
           if (!window.electronAPI || !window.electronAPI.redisSet) {
-            console.error('[handleDeleteField] electronAPI.redisSet not available')
             return
           }
 
@@ -407,14 +395,9 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
             { action: 'deleteField', field }
           )
 
-          console.log('[handleDeleteField] redisSet result:', result)
-
           // Delete successful - reload data to ensure UI reflects actual Redis state
-          console.log('[handleDeleteField] Reloading data...')
           await loadKey()
-          console.log('[handleDeleteField] Data reloaded successfully')
         } catch (error) {
-          console.error('[handleDeleteField] Failed to delete hash field:', error)
         }
       },
       title: 'Delete Hash Field',
@@ -425,7 +408,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400 text-sm">Loading...</div>
+        <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
       </div>
     )
   }
@@ -473,8 +456,8 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-4 pb-4">
         {visibleFields.length === 0 ? (
           <div className="flex-1 overflow-auto">
-            <div className="flex items-center justify-center h-full text-gray-400 text-xs">
-              {searchTerm ? 'No matching fields found' : 'No fields yet'}
+            <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
+              No fields found
             </div>
           </div>
         ) : (

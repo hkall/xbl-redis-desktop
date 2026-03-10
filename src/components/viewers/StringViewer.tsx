@@ -177,7 +177,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400 text-sm">Loading...</div>
+        <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
       </div>
     )
   }

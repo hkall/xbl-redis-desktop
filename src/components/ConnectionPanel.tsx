@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { Trash2, Database, CheckCircle, XCircle, Loader2, AlertCircle, Edit3, Link, X, ChevronDown } from 'lucide-react'
+import { Trash2, Database, CheckCircle, XCircle, Loader2, AlertCircle, Edit3, Link, X, ChevronDown, Terminal, Server, List, Download, Key } from 'lucide-react'
 import { useRedisStore, RedisConnection } from '@/store/redisStore'
 import ConfirmDialog from './ConfirmDialog'
 
-export default function ConnectionPanel() {
+type PanelType = 'keys' | 'command' | 'server' | 'batch' | 'export'
+
+const PANEL_CONFIG = {
+  keys: { label: 'Keys', icon: Key, color: 'blue' as const },
+  command: { label: 'CLI', icon: Terminal, color: 'gray' as const },
+  server: { label: 'Server', icon: Server, color: 'purple' as const },
+  batch: { label: 'Batch', icon: List, color: 'orange' as const },
+  export: { label: 'Export', icon: Download, color: 'green' as const },
+}
+
+export default function ConnectionPanel({ selectedPanel, onPanelChange }: { selectedPanel: PanelType; onPanelChange: (panel: PanelType) => void }) {
   const {
     connections,
     activeConnectionId,
@@ -89,7 +99,6 @@ export default function ConnectionPanel() {
       // Check if electronAPI is available (running in Electron)
       if (window.electronAPI && window.electronAPI.redisConnect) {
         // Real connection via Electron IPC
-        console.log('Redis connect request:', { id: connection.id, host: connection.host, port: connection.port, db: connection.database })
         const result = await window.electronAPI.redisConnect(
           connection.id,
           {
@@ -99,7 +108,6 @@ export default function ConnectionPanel() {
             db: connection.database,
           }
         )
-        console.log('Redis connect result:', result)
 
         if (result.success) {
           // Use the db returned from the connection (ensures we have the correct db index)
@@ -186,7 +194,6 @@ export default function ConnectionPanel() {
 
   const handleSelectDatabase = async (connection: RedisConnection, db: number) => {
     // Disconnect and reconnect with new database to ensure proper switching
-    console.log('Switching database to:', db)
     const tempConnection = { ...connection, database: db }
     await handleConnect(tempConnection)
   }
@@ -205,8 +212,8 @@ export default function ConnectionPanel() {
   }
 
   return (
-    <div className="w-full h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
-      <div className="px-3 h-10 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex items-center justify-between gap-2">
+    <div className="w-full h-full bg-white dark:bg-gray-800 flex flex-col overflow-hidden">
+      <div className="px-3 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
           <Database className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
           <span className="text-sm font-medium text-gray-900 dark:text-white flex-shrink-0">
@@ -241,7 +248,7 @@ export default function ConnectionPanel() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0 pb-16">
         {connections.length === 0 ? (
           <div className="p-4 text-center text-gray-400 text-sm">
             No connections yet
@@ -267,6 +274,29 @@ export default function ConnectionPanel() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Panel Switcher - Fixed at bottom of Connection Panel */}
+      <div className="flex-shrink-0 h-[52px] px-2 py-1 border-t border-black/10 dark:border-white/10 bg-gray-50 dark:bg-gray-800/50 flex items-center">
+        <div className="grid grid-cols-5 gap-1 w-full">
+          {Object.entries(PANEL_CONFIG).map(([id, panel]) => (
+            <button
+              key={id}
+              onClick={() => onPanelChange(id as PanelType)}
+              className={`flex flex-col items-center justify-center rounded-lg transition-all duration-200 py-1 ${
+                selectedPanel === id
+                  ? id === 'keys'
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'bg-blue-500 text-white shadow-md'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+              title={panel.label}
+            >
+              {panel.icon && <panel.icon className="w-3.5 h-3.5" />}
+              <span className="text-[10px] font-medium leading-none">{panel.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {showAddForm && (
@@ -568,7 +598,7 @@ function AddConnectionForm({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
             {isEdit ? 'Edit Connection' : 'New Connection'}
           </h3>
@@ -662,7 +692,7 @@ function AddConnectionForm({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
+        <div className="px-6 py-4 border-t border-black/10 dark:border-white/10 flex justify-end gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
           <button
             onClick={onCancel}
             className="px-4 py-2 text-xs font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
