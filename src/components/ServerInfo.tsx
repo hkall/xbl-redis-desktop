@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { RefreshCw, Database, Zap, Circle, CheckCircle, AlertTriangle, Activity, Clock, Shield, Code, Server } from 'lucide-react'
+import { RefreshCw, Database, Zap, Circle, CheckCircle, AlertTriangle, Activity, Clock, Shield, Code, Server, TrendingUp, Hash, Command, Timer, Ban, HardDrive, Save } from 'lucide-react'
 
 interface ServerInfoProps {
   connectionId: string | null
@@ -17,6 +17,7 @@ const CORE_METRICS = {
   instantaneous_ops_per_sec: { name: '每秒操作数', icon: Zap, category: 'performance', format: 'ops' },
   keyspace_hits: { name: '缓存命中', icon: CheckCircle, category: 'performance' },
   keyspace_misses: { name: '缓存未命中', icon: AlertTriangle, category: 'performance' },
+  hit_rate: { name: '命中率', icon: TrendingUp, category: 'performance', format: 'percent', computed: true },
 
   // Memory
   used_memory: { name: '已用内存', icon: Database, category: 'memory', format: 'bytes' },
@@ -30,6 +31,13 @@ const CORE_METRICS = {
   redis_version: { name: 'Redis 版本', icon: Code, category: 'server' },
   uptime_in_seconds: { name: '运行时间', icon: Clock, category: 'server', format: 'uptime' },
   connected_clients: { name: '客户端连接', icon: Activity, category: 'server' },
+
+  // Keys & Stats
+  db_keys: { name: '总键数', icon: Hash, category: 'stats', format: 'count', computed: true },
+  total_commands_processed: { name: '总命令数', icon: Command, category: 'stats', format: 'count' },
+  expired_keys: { name: '过期键数', icon: Timer, category: 'stats', format: 'count' },
+  rejected_connections: { name: '拒绝连接', icon: Ban, category: 'stats', format: 'count' },
+  rdb_last_save_time: { name: '最后保存', icon: Save, category: 'stats', format: 'timeago' },
 }
 
 const CATEGORY_COLORS = {
@@ -50,6 +58,12 @@ const CATEGORY_COLORS = {
     border: 'border-purple-200 dark:border-purple-700',
     text: 'text-purple-700 dark:text-purple-400',
     icon: 'text-purple-600 dark:text-purple-400',
+  },
+  stats: {
+    bg: 'bg-amber-50 dark:bg-amber-900/20',
+    border: 'border-amber-200 dark:border-amber-700',
+    text: 'text-amber-700 dark:text-amber-400',
+    icon: 'text-amber-600 dark:text-amber-400',
   },
 }
 
@@ -128,8 +142,23 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
       return (parseInt(value) || 0).toLocaleString()
     }
 
-    if (formatType === 'count' && num > 0) {
-      return num.toLocaleString()
+    if (formatType === 'count') {
+      return (parseInt(value) || 0).toLocaleString()
+    }
+
+    if (formatType === 'percent') {
+      return value
+    }
+
+    if (formatType === 'timeago') {
+      const timestamp = parseInt(value) || 0
+      if (timestamp === 0) return 'N/A'
+      const now = Math.floor(Date.now() / 1000)
+      const diff = now - timestamp
+      if (diff < 60) return `${diff}s ago`
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+      return `${Math.floor(diff / 86400)}d ago`
     }
 
     return value
@@ -156,6 +185,43 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
     }
 
     return { status: 'neutral', bg: 'bg-gray-100 dark:bg-gray-800' }
+  }
+
+  // Compute derived metrics
+  const getComputedValue = (key: string): string => {
+    if (key === 'hit_rate') {
+      const hits = parseInt(serverInfo['keyspace_hits'] || '0')
+      const misses = parseInt(serverInfo['keyspace_misses'] || '0')
+      const total = hits + misses
+      if (total === 0) return '0%'
+      return `${((hits / total) * 100).toFixed(1)}%`
+    }
+    if (key === 'db_keys') {
+      // Parse db0:keys=XXX,expires=XXX format
+      const db0 = serverInfo['db0']
+      if (db0) {
+        const match = db0.match(/keys=(\d+)/)
+        if (match) return match[1]
+      }
+      // Try other db keys
+      for (let i = 0; i < 16; i++) {
+        const db = serverInfo[`db${i}`]
+        if (db) {
+          const match = db.match(/keys=(\d+)/)
+          if (match) return match[1]
+        }
+      }
+      return '0'
+    }
+    return '0'
+  }
+
+  // Get metric value (computed or direct)
+  const getMetricValue = (key: string, config: any): string => {
+    if (config.computed) {
+      return getComputedValue(key)
+    }
+    return serverInfo[key] || '0'
   }
 
   const getCategoryIcon = (icon?: any, category?: string) => {
@@ -217,12 +283,12 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                 <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
                 <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">性能指标</h3>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'performance')
                   .map(([key, config]) => {
                     const Icon = getCategoryIcon(config.icon, config.category)
-                    const value = serverInfo[key] || '0'
+                    const value = getMetricValue(key, config)
                     const status = getMetricStatus(key, value)
                     const formatted = formatValue(key, value, config.format)
 
@@ -296,6 +362,35 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                           <span className="text-xs text-purple-700/80 dark:text-purple-400/80">{config.name}</span>
                         </div>
                         <div className="text-base font-bold text-purple-900 dark:text-purple-100">
+                          {formatted}
+                        </div>
+                      </div>
+                    )
+                  })}
+              </div>
+            </div>
+
+            {/* Stats Metrics */}
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <HardDrive className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-100">数据统计</h3>
+              </div>
+              <div className="grid grid-cols-5 gap-3">
+                {Object.entries(CORE_METRICS)
+                  .filter(([_, config]) => config.category === 'stats')
+                  .map(([key, config]) => {
+                    const Icon = getCategoryIcon(config.icon, config.category)
+                    const value = getMetricValue(key, config)
+                    const formatted = formatValue(key, value, config.format)
+
+                    return (
+                      <div key={key} className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Icon className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                          <span className="text-xs text-amber-700/80 dark:text-amber-400/80">{config.name}</span>
+                        </div>
+                        <div className="text-base font-bold text-amber-900 dark:text-amber-100">
                           {formatted}
                         </div>
                       </div>

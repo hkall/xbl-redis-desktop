@@ -238,7 +238,15 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
 
   // Format output for display
   const formatOutput = async (data: any): Promise<{ text: string; data?: any; formatted: boolean }> => {
-    if (data === null || data === undefined) {
+    console.log('formatOutput called with:', data, 'type:', typeof data)
+
+    if (data === null) {
+      console.log('formatOutput: data is null, returning (nil)')
+      return { text: '(nil)', formatted: false }
+    }
+
+    if (data === undefined) {
+      console.log('formatOutput: data is undefined, returning (nil)')
       return { text: '(nil)', formatted: false }
     }
 

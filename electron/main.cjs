@@ -26,9 +26,7 @@ function debugLog(...args) {
   const logMessage = `[${timestamp}] ${message}\n`
   console.log(logMessage)
   if (debugLogStream) {
-    // Flush immediately to ensure logs are written
     debugLogStream.write(logMessage)
-    debugLogStream.flush()
   }
 }
 
@@ -751,6 +749,16 @@ ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
 
       // Always use getBuffer for GET commands to detect Java serialization
       const buffer = await client.getBuffer(key)
+
+      // Handle null case (key does not exist)
+      if (buffer === null) {
+        debugLog('[redis:executeCommand] GET result: null (key not found)')
+        return {
+          success: true,
+          data: null,
+          command: cmd
+        }
+      }
 
       debugLog('[redis:executeCommand] GET result:', {
         key,
