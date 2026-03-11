@@ -1,6 +1,6 @@
 # Xbl Redis Desktop
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](../../releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](../../releases)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](../../releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node.js-18%2B-brightgreen.svg)](https://nodejs.org)
@@ -52,6 +52,45 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
 - 🔑 **Quick Actions** - Supports keyboard shortcuts for efficient operation
 - 💾 **Config Persistence** - Auto-save connection config, restore on next startup
 
+---
+
+## 📝 Changelog
+
+### v1.1.0 (2026-03-11)
+
+#### ✨ New Features
+
+- **CLI Command Line Tool** - Execute Redis commands directly with syntax highlighting, history support, and Enter key shortcut
+- **Batch Operations** - Delete multiple keys at once with pattern matching and preview functionality
+- **Data Export** - Export Redis data in JSON/CSV formats, supports single key or full database export with archive option
+- **Enhanced Server Monitoring** - Added 6 new metrics: hit rate, total keys, total commands, expired keys, rejected connections, last save time
+- **Connection Copy** - Quickly duplicate connection configurations with one click
+- **Connection Card Click** - Click anywhere on connection card to switch active connection
+
+#### 🐛 Bug Fixes
+
+- Fixed `flush is not a function` error in debug logging
+- Fixed null buffer crash when reading certain keys
+- Fixed Enter key not working in CLI input field
+- Fixed data not refreshing after connecting from Export/Batch/Server views
+- Fixed panel divider alignment issues across all views
+
+#### 🎨 UI Improvements
+
+- Redesigned export format selectors as tabs for better UX
+- Unified divider line alignment across left/center/right panels
+- Improved connection panel with rounded corners
+
+### v1.0.0 (Initial Release)
+
+- Basic connection management
+- View and edit five Redis data types
+- Key search and filtering
+- Tree key browser
+- TTL setting
+- Config persistence
+- Chinese support
+
 ### Data Type Operations
 
 | Data Type | View Mode | Edit Features | Special Features |
@@ -90,13 +129,13 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
 
 #### Windows Installer
 
-1. Download the latest installer `Xbl Redis Desktop Setup 1.0.0.exe` from [Releases](../../releases)
+1. Download the latest installer `Xbl Redis Desktop Setup 1.1.0.exe` from [Releases](../../releases)
 2. Double-click to run the installer and follow the prompts to complete installation
 3. A shortcut will be created on the desktop, click to launch
 
 #### Windows Portable
 
-1. Download the portable version `Xbl Redis Desktop 1.0.0.exe` from [Releases](../../releases)
+1. Download the portable version `Xbl Redis Desktop 1.1.0.exe` from [Releases](../../releases)
 2. Unzip and run directly, no installation required
 
 **Recommend using portable version** - requires no admin privileges, can be carried on USB drive.
@@ -484,7 +523,11 @@ xbl-redis-desktop/
 │   │   ├── CodeEditor.tsx           # Code editor
 │   │   ├── EditableJsonTree.tsx     # Editable JSON tree
 │   │   ├── JsonTree.tsx             # JSON tree viewer
-│   │   └── ConfirmDialog.tsx        # Confirm dialog
+│   │   ├── ConfirmDialog.tsx        # Confirm dialog
+│   │   ├── CommandLine.tsx          # CLI command line (v1.1.0)
+│   │   ├── BatchOperations.tsx      # Batch operations (v1.1.0)
+│   │   ├── DataExport.tsx           # Data export (v1.1.0)
+│   │   └── ServerInfo.tsx           # Server monitoring (v1.1.0)
 │   ├── services/          # Service layer
 │   │   └── redis.ts       # Redis operations wrapper
 │   ├── store/             # State management
@@ -512,8 +555,8 @@ After building, installer and portable version will be output to `dist` director
 
 ```
 dist/
-├── Xbl Redis Desktop Setup 1.0.0.exe    # Installer
-└── Xbl Redis Desktop 1.0.0.exe           # Portable version
+├── Xbl Redis Desktop Setup 1.1.0.exe    # Installer
+└── Xbl Redis Desktop 1.1.0.exe           # Portable version
 ```
 
 ---
@@ -647,18 +690,18 @@ Thanks to the following open source projects. This tool wouldn't be possible wit
 - [x] TTL setting
 - [x] Config persistence
 - [x] Chinese support
+- [x] Data export functionality (v1.1.0)
+- [x] Command-line execution interface (v1.1.0)
+- [x] Batch data operations (v1.1.0)
 
 ### In Progress 🚧
 
 - [ ] Redis Cluster support
 - [ ] Redis Sentinel support
-- [ ] Data export functionality
 - [ ] Data import functionality
-- [ ] Command-line execution interface
 
 ### Planned 📋
 
-- [ ] Batch data operations
 - [ ] Key rename functionality
 - [ ] Key move (Rename/Move)
 - [ ] Pub/Sub message subscription
