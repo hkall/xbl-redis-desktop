@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Trash2, Database, CheckCircle, XCircle, Loader2, AlertCircle, Edit3, Link, X, ChevronDown, Terminal, Server, List, Download, Key, Copy } from 'lucide-react'
+import { Trash2, Database, CheckCircle, XCircle, Loader2, AlertCircle, Edit3, Link, X, ChevronDown, Terminal, Server, List, Download, Key, Copy, RefreshCw, ExternalLink } from 'lucide-react'
 import { useRedisStore, RedisConnection } from '@/store/redisStore'
 import ConfirmDialog from './ConfirmDialog'
+
+const APP_VERSION = '1.1.0'
 
 type PanelType = 'keys' | 'command' | 'server' | 'batch' | 'export'
 
@@ -60,6 +62,54 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
     isOpen: false,
     connection: null,
   })
+
+  // Update check state
+  const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const [updateInfo, setUpdateInfo] = useState<{
+    hasUpdate: boolean
+    latestVersion: string
+    releaseUrl: string
+  } | null>(null)
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false)
+
+  // Check for updates
+  const checkForUpdate = async () => {
+    setCheckingUpdate(true)
+    try {
+      const response = await fetch('https://api.github.com/repos/hkall/xbl-redis-desktop/releases/latest')
+      if (response.ok) {
+        const data = await response.json()
+        const latestVersion = data.tag_name?.replace(/^v/, '') || '0.0.0'
+
+        // Compare versions
+        const currentParts = APP_VERSION.split('.').map(Number)
+        const latestParts = latestVersion.split('.').map(Number)
+
+        let hasUpdate = false
+        for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
+          const current = currentParts[i] || 0
+          const latest = latestParts[i] || 0
+          if (latest > current) {
+            hasUpdate = true
+            break
+          } else if (latest < current) {
+            break
+          }
+        }
+
+        setUpdateInfo({
+          hasUpdate,
+          latestVersion,
+          releaseUrl: data.html_url || 'https://github.com/hkall/xbl-redis-desktop/releases'
+        })
+        setShowUpdateDialog(true)
+      }
+    } catch (error) {
+      console.error('Failed to check for updates:', error)
+    } finally {
+      setCheckingUpdate(false)
+    }
+  }
 
   const handleCopyConnection = () => {
     if (copyConfirm.connection) {
@@ -251,24 +301,40 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
             </span>
           )}
         </div>
-        <button
-          onClick={() => {
-            setEditingConnection(null)
-            setNewConnection({
-              name: '',
-              host: 'localhost',
-              port: 6379,
-              password: '',
-              database: 0,
-              mode: 'standalone',
-            })
-            setShowAddForm(true)
-          }}
-          className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-medium text-xs py-1 px-2.5 rounded-md transition-colors flex-shrink-0 whitespace-nowrap"
-          title="New Connection"
-        >
-          <Link className="w-3 h-3" />
-        </button>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Version display and update check */}
+          <button
+            onClick={checkForUpdate}
+            disabled={checkingUpdate}
+            className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
+            title="Check for updates"
+          >
+            <span className="font-mono">v{APP_VERSION}</span>
+            {checkingUpdate ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3 h-3" />
+            )}
+          </button>
+          <button
+            onClick={() => {
+              setEditingConnection(null)
+              setNewConnection({
+                name: '',
+                host: 'localhost',
+                port: 6379,
+                password: '',
+                database: 0,
+                mode: 'standalone',
+              })
+              setShowAddForm(true)
+            }}
+            className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-medium text-xs py-1 px-2.5 rounded-md transition-colors flex-shrink-0 whitespace-nowrap"
+            title="New Connection"
+          >
+            <Link className="w-3 h-3" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0 pb-16">
@@ -360,6 +426,66 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
         onConfirm={handleCopyConnection}
         onCancel={() => setCopyConfirm({ isOpen: false, connection: null })}
       />
+
+      {/* Update Dialog */}
+      {showUpdateDialog && updateInfo && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                {updateInfo.hasUpdate ? 'Update Available' : 'Up to Date'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowUpdateDialog(false)
+                  setUpdateInfo(null)
+                }}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 text-center">
+              {updateInfo.hasUpdate ? (
+                <>
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <RefreshCw className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 mb-2">
+                    A new version is available!
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Current: <span className="font-mono">v{APP_VERSION}</span> → Latest: <span className="font-mono text-green-600 dark:text-green-400">v{updateInfo.latestVersion}</span>
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (window.electronAPI?.openExternal) {
+                        window.electronAPI.openExternal(updateInfo.releaseUrl)
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Download Update
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    You're using the latest version!
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    <span className="font-mono">v{APP_VERSION}</span>
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

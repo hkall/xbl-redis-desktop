@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron')
+const { contextBridge, ipcRenderer, shell } = require('electron')
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Redis connection operations
@@ -40,4 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveConfig: (key, data) => ipcRenderer.invoke('config:save', key, data),
   loadConfig: (key) => ipcRenderer.invoke('config:load', key),
   getUserDataPath: () => ipcRenderer.invoke('config:getUserDataPath'),
+
+  // Open external URL in default browser
+  openExternal: (url) => shell.openExternal(url),
 })
