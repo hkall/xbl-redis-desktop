@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { RefreshCw, Database, Zap, Circle, CheckCircle, AlertTriangle, Activity, Clock, Shield, Code, Server, TrendingUp, Hash, Command, Timer, Ban, HardDrive, Save } from 'lucide-react'
+import { useRedisStore } from '@/store/redisStore'
 
 interface ServerInfoProps {
   connectionId: string | null
@@ -68,15 +69,22 @@ const CATEGORY_COLORS = {
 }
 
 export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) {
+  const { connections } = useRedisStore()
   const [loading, setLoading] = useState(false)
   const [serverInfo, setServerInfo] = useState<Record<string, string>>({})
   const [autoRefresh, setAutoRefresh] = useState(false)
 
+  // Get connection status
+  const activeConnection = connectionId
+    ? connections.find((c) => c.id === connectionId)
+    : null
+  const isConnected = activeConnection?.connected || false
+
   useEffect(() => {
-    if (connectionId) {
+    if (connectionId && isConnected) {
       loadServerInfo()
     }
-  }, [connectionId])
+  }, [connectionId, isConnected])
 
   useEffect(() => {
     let interval: NodeJS.Timeout

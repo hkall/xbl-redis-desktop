@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Download, FileJson, FileText, Database, RefreshCw, CheckCircle2, X, FileSpreadsheet, CheckSquare, Square, Archive, DownloadCloud } from 'lucide-react'
 import { customStringify } from '@/utils/formatter'
+import { useRedisStore } from '@/store/redisStore'
 
 interface DataExportProps {
   connectionId: string | null
@@ -24,6 +25,7 @@ type ExportMode = 'single' | 'archive'
 type ExportFormat = 'json' | 'csv' | 'txt'
 
 export default function DataExport({ connectionId }: DataExportProps) {
+  const { connections } = useRedisStore()
   const [keys, setKeys] = useState<KeyInfo[]>([])
   const [loading, setLoading] = useState(false)
   const [searchPattern, setSearchPattern] = useState('*')
@@ -32,6 +34,12 @@ export default function DataExport({ connectionId }: DataExportProps) {
   const [selectAll, setSelectAll] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [exportResults, setExportResults] = useState<{ exported: number; skipped: number; error?: string } | null>(null)
+
+  // Get connection status
+  const activeConnection = connectionId
+    ? connections.find((c) => c.id === connectionId)
+    : null
+  const isConnected = activeConnection?.connected || false
 
   // Lazy loading state - similar to HashViewer
   const [visibleKeys, setVisibleKeys] = useState<KeyInfo[]>([])
@@ -93,12 +101,12 @@ export default function DataExport({ connectionId }: DataExportProps) {
   }, [connectionId, searchPattern])
 
   useEffect(() => {
-    if (connectionId) {
+    if (connectionId && isConnected) {
       loadKeys()
     } else {
       setKeys([])
     }
-  }, [connectionId, loadKeys])
+  }, [connectionId, isConnected, loadKeys])
 
   // Reset visible state when keys or pattern changes
   useEffect(() => {
@@ -666,69 +674,66 @@ export default function DataExport({ connectionId }: DataExportProps) {
           </span>
 
           {/* Export Format & Action Buttons */}
-          <div className="flex items-center gap-2 ml-2">
-            {/* Export Mode Toggle */}
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3 ml-2">
+            {/* Export Mode Tabs */}
+            <div className="flex items-center border-b border-gray-300 dark:border-gray-600">
               <button
                 onClick={() => setExportMode('single')}
-                className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
+                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
                   exportMode === 'single'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    ? 'text-blue-600 dark:text-blue-400 border-blue-500'
+                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
-                title="Export as single file"
               >
-                <FileJson className="w-3 h-3" />
                 Single
               </button>
               <button
                 onClick={() => setExportMode('archive')}
-                className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
+                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
                   exportMode === 'archive'
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    ? 'text-purple-600 dark:text-purple-400 border-purple-500'
+                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
-                title="Export as archive (each key in separate file)"
               >
-                <Archive className="w-3 h-3" />
                 Archive
               </button>
             </div>
 
-            {/* Format Buttons */}
-            <button
-              onClick={() => setExportFormat('json')}
-              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
-                exportFormat === 'json'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              <FileJson className="w-3 h-3" />
-              JSON
-            </button>
-            <button
-              onClick={() => setExportFormat('csv')}
-              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
-                exportFormat === 'csv'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              <FileSpreadsheet className="w-3 h-3" />
-              CSV
-            </button>
-            <button
-              onClick={() => setExportFormat('txt')}
-              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors ${
-                exportFormat === 'txt'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              <FileText className="w-3 h-3" />
-              TXT
-            </button>
+            {/* Format Tabs */}
+            <div className="flex items-center border-b border-gray-300 dark:border-gray-600">
+              <button
+                onClick={() => setExportFormat('json')}
+                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                  exportFormat === 'json'
+                    ? 'text-green-600 dark:text-green-400 border-green-500'
+                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                JSON
+              </button>
+              <button
+                onClick={() => setExportFormat('csv')}
+                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                  exportFormat === 'csv'
+                    ? 'text-green-600 dark:text-green-400 border-green-500'
+                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                CSV
+              </button>
+              <button
+                onClick={() => setExportFormat('txt')}
+                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                  exportFormat === 'txt'
+                    ? 'text-green-600 dark:text-green-400 border-green-500'
+                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                TXT
+              </button>
+            </div>
+
+            {/* Export Button */}
             <button
               onClick={handleExport}
               disabled={getSelectedCount() === 0 || exporting}

@@ -82,6 +82,13 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
 
   // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Handle Enter to execute command
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleExecute()
+      return
+    }
+
     // Handle autocomplete
     if (e.key === 'Tab' && autocompleteSuggestions.length > 0) {
       e.preventDefault()
@@ -576,8 +583,8 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
       )}
 
       {/* Input area */}
-      <div className="flex-shrink-0 border-t border-black/10 dark:border-white/10 h-[52px] flex items-center px-2">
-        <div className="flex items-center gap-2">
+      <div className="flex-shrink-0 border-t border-black/10 dark:border-white/10 h-[52px] flex items-center px-3">
+        <div className="flex items-center gap-2 w-full">
           <span className="text-red-500 font-bold">&gt;</span>
           <input
             ref={inputRef}
@@ -586,7 +593,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Type a Redis command..."
-            className="flex-1 bg-transparent text-gray-300 focus:outline-none placeholder-gray-600"
+            className="flex-1 bg-transparent text-gray-300 focus:outline-none placeholder-gray-600 py-1"
             disabled={!connectionId || loading}
             autoFocus
           />
@@ -599,7 +606,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
             <Send className="w-4 h-4" />
           </button>
         </div>
-        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+        <div className="flex items-center gap-3 text-xs text-gray-500 ml-4">
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 bg-gray-700 rounded">Enter</kbd>
             <span>Execute</span>

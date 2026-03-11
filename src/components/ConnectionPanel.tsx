@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Trash2, Database, CheckCircle, XCircle, Loader2, AlertCircle, Edit3, Link, X, ChevronDown, Terminal, Server, List, Download, Key } from 'lucide-react'
+import { Trash2, Database, CheckCircle, XCircle, Loader2, AlertCircle, Edit3, Link, X, ChevronDown, Terminal, Server, List, Download, Key, Copy } from 'lucide-react'
 import { useRedisStore, RedisConnection } from '@/store/redisStore'
 import ConfirmDialog from './ConfirmDialog'
 
@@ -52,6 +52,29 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
     title: '',
     message: '',
   })
+
+  const [copyConfirm, setCopyConfirm] = useState<{
+    isOpen: boolean
+    connection: RedisConnection | null
+  }>({
+    isOpen: false,
+    connection: null,
+  })
+
+  const handleCopyConnection = () => {
+    if (copyConfirm.connection) {
+      const newConn = {
+        name: `${copyConfirm.connection.name} (copy)`,
+        host: copyConfirm.connection.host,
+        port: copyConfirm.connection.port,
+        password: copyConfirm.connection.password || '',
+        database: copyConfirm.connection.database,
+        mode: copyConfirm.connection.mode,
+      }
+      addConnection(newConn)
+      setCopyConfirm({ isOpen: false, connection: null })
+    }
+  }
 
   const handleAddConnection = async () => {
     addConnection(newConnection)
@@ -270,6 +293,7 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
                 })}
                 onEdit={() => openEditForm(connection)}
                 onSelectDatabase={(db) => handleSelectDatabase(connection, db)}
+                onCopy={() => setCopyConfirm({ isOpen: true, connection })}
               />
             ))}
           </div>
@@ -325,6 +349,17 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
         }}
         onCancel={() => setDeleteConfirm({ isOpen: false, callback: () => {}, title: '', message: '' })}
       />
+
+      <ConfirmDialog
+        isOpen={copyConfirm.isOpen}
+        title="Copy Connection"
+        message={`Create a copy of "${copyConfirm.connection?.name}"? The new connection will be named "${copyConfirm.connection?.name} (copy)".`}
+        confirmText="Copy"
+        cancelText="Cancel"
+        variant="info"
+        onConfirm={handleCopyConnection}
+        onCancel={() => setCopyConfirm({ isOpen: false, connection: null })}
+      />
     </div>
   )
 }
@@ -337,6 +372,7 @@ function ConnectionItem({
   onDelete,
   onEdit,
   onSelectDatabase,
+  onCopy,
 }: {
   connection: RedisConnection
   isActive: boolean
@@ -345,6 +381,7 @@ function ConnectionItem({
   onDelete: () => void
   onEdit: () => void
   onSelectDatabase: (db: number) => void
+  onCopy: () => void
 }) {
   const [showDbDropdown, setShowDbDropdown] = useState(false)
 
@@ -369,7 +406,8 @@ function ConnectionItem({
 
   return (
     <div
-      className={`p-3 rounded-lg transition-colors ${
+      onClick={() => useRedisStore.getState().setActiveConnection(connection.id)}
+      className={`p-3 rounded-lg transition-colors cursor-pointer ${
         isActive
           ? 'bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700'
           : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
@@ -380,6 +418,16 @@ function ConnectionItem({
           {connection.name}
         </span>
         <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onCopy()
+            }}
+            className="text-gray-400 hover:text-green-500 transition-colors"
+            title="Copy connection"
+          >
+            <Copy className="w-3 h-3" />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation()

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Trash2, Clock, RefreshCw, X, Database, CheckCircle2, CheckSquare, Square, ToggleLeft, ToggleRight, AlertCircle, Layers } from 'lucide-react'
+import { useRedisStore } from '@/store/redisStore'
 
 interface BatchOperationsProps {
   connectionId: string | null
@@ -14,6 +15,7 @@ interface KeyOption {
 }
 
 export default function BatchOperations({ connectionId }: BatchOperationsProps) {
+  const { connections } = useRedisStore()
   const [keys, setKeys] = useState<KeyOption[]>([])
   const [visibleKeys, setVisibleKeys] = useState<KeyOption[]>([])
   const [allScanned, setAllScanned] = useState(false)
@@ -32,6 +34,12 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
   // Key loader status
   const [keysFoundCount, setKeysFoundCount] = useState(0)
   const [hasMoreKeys, setHasMoreKeys] = useState(true)
+
+  // Get connection status
+  const activeConnection = connectionId
+    ? connections.find((c) => c.id === connectionId)
+    : null
+  const isConnected = activeConnection?.connected || false
 
   // Table container ref for scroll listening
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -122,12 +130,12 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
   }, [connectionId, searchPattern, selectAll])
 
   useEffect(() => {
-    if (connectionId) {
+    if (connectionId && isConnected) {
       loadKeys(true)
     } else {
       setKeys([])
     }
-  }, [connectionId, loadKeys])
+  }, [connectionId, isConnected, loadKeys])
 
   // Debounce pattern search - reset and reload when pattern changes
   useEffect(() => {
