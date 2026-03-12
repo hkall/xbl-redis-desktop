@@ -12,8 +12,16 @@ interface ServerData {
   data: Record<string, string>
 }
 
+interface MetricConfig {
+  name: string
+  icon: React.ComponentType<{ className?: string }>
+  category: string
+  format?: string
+  computed?: boolean
+}
+
 // Friendly field names - 精简到最核心的指标
-const CORE_METRICS = {
+const CORE_METRICS: Record<string, MetricConfig> = {
   // Performance
   instantaneous_ops_per_sec: { name: '每秒操作数', icon: Zap, category: 'performance', format: 'ops' },
   keyspace_hits: { name: '缓存命中', icon: CheckCircle, category: 'performance' },
@@ -338,7 +346,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                     const Icon = getCategoryIcon(config.icon, config.category)
                     const value = getMetricValue(key, config)
                     const status = getMetricStatus(key, value)
-                    const formatted = formatValue(key, value, config.format)
+                    const formatted = formatValue(key, value, config.format ?? undefined)
 
                     return (
                       <div key={key} className={`${status.bg} rounded-lg p-3`}>
@@ -368,7 +376,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                     const Icon = getCategoryIcon(config.icon, config.category)
                     const value = serverInfo[key] || '0'
                     const status = getMetricStatus(key, value)
-                    const formatted = formatValue(key, value, config.format)
+                    const formatted = formatValue(key, value, config.format ?? undefined)
 
                     return (
                       <div key={key} className={`${status.bg} rounded-lg p-3`}>
@@ -401,7 +409,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                   .map(([key, config]) => {
                     const Icon = getCategoryIcon(config.icon, config.category)
                     const value = serverInfo[key] || '0'
-                    const formatted = formatValue(key, value, config.format)
+                    const formatted = formatValue(key, value, config.format ?? undefined)
 
                     return (
                       <div key={key} className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
@@ -430,7 +438,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                   .map(([key, config]) => {
                     const Icon = getCategoryIcon(config.icon, config.category)
                     const value = getMetricValue(key, config)
-                    const formatted = formatValue(key, value, config.format)
+                    const formatted = formatValue(key, value, config.format ?? undefined)
 
                     return (
                       <div key={key} className="bg-white/50 dark:bg-black/20 rounded-lg p-3">

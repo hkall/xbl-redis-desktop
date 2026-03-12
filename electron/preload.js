@@ -17,6 +17,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   redisRename: (id, key, newKey) =>
     ipcRenderer.invoke('redis:rename', id, key, newKey),
 
+  // Hash pagination
+  redisHscan: (id, key, cursor, count) =>
+    ipcRenderer.invoke('redis:hscan', id, key, cursor, count),
+
   // TTL operations
   redisSetTTL: (id, key, seconds) =>
     ipcRenderer.invoke('redis:setTTL', id, key, seconds),

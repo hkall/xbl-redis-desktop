@@ -424,7 +424,8 @@ export default function KeyBrowser() {
 
         setKeys(keyInfos)
       }
-    } catch (error) {
+    } catch {
+      // Ignore errors when loading keys
     } finally {
       setKeysLoading(false)
       setRefreshing(false)
@@ -477,7 +478,8 @@ export default function KeyBrowser() {
               setSelectedKey(null)
             }
           }
-        } catch (error) {
+        } catch {
+          // Ignore delete errors
         }
       },
       title: 'Delete Key',
@@ -517,7 +519,7 @@ export default function KeyBrowser() {
           alert(`Failed to rename key: ${result.error}`)
         }
       }
-    } catch (error) {
+    } catch {
       alert('Failed to rename key')
     }
   }
@@ -609,18 +611,10 @@ export default function KeyBrowser() {
         } as const
         setKeys([...keys, mockKey])
       }
-    } catch (error) {
+    } catch {
+      // Ignore add key errors
     }
   }
-
-  // formatTTL is defined but not used - commented out to avoid error
-  // const formatTTL = (ttl: number) => {
-  //   if (ttl < 0) return '-1'
-  //   if (ttl === 0) return 'Expired'
-  //   if (ttl < 60) return `${ttl}s`
-  //   if (ttl < 3600) return `${Math.floor(ttl / 60)}m ${ttl % 60}s`
-  //   return `${Math.floor(ttl / 3600)}h ${Math.floor((ttl % 3600) / 60)}m`
-  // }
 
   const getTypeDisplayName = (type: RedisDataType) => {
     const names: Record<string, string> = {

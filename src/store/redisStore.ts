@@ -156,7 +156,7 @@ export const useRedisStore = create<RedisStore>((set, get) => ({
       if (result && result.connections && result.connections.length > 0) {
         const connections = result.connections.map((c) => ({
           ...c,
-          id: c.id || crypto.randomUUID(), // Preserve existing ID or create new one
+          id: crypto.randomUUID(), // Generate new ID for each connection
           connected: false,
           connecting: false,
           databaseInfo: {},
@@ -167,7 +167,8 @@ export const useRedisStore = create<RedisStore>((set, get) => ({
           activeConnectionId: result.activeConnectionId,
         })
       }
-    } catch (error) {
+    } catch {
+      // Ignore errors when loading config
     }
   },
 
@@ -296,6 +297,7 @@ declare global {
       redisSet: (id: string, key: string, type: string, value: any) => Promise<any>
       redisDelete: (id: string, key: string) => Promise<any>
       redisRename: (id: string, key: string, newKey: string) => Promise<any>
+      redisHscan: (id: string, key: string, cursor?: string, count?: number) => Promise<any>
       redisSetTTL: (id: string, key: string, seconds: number) => Promise<any>
       redisClearTTL: (id: string, key: string) => Promise<any>
       redisInfo: (id: string) => Promise<any>
@@ -303,6 +305,8 @@ declare global {
       javaDeserialize: (byteArray: number[]) => Promise<any>
       redisExecuteCommand: (id: string, command: string) => Promise<any>
       redisGetServerInfo: (id: string, section?: string) => Promise<any>
+      openExternal: (url: string) => Promise<void>
+      createAndDownloadArchive: (options: { filename: string; files: { name: string; content: string }[] }) => Promise<{ success: boolean; error?: string }>
     }
   }
 }

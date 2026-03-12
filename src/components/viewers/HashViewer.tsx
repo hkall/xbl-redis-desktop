@@ -1,15 +1,12 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Trash2, Edit2, Search, X, Copy, Check, Box } from 'lucide-react'
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { Plus, Trash2, Edit2, Search, X, Copy, Check, Loader2 } from 'lucide-react'
 import { formatDataForEdit } from '@/utils/formatter'
 import CodeEditor from '@/components/CodeEditor'
 import ConfirmDialog from '../ConfirmDialog'
-import JavaObjectViewer from './JavaObjectViewer'
 
 interface HashField {
   field: string
   value: string
-  isJavaBinary?: boolean
-  javaObject?: any
 }
 
 export interface HashViewerProps {
@@ -182,9 +179,15 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
   )
 }
 
+const PAGE_SIZE = 100
+
 export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
   const [fields, setFields] = useState<HashField[]>([])
+  const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [cursor, setCursor] = useState('0')
   const [editModal, setEditModal] = useState<{
     isOpen: boolean
     type: 'add' | 'edit'
@@ -206,40 +209,29 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
     message: '',
   })
 
-  // Java object viewer state
-  const [javaViewerData, setJavaViewerData] = useState<{
-    isOpen: boolean
-    data: any
-    className: string
-  }>({
-    isOpen: false,
-    data: null,
-    className: ''
-  })
-
-  // Search and lazy loading state
+  // Search state
   const [searchTerm, setSearchTerm] = useState('')
-  const [visibleFields, setVisibleFields] = useState<HashField[]>([])
-  const [visibleCount, setVisibleCount] = useState(50) // 单独状态记录需要显示的数量
-  const [allFieldsLoaded, setAllFieldsLoaded] = useState(false)
+  const [isSearchMode, setIsSearchMode] = useState(false)
 
-  // 表格容器的 ref，用于滚动监听
-  const tableContainerRef = React.useRef<HTMLDivElement>(null)
-  const loadingMoreRef = React.useRef(false) // 防止重复加载
+  // Table container ref for scroll detection
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const loadingRef = useRef(false)
 
   useEffect(() => {
     loadKey()
   }, [connectionId, keyName])
 
-  // 重置搜索和加载状态
+  // Reset when key changes
   useEffect(() => {
-    setVisibleFields([])
-    setVisibleCount(50)
-    setAllFieldsLoaded(false)
-    loadingMoreRef.current = false
-  }, [searchTerm, fields])
+    setFields([])
+    setTotalCount(0)
+    setCursor('0')
+    setHasMore(false)
+    setSearchTerm('')
+    setIsSearchMode(false)
+  }, [keyName])
 
-  // Filter fields based on search
+  // Filter fields based on search (client-side filtering)
   const filteredFields = useMemo(() => {
     if (!searchTerm) return fields
 
@@ -251,126 +243,157 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
     )
   }, [fields, searchTerm])
 
-  // 计算当前应该显示的数据
-  useEffect(() => {
-    if (filteredFields.length === 0) {
-      setVisibleFields([])
-      setAllFieldsLoaded(true)
-      return
-    }
-
-    const currentVisible = filteredFields.slice(0, visibleCount)
-    setVisibleFields(currentVisible)
-    setAllFieldsLoaded(visibleCount >= filteredFields.length)
-
-    // 加载完成后重置加载状态
-    if (loadingMoreRef.current && visibleCount >= filteredFields.length) {
-      loadingMoreRef.current = false
-    }
-  }, [filteredFields, visibleCount])
-
-  // 滚动到底部自动加载更多
-  useEffect(() => {
-    const container = tableContainerRef.current
-    if (!container) return
-
-    const handleScroll = () => {
-      if (allFieldsLoaded || loadingMoreRef.current) return
-
-      const { scrollTop, scrollHeight, clientHeight } = container
-      // 当滚动到接近底部时加载更多
-      if (scrollHeight - scrollTop - clientHeight < 50) {
-        loadingMoreRef.current = true
-        setVisibleCount(prev => {
-          const newVal = prev + 50
-          // 短暂延迟后重置加载状态
-          setTimeout(() => {
-            loadingMoreRef.current = false
-          }, 100)
-          return newVal
-        })
-      }
-    }
-
-    container.addEventListener('scroll', handleScroll)
-    return () => {
-      container.removeEventListener('scroll', handleScroll)
-    }
-  }, [allFieldsLoaded])
-
   const loadKey = async () => {
     if (!connectionId || !keyName) return
 
     setLoading(true)
     setFields([])
-    setVisibleFields([])
-    setVisibleCount(50)
-    setAllFieldsLoaded(false)
-    loadingMoreRef.current = false
+    setCursor('0')
+    setHasMore(false)
+    setSearchTerm('')
+    setIsSearchMode(false)
+    loadingRef.current = false
 
     try {
-      if (window.electronAPI && window.electronAPI.redisGet) {
-        const result = await window.electronAPI.redisGet(connectionId, keyName)
+      if (window.electronAPI?.redisHscan) {
+        const result = await window.electronAPI.redisHscan(
+          connectionId,
+          keyName,
+          '0',
+          PAGE_SIZE
+        )
 
         if (result.success && result.data) {
-          const data = result.data as Record<string, any>
-          const javaFields = (result as any).javaFields || {}
-          const entries = Object.entries(data)
+          const data = result.data as Record<string, string>
+          const newFields: HashField[] = Object.entries(data).map(([field, value]) => ({
+            field,
+            value: String(value)
+          }))
 
-          // Process each field, deserialize Java objects
-          const allFields: HashField[] = await Promise.all(
-            entries.map(async ([field, value]) => {
-              // Check if this field is a Java serialized object
-              if (javaFields[field] && Array.isArray(value)) {
-                try {
-                  if (window.electronAPI?.javaDeserialize) {
-                    const deserialized = await window.electronAPI.javaDeserialize(value)
-                    if (deserialized.success && deserialized.data) {
-                      return {
-                        field,
-                        value: JSON.stringify(value),
-                        isJavaBinary: true,
-                        javaObject: deserialized.data
-                      }
-                    }
-                  }
-                } catch (e) {
-                  // Fall through to regular value
-                }
-              }
-              return {
-                field,
-                value: String(value)
-              }
-            })
-          )
-
+          setFields(newFields)
+          setTotalCount(result.total || newFields.length)
+          setCursor(result.cursor)
+          setHasMore(result.hasMore)
+        }
+      } else {
+        // Fallback to old method if hscan not available
+        const result = await window.electronAPI.redisGet(connectionId, keyName)
+        if (result.success && result.data) {
+          const data = result.data as Record<string, string>
+          const allFields: HashField[] = Object.entries(data).map(([field, value]) => ({
+            field,
+            value: String(value)
+          }))
           setFields(allFields)
-
-          // 先加载第一页数据，立即显示
-          const firstBatch = allFields.slice(0, 50)
-          setVisibleFields(firstBatch)
-          setAllFieldsLoaded(allFields.length <= 50)
+          setTotalCount(allFields.length)
+          setHasMore(false)
         }
       }
     } catch (error) {
-      // Error already handled by UI state
+      // Error handled by UI state
     } finally {
       setLoading(false)
     }
   }
 
-  // 加载更多数据
-  const handleLoadMore = useCallback(() => {
-    if (loadingMoreRef.current || allFieldsLoaded) return
-    loadingMoreRef.current = true
-    setVisibleCount(prev => prev + 50)
+  const loadMore = useCallback(async () => {
+    if (loadingRef.current || !hasMore || !connectionId || !keyName || isSearchMode) return
 
-    // 短暂延迟后重置加载状态
-    setTimeout(() => {
-      loadingMoreRef.current = false
-    }, 100)
-  }, [allFieldsLoaded])
+    loadingRef.current = true
+    setLoadingMore(true)
+
+    try {
+      const result = await window.electronAPI.redisHscan(
+        connectionId,
+        keyName,
+        cursor,
+        PAGE_SIZE
+      )
+
+      if (result.success && result.data) {
+        const data = result.data as Record<string, string>
+        const newFields: HashField[] = Object.entries(data).map(([field, value]) => ({
+          field,
+          value: String(value)
+        }))
+
+        setFields(prev => [...prev, ...newFields])
+        setCursor(result.cursor)
+        setHasMore(result.hasMore)
+      }
+    } catch (error) {
+      // Error handled by UI state
+    } finally {
+      setLoadingMore(false)
+      loadingRef.current = false
+    }
+  }, [connectionId, keyName, cursor, hasMore, isSearchMode])
+
+  // Scroll detection for auto-load
+  useEffect(() => {
+    const container = tableContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      if (!hasMore || loadingMore || loadingRef.current || isSearchMode) return
+
+      const { scrollTop, scrollHeight, clientHeight } = container
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        loadMore()
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll)
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [hasMore, loadingMore, loadMore, isSearchMode])
+
+  // Search handler - when searching, load all data
+  const handleSearchChange = async (value: string) => {
+    setSearchTerm(value)
+
+    // If user starts searching and we haven't loaded all data, load all
+    if (value && !isSearchMode && hasMore) {
+      setIsSearchMode(true)
+      setLoading(true)
+
+      try {
+        // Load all data for searching
+        let allFields: HashField[] = [...fields]
+        let currentCursor = cursor
+        let hasMoreData = hasMore
+
+        while (hasMoreData) {
+          const result = await window.electronAPI.redisHscan(
+            connectionId!,
+            keyName,
+            currentCursor,
+            PAGE_SIZE
+          )
+
+          if (result.success && result.data) {
+            const data = result.data as Record<string, string>
+            const newFields: HashField[] = Object.entries(data).map(([field, val]) => ({
+              field,
+              value: String(val)
+            }))
+            allFields = [...allFields, ...newFields]
+            currentCursor = result.cursor
+            hasMoreData = result.hasMore
+          } else {
+            break
+          }
+        }
+
+        setFields(allFields)
+        setCursor(currentCursor)
+        setHasMore(false)
+      } catch (error) {
+        // Error handled by UI state
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
 
   const handleAddField = async (field: string, value: string) => {
     if (!connectionId || !keyName || !field.trim()) return
@@ -384,10 +407,11 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
       )
       if (result.success) {
         setFields([...fields, { field: field.trim(), value }])
+        setTotalCount(prev => prev + 1)
         setEditModal({ isOpen: false, type: 'add' })
       }
     } catch (error) {
-      // Error already handled by UI state
+      // Error handled by UI state
     }
   }
 
@@ -410,34 +434,29 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
         setEditModal({ isOpen: false, type: 'add' })
       }
     } catch (error) {
-      // Error already handled by UI state
+      // Error handled by UI state
     }
   }
 
   const handleDeleteField = async (field: string) => {
-
-    if (!connectionId || !keyName) {
-      return
-    }
+    if (!connectionId || !keyName) return
 
     setDeleteConfirm({
       isOpen: true,
       callback: async () => {
         try {
-          if (!window.electronAPI || !window.electronAPI.redisSet) {
-            return
-          }
-
           const result = await window.electronAPI.redisSet(
             connectionId,
             keyName,
             'hash',
             { action: 'deleteField', field }
           )
-
-          // Delete successful - reload data to ensure UI reflects actual Redis state
-          await loadKey()
+          if (result.success) {
+            setFields(fields.filter(f => f.field !== field))
+            setTotalCount(prev => prev - 1)
+          }
         } catch (error) {
+          // Error handled by UI state
         }
       },
       title: 'Delete Hash Field',
@@ -445,7 +464,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
     })
   }
 
-  if (loading) {
+  if (loading && fields.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
@@ -459,7 +478,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
       <div className="flex items-center justify-between px-4 py-2.5 flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {fields.length} field{fields.length !== 1 ? 's' : ''}
+            {totalCount} field{totalCount !== 1 ? 's' : ''}
           </span>
           {filteredFields.length !== fields.length && filteredFields.length > 0 && (
             <span className="text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
@@ -477,7 +496,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
       </div>
 
       {/* Search Bar */}
-      {fields.length > 10 && (
+      {totalCount > 10 && (
         <div className="flex-shrink-0 px-4 pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
@@ -485,7 +504,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
               type="text"
               placeholder="Search fields or values..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
@@ -494,10 +513,10 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
 
       {/* Table */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-4 pb-4">
-        {visibleFields.length === 0 ? (
+        {filteredFields.length === 0 ? (
           <div className="flex-1 overflow-auto">
             <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
-              No fields found
+              {searchTerm ? 'No matching fields found' : 'No fields found'}
             </div>
           </div>
         ) : (
@@ -529,7 +548,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                   <col style={{ width: '90px' }} />
                 </colgroup>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {visibleFields.map((f, index) => (
+                  {filteredFields.map((f) => (
                     <tr key={f.field} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                       <td className="py-2.5 px-2.5">
                         <div
@@ -540,34 +559,18 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                         </div>
                       </td>
                       <td className="py-2.5 px-2">
-                        {f.isJavaBinary && f.javaObject ? (
-                          <div
-                            className="font-mono text-xs text-purple-600 dark:text-purple-400 truncate cursor-pointer hover:text-purple-800 dark:hover:text-purple-300 transition-colors flex items-center gap-1"
-                            onClick={() => setJavaViewerData({
-                              isOpen: true,
-                              data: f.javaObject,
-                              className: f.javaObject?.className || 'Unknown'
-                            })}
-                          >
-                            <Box className="w-3 h-3 flex-shrink-0" />
-                            <span title={`Java Object: ${f.javaObject?.className || 'Unknown'}`}>
-                              {f.javaObject?.className || 'Java Object'}
-                            </span>
-                          </div>
-                        ) : (
-                          <div
-                            className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                            title={f.value}
-                            onClick={() => setEditModal({
-                              isOpen: true,
-                              type: 'edit',
-                              initialField: f.field,
-                              initialValue: f.value,
-                            })}
-                          >
-                            {f.value || '<empty>'}
-                          </div>
-                        )}
+                        <div
+                          className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          title={f.value}
+                          onClick={() => setEditModal({
+                            isOpen: true,
+                            type: 'edit',
+                            initialField: f.field,
+                            initialValue: f.value,
+                          })}
+                        >
+                          {f.value || '<empty>'}
+                        </div>
                       </td>
                       <td className="py-2.5 px-2">
                         <div className="flex items-center justify-center gap-1">
@@ -596,22 +599,32 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                   ))}
                 </tbody>
               </table>
+
+              {/* Loading more indicator */}
+              {loadingMore && (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                  <span className="ml-2 text-xs text-gray-400">Loading more...</span>
+                </div>
+              )}
             </div>
           </>
         )}
 
         {/* Load More / Pagination Info */}
-        {!searchTerm && filteredFields.length > 0 && (
+        {!searchTerm && (
           <div className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-lg">
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {visibleFields.length} of {filteredFields.length} fields
-              {allFieldsLoaded && ' · All loaded'}
+              {fields.length} of {totalCount} fields
+              {!hasMore && ' · All loaded'}
             </div>
-            {!allFieldsLoaded && (
+            {hasMore && (
               <button
-                onClick={handleLoadMore}
-                className="px-3 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-3 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
+                {loadingMore && <Loader2 className="w-3 h-3 animate-spin" />}
                 Load More
               </button>
             )}
@@ -647,29 +660,6 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
         }}
         onCancel={() => setDeleteConfirm({ isOpen: false, callback: () => {}, title: '', message: '' })}
       />
-
-      {/* Java Object Viewer Modal */}
-      {javaViewerData.isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Box className="w-4 h-4 text-purple-500" />
-                Java Object: {javaViewerData.className}
-              </h3>
-              <button
-                onClick={() => setJavaViewerData({ isOpen: false, data: null, className: '' })}
-                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              <JavaObjectViewer data={javaViewerData.data} />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

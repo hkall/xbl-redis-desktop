@@ -189,38 +189,28 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
         const result = await window.electronAPI.redisExecuteCommand(connectionId, cmdToExecute)
 
         if (result.success) {
-          // Log the result for debugging
-          console.log('CLI Command Result:', { encoding: result.encoding, dataType: typeof result.data, isArray: Array.isArray(result.data), dataSample: result.data })
-
           // Check for encoding field (Java binary data)
           const encoding = result.encoding
           const data = result.data
 
           // If it's Java binary data, deserialize it
           if (encoding === 'java-binary' && Array.isArray(data)) {
-            console.log('CLI: Detected Java binary data, attempting deserialization...')
             try {
               if (window.electronAPI?.javaDeserialize) {
                 const deserialized = await window.electronAPI.javaDeserialize(data)
-                console.log('CLI: Deserialization result:', deserialized)
                 if (deserialized.success && deserialized.data) {
                   const message = `[Java Object: ${deserialized.data?.className || 'Unknown'}]`
-                  console.log('CLI: Displaying Java object:', message)
                   appendOutput('result', message, deserialized.data)
                 } else {
-                  console.log('CLI: Deserialization failed, showing binary data')
                   appendOutput('result', `[Binary data: ${data.length} bytes]`, { byteArray: data })
                 }
               } else {
-                console.log('CLI: javaDeserialize API not available')
                 appendOutput('result', `[Binary data: ${data.length} bytes]`, { byteArray: data })
               }
-            } catch (error) {
-              console.error('CLI: Deserialization error:', error)
+            } catch {
               appendOutput('result', `[Binary data: ${data.length} bytes]`, { byteArray: data })
             }
           } else {
-            console.log('CLI: Formatting regular output...')
             // Format regular output
             const formatted = await formatOutput(data)
             appendOutput('result', formatted.text, formatted.data)
@@ -233,7 +223,6 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
         appendOutput('result', 'Browser mode: command execution simulated')
       }
     } catch (error) {
-      console.error('CLI: Execute error:', error)
       appendOutput('error', error instanceof Error ? error.message : 'Unknown error')
     } finally {
       setLoading(false)
@@ -245,20 +234,16 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
 
   // Format output for display
   const formatOutput = async (data: any): Promise<{ text: string; data?: any; formatted: boolean }> => {
-    console.log('formatOutput called with:', data, 'type:', typeof data)
-
     if (data === null) {
-      console.log('formatOutput: data is null, returning (nil)')
       return { text: '(nil)', formatted: false }
     }
 
     if (data === undefined) {
-      console.log('formatOutput: data is undefined, returning (nil)')
       return { text: '(nil)', formatted: false }
     }
 
     // Handle byte array (from Redis GET with java-binary encoding)
-    if (Array.isArray(data) && data.every(item => typeof item === 'number')) {
+    if (Array.isArray(data) && data.every((item: any) => typeof item === 'number')) {
       try {
         if (window.electronAPI?.javaDeserialize) {
           const result = await window.electronAPI.javaDeserialize(data)
@@ -270,7 +255,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
             }
           }
         }
-      } catch (error) {
+      } catch {
         // Fall through to regular display
       }
       return { text: `[Binary data: ${data.length} bytes]`, data, formatted: false }
@@ -339,7 +324,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
             data: deserializedItems,
             formatted: true
           }
-        } catch (error) {
+        } catch {
           // Fall through to regular array display
         }
       }

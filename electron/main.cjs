@@ -354,7 +354,6 @@ ipcMain.handle('redis:disconnect', async (_event, id) => {
 })
 
 ipcMain.handle('redis:scan', async (_event, id, pattern = '*', count = 100, cursor = '0') => {
-  console.log('[redis:scan] Called with id:', id, 'pattern:', pattern, 'count:', count, 'cursor:', cursor)
   try {
     const client = redisConnections.get(id)
     if (!client) {
@@ -363,19 +362,12 @@ ipcMain.handle('redis:scan', async (_event, id, pattern = '*', count = 100, curs
 
     const keys = []
     const [nextCursor, batch] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', count)
-    console.log('[redis:scan] Scan result - nextCursor:', nextCursor, 'batch length:', batch ? batch.length : 0)
     // Convert buffers to strings
-    const keysFromBatch = batch.map(key => {
-      const str = key.toString()
-      console.log('[redis:scan] Key (Buffer):', key, '-> String:', str)
-      return str
-    })
+    const keysFromBatch = batch.map(key => key.toString())
     keys.push(...keysFromBatch)
 
-    console.log('[redis:scan] Returning', keys.length, 'keys')
     return { success: true, data: keys, cursor: nextCursor }
   } catch (error) {
-    console.error('[redis:scan] Error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to scan keys',
@@ -457,41 +449,12 @@ ipcMain.handle('redis:get', async (_event, id, key) => {
       }
 
       case 'hash': {
-        // Get all hash fields
+        // Get all hash fields - simple and fast
         const hashData = await client.hgetall(key)
-        const result = {}
-        const javaFields = {} // Track which fields are Java serialized
-
-        // Check each field for Java serialization
-        for (const [field, value] of Object.entries(hashData)) {
-          // Try to get the field as buffer to check for Java serialization
-          try {
-            const fieldBuffer = await client.call('HGET', key, field, { buffer: true })
-            if (Buffer.isBuffer(fieldBuffer) &&
-                fieldBuffer.length >= 2 &&
-                fieldBuffer[0] === 0xAC &&
-                fieldBuffer[1] === 0xED &&
-                fieldBuffer.length > 32) {
-              // Java serialized object
-              result[field] = Array.from(fieldBuffer)
-              javaFields[field] = true
-            } else {
-              // Regular string value
-              result[field] = value
-              javaFields[field] = false
-            }
-          } catch (e) {
-            // Fall back to string value
-            result[field] = value
-            javaFields[field] = false
-          }
-        }
-
         return {
           success: true,
-          data: result,
-          encoding: 'hash',
-          javaFields: javaFields
+          data: hashData,
+          encoding: 'hash'
         }
       }
       case 'list': return { success: true, data: await client.lrange(key, 0, -1) }
@@ -527,11 +490,8 @@ ipcMain.handle('redis:set', async (_event, id, key, type, value) => {
       case 'string': await client.set(key, value); break
       case 'hash':
         if (value.action === 'deleteField') {
-          console.log(`[redis:set] Deleting hash field "${value.field}" from key "${key}"`)
-          const result = await client.hdel(key, value.field)
-          console.log(`[redis:set] HDEL result: ${result} fields deleted`)
+          await client.hdel(key, value.field)
         } else {
-          console.log(`[redis:set] Setting hash field "${value.field}" for key "${key}"`)
           await client.hset(key, value.field, value.value)
         }
         break
@@ -557,7 +517,6 @@ ipcMain.handle('redis:set', async (_event, id, key, type, value) => {
 
     return { success: true }
   } catch (error) {
-    console.error('[redis:set] Error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to set value',
@@ -601,6 +560,47 @@ ipcMain.handle('redis:rename', async (_event, id, key, newKey) => {
   }
 })
 
+// Scan hash fields with pagination
+ipcMain.handle('redis:hscan', async (_event, id, key, cursor = '0', count = 100) => {
+  try {
+    const client = redisConnections.get(id)
+    if (!client) {
+      throw new Error('Not connected to Redis')
+    }
+
+    // Use HSCAN for pagination
+    // ioredis returns [cursor, [field1, value1, field2, value2, ...]]
+    const [nextCursor, fieldArray] = await client.hscan(key, cursor, 'COUNT', count)
+
+    // Convert array to object
+    const result = {}
+    for (let i = 0; i < fieldArray.length; i += 2) {
+      result[fieldArray[i]] = fieldArray[i + 1]
+    }
+
+    // Get total count
+    const total = await client.hlen(key)
+
+    // cursor '0' means scan complete, convert to string for comparison
+    const cursorStr = String(nextCursor)
+    const hasMore = cursorStr !== '0'
+
+    return {
+      success: true,
+      data: result,
+      cursor: cursorStr,
+      total,
+      count: Object.keys(result).length,
+      hasMore
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to scan hash fields',
+    }
+  }
+})
+
 ipcMain.handle('redis:setTTL', async (_event, id, key, seconds) => {
   try {
     const client = redisConnections.get(id)
@@ -624,7 +624,6 @@ ipcMain.handle('redis:setTTL', async (_event, id, key, seconds) => {
 
     return { success: true }
   } catch (error) {
-    console.error('[redis:setTTL] Error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to set TTL',
@@ -732,7 +731,6 @@ ipcMain.handle('config:save', async (_event, key, data) => {
 
     return { success: true }
   } catch (error) {
-    console.error('Failed to save config:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to save config',
@@ -753,7 +751,6 @@ ipcMain.handle('config:load', async (_event, key) => {
       // Config file doesn't exist yet
       return { success: true, data: null }
     }
-    console.error('Failed to load config:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to load config',
@@ -767,12 +764,9 @@ ipcMain.handle('config:getUserDataPath', async () => {
 
 // Execute custom Redis command
 ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
-  debugLog('[redis:executeCommand] Called with:', { id, command })
-
   try {
     const client = redisConnections.get(id)
     if (!client) {
-      debugLog('[redis:executeCommand] No client found for id:', id)
       throw new Error('Not connected to Redis')
     }
 
@@ -789,7 +783,6 @@ ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
 
       // Handle null case (key does not exist)
       if (buffer === null) {
-        debugLog('[redis:executeCommand] GET result: null (key not found)')
         return {
           success: true,
           data: null,
@@ -797,23 +790,13 @@ ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
         }
       }
 
-      debugLog('[redis:executeCommand] GET result:', {
-        key,
-        bufferLength: buffer.length,
-        first10Bytes: Array.from(buffer.slice(0, 10)),
-        hex: Array.from(buffer.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' ')
-      })
-
       // Check if it's a Java serialized object
       const isJavaSerialization = buffer.length >= 2 &&
                                    buffer[0] === 0xAC &&
                                    buffer[1] === 0xED &&
                                    buffer.length > 32
 
-      debugLog('[redis:executeCommand] Is Java serialization:', isJavaSerialization)
-
       if (isJavaSerialization) {
-        debugLog('[redis:executeCommand] Returning Java binary data')
         return {
           success: true,
           data: Array.from(buffer),
@@ -823,9 +806,7 @@ ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
       }
 
       // For non-Java objects, return decoded string
-      debugLog('[redis:executeCommand] Not Java serialization, getting string value')
       const value = buffer.toString('utf-8')
-      debugLog('[redis:executeCommand] Returning string value, length:', value?.length)
       return {
         success: true,
         data: value,
@@ -834,14 +815,7 @@ ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
     }
 
     // For other commands, execute normally
-    debugLog('[redis:executeCommand] Executing:', { cmd, args })
-
     const result = await client.send_command(cmd, ...args)
-
-    debugLog('[redis:executeCommand] Result:', {
-      type: typeof result,
-      value: result
-    })
 
     return {
       success: true,
@@ -849,7 +823,6 @@ ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
       command: cmd
     }
   } catch (error) {
-    debugLog('[redis:executeCommand] ERROR:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Command execution failed'
@@ -860,29 +833,20 @@ ipcMain.handle('redis:executeCommand', async (_event, id, command) => {
 // Get Redis server info
 ipcMain.handle('redis:getServerInfo', async (_event, id, section = 'default') => {
   try {
-    console.log('[redis:getServerInfo] Called with:', { id, section })
-
     const client = redisConnections.get(id)
     if (!client) {
-      console.error('[redis:getServerInfo] No client found for id:', id)
       throw new Error('Not connected to Redis')
     }
 
-    console.log('[redis:getServerInfo] Client found, calling INFO')
     const info = await client.info(section)
-    console.log('[redis:getServerInfo] INFO result length:', info.length)
-    console.log('[redis:getServerInfo] INFO preview:', info.substring(0, 200))
 
     // Parse INFO output into object
     const parsedInfo = {}
     let currentSection = 'default'
-    let lineCount = 0
 
     for (const line of info.split('\n')) {
-      lineCount++
       if (line.startsWith('#')) {
         currentSection = line.slice(1).trim().toLowerCase()
-        console.log(`[redis:getServerInfo] Section ${lineCount}:`, currentSection)
       } else if (line.includes(':')) {
         const colonIndex = line.indexOf(':')
         const key = line.substring(0, colonIndex)
@@ -894,15 +858,11 @@ ipcMain.handle('redis:getServerInfo', async (_event, id, section = 'default') =>
       }
     }
 
-    console.log('[redis:getServerInfo] Parsed sections:', Object.keys(parsedInfo))
-    console.log('[redis:getServerInfo] Total lines processed:', lineCount)
-
     return {
       success: true,
       data: parsedInfo
     }
   } catch (error) {
-    console.error('[redis:getServerInfo] Error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get server info'
