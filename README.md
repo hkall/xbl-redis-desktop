@@ -1,6 +1,6 @@
 # Xbl Redis Desktop
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](../../releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](../../releases)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](../../releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node.js-18%2B-brightgreen.svg)](https://nodejs.org)
@@ -55,6 +55,18 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
 ---
 
 ## 📝 Changelog
+
+### v1.2.0 (2026-03-12)
+
+#### ⚡ Performance
+
+- **Hash Lazy Loading** - Implemented HSCAN-based pagination for Hash viewer, significantly improving performance when viewing Hash keys with large datasets. Data loads in batches of 100 fields with automatic loading on scroll.
+
+#### 🎯 Improvements
+
+- Removed debug `console.log` statements from production code
+- Added missing TypeScript type definitions (`redisHscan`, `openExternal`, `createAndDownloadArchive`)
+- Cleaned up empty catch blocks with descriptive comments
 
 ### v1.1.0 (2026-03-11)
 
@@ -129,13 +141,13 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
 
 #### Windows Installer
 
-1. Download the latest installer `Xbl Redis Desktop Setup 1.1.0.exe` from [Releases](../../releases)
+1. Download the latest installer `Xbl Redis Desktop Setup 1.2.0.exe` from [Releases](../../releases)
 2. Double-click to run the installer and follow the prompts to complete installation
 3. A shortcut will be created on the desktop, click to launch
 
 #### Windows Portable
 
-1. Download the portable version `Xbl Redis Desktop 1.1.0.exe` from [Releases](../../releases)
+1. Download the portable version `Xbl Redis Desktop 1.2.0.exe` from [Releases](../../releases)
 2. Unzip and run directly, no installation required
 
 **Recommend using portable version** - requires no admin privileges, can be carried on USB drive.
@@ -555,8 +567,8 @@ After building, installer and portable version will be output to `dist` director
 
 ```
 dist/
-├── Xbl Redis Desktop Setup 1.1.0.exe    # Installer
-└── Xbl Redis Desktop 1.1.0.exe           # Portable version
+├── Xbl Redis Desktop Setup 1.2.0.exe    # Installer
+└── Xbl Redis Desktop 1.2.0.exe           # Portable version
 ```
 
 ---

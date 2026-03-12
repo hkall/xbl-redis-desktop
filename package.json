@@ -1,6 +1,6 @@
 {
   "name": "xbl-redis-desktop",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "A Windows Redis desktop tool with type-safe operations",
   "main": "electron/main.cjs",
