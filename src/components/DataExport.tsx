@@ -489,14 +489,14 @@ export default function DataExport({ connectionId }: DataExportProps) {
               lines.push('Value:')
               if (value.data.data && typeof value.data.data === 'object') {
                 const javaFormatted = customStringify(value.data.data, 2)
-                javaFormatted.split(chr(10)).forEach(line => {
+                javaFormatted.split('\n').forEach(line => {
                   lines.push(`  ${line}`)
                 })
               }
             } else {
               lines.push('Value:')
               const formatted = customStringify(value.data, 2)
-              formatted.split(chr(10)).forEach(line => {
+              formatted.split('\n').forEach(line => {
                 lines.push(`  ${line}`)
               })
             }
@@ -504,7 +504,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
             lines.push(`Value: ${JSON.stringify(value.data, null, 2)}`)
           }
 
-          content = lines.join(chr(10))
+          content = lines.join('\n')
           extension = 'txt'
         }
 
@@ -591,14 +591,14 @@ export default function DataExport({ connectionId }: DataExportProps) {
           lines.push('Value:')
           if (value.data.data && typeof value.data.data === 'object') {
             const javaFormatted = customStringify(value.data.data, 2)
-            javaFormatted.split(chr(10)).forEach(line => {
+            javaFormatted.split('\n').forEach(line => {
               lines.push(`  ${line}`)
             })
           }
         } else {
           lines.push('Value:')
           const formatted = customStringify(value.data, 2)
-          formatted.split(chr(10)).forEach(line => {
+          formatted.split('\n').forEach(line => {
             lines.push(`  ${line}`)
           })
         }
@@ -610,7 +610,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
       lines.push('')
     }
 
-    return lines.join(chr(10))
+    return lines.join('\n')
   }
 
   const clearResults = () => {

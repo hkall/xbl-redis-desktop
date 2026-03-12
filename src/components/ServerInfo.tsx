@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { RefreshCw, Database, Zap, Circle, CheckCircle, AlertTriangle, Activity, Clock, Shield, Code, Server, TrendingUp, Hash, Command, Timer, Ban, HardDrive, Save } from 'lucide-react'
+import { RefreshCw, Database, Zap, Circle, CheckCircle, AlertTriangle, Activity, Clock, Shield, Code, Server, TrendingUp, Hash, Command, Timer, Ban, HardDrive, Save, FileBox } from 'lucide-react'
 import { useRedisStore } from '@/store/redisStore'
 
 interface ServerInfoProps {
@@ -237,6 +237,46 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
     return Circle
   }
 
+  // Get persistence info from server info
+  const getPersistenceInfo = () => {
+    const rdbEnabled = serverInfo['rdb_last_save_time'] !== undefined
+    const aofEnabled = serverInfo['aof_enabled'] === '1'
+    const rdbLastSave = serverInfo['rdb_last_save_time']
+    const rdbChanges = serverInfo['rdb_changes_since_last_save'] || '0'
+    const rdbStatus = serverInfo['rdb_last_bgsave_status'] || 'ok'
+    const aofRewriteInProgress = serverInfo['aof_rewrite_in_progress'] === '1'
+    const aofLastRewriteTime = serverInfo['aof_last_rewrite_time_sec'] || '0'
+    const aofStatus = serverInfo['aof_last_bgrewrite_status'] || 'ok'
+    const aofCurrentSize = serverInfo['aof_current_size']
+    const aofBaseSize = serverInfo['aof_base_size']
+
+    // Determine persistence mode
+    let persistenceMode = '无持久化'
+    if (rdbEnabled && aofEnabled) {
+      persistenceMode = '混合模式 (RDB + AOF)'
+    } else if (aofEnabled) {
+      persistenceMode = 'AOF'
+    } else if (rdbEnabled) {
+      persistenceMode = 'RDB'
+    }
+
+    return {
+      rdbEnabled,
+      aofEnabled,
+      persistenceMode,
+      rdbLastSave,
+      rdbChanges,
+      rdbStatus,
+      aofRewriteInProgress,
+      aofLastRewriteTime,
+      aofStatus,
+      aofCurrentSize,
+      aofBaseSize
+    }
+  }
+
+  const persistenceInfo = getPersistenceInfo()
+
   if (!connectionId) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -404,6 +444,97 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                       </div>
                     )
                   })}
+              </div>
+            </div>
+
+            {/* Persistence Metrics */}
+            <div className="bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 border border-cyan-200 dark:border-cyan-700 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <FileBox className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                  <h3 className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">持久化备份</h3>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  persistenceInfo.persistenceMode === '无持久化'
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
+                }`}>
+                  {persistenceInfo.persistenceMode}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* RDB Section */}
+                <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Database className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">RDB 快照</span>
+                    {persistenceInfo.rdbEnabled ? (
+                      <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                    ) : (
+                      <AlertTriangle className="w-3.5 h-3.5 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">最后保存</span>
+                      <span className="text-cyan-900 dark:text-cyan-100 font-medium">
+                        {formatValue('rdb_last_save_time', persistenceInfo.rdbLastSave || '0', 'timeago')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">变更次数</span>
+                      <span className="text-cyan-900 dark:text-cyan-100 font-medium">{persistenceInfo.rdbChanges}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">保存状态</span>
+                      <span className={`font-medium ${persistenceInfo.rdbStatus === 'ok' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {persistenceInfo.rdbStatus === 'ok' ? '正常' : '异常'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AOF Section */}
+                <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Save className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">AOF 日志</span>
+                    {persistenceInfo.aofEnabled ? (
+                      <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                    ) : (
+                      <AlertTriangle className="w-3.5 h-3.5 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">启用状态</span>
+                      <span className={`font-medium ${persistenceInfo.aofEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
+                        {persistenceInfo.aofEnabled ? '已启用' : '未启用'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">重写状态</span>
+                      <span className="text-cyan-900 dark:text-cyan-100 font-medium">
+                        {persistenceInfo.aofRewriteInProgress ? '进行中...' : '空闲'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">重写状态</span>
+                      <span className={`font-medium ${persistenceInfo.aofStatus === 'ok' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {persistenceInfo.aofStatus === 'ok' ? '正常' : '异常'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="mt-3 p-2 bg-cyan-100/50 dark:bg-cyan-900/20 rounded-lg">
+                <p className="text-xs text-cyan-700 dark:text-cyan-300">
+                  💡 提示：RDB 文件通常位于 Redis 服务器的 dump.rdb，AOF 文件为 appendonly.aof。
+                  请通过服务器端进行备份和恢复操作。
+                </p>
               </div>
             </div>
           </div>
