@@ -456,7 +456,44 @@ ipcMain.handle('redis:get', async (_event, id, key) => {
         return { success: true, data: value, encoding: 'utf-8' }
       }
 
-      case 'hash': return { success: true, data: await client.hgetall(key) }
+      case 'hash': {
+        // Get all hash fields
+        const hashData = await client.hgetall(key)
+        const result = {}
+        const javaFields = {} // Track which fields are Java serialized
+
+        // Check each field for Java serialization
+        for (const [field, value] of Object.entries(hashData)) {
+          // Try to get the field as buffer to check for Java serialization
+          try {
+            const fieldBuffer = await client.call('HGET', key, field, { buffer: true })
+            if (Buffer.isBuffer(fieldBuffer) &&
+                fieldBuffer.length >= 2 &&
+                fieldBuffer[0] === 0xAC &&
+                fieldBuffer[1] === 0xED &&
+                fieldBuffer.length > 32) {
+              // Java serialized object
+              result[field] = Array.from(fieldBuffer)
+              javaFields[field] = true
+            } else {
+              // Regular string value
+              result[field] = value
+              javaFields[field] = false
+            }
+          } catch (e) {
+            // Fall back to string value
+            result[field] = value
+            javaFields[field] = false
+          }
+        }
+
+        return {
+          success: true,
+          data: result,
+          encoding: 'hash',
+          javaFields: javaFields
+        }
+      }
       case 'list': return { success: true, data: await client.lrange(key, 0, -1) }
       case 'set': return { success: true, data: await client.smembers(key) }
       case 'zset': {

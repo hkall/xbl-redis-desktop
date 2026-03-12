@@ -1,12 +1,15 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
-import { Plus, Trash2, Edit2, Search, X, Copy, Check } from 'lucide-react'
+import { Plus, Trash2, Edit2, Search, X, Copy, Check, Box } from 'lucide-react'
 import { formatDataForEdit } from '@/utils/formatter'
 import CodeEditor from '@/components/CodeEditor'
 import ConfirmDialog from '../ConfirmDialog'
+import JavaObjectViewer from './JavaObjectViewer'
 
 interface HashField {
   field: string
   value: string
+  isJavaBinary?: boolean
+  javaObject?: any
 }
 
 export interface HashViewerProps {
@@ -203,6 +206,17 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
     message: '',
   })
 
+  // Java object viewer state
+  const [javaViewerData, setJavaViewerData] = useState<{
+    isOpen: boolean
+    data: any
+    className: string
+  }>({
+    isOpen: false,
+    data: null,
+    className: ''
+  })
+
   // Search and lazy loading state
   const [searchTerm, setSearchTerm] = useState('')
   const [visibleFields, setVisibleFields] = useState<HashField[]>([])
@@ -299,12 +313,38 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
         const result = await window.electronAPI.redisGet(connectionId, keyName)
 
         if (result.success && result.data) {
-          const data = result.data as Record<string, string>
+          const data = result.data as Record<string, any>
+          const javaFields = (result as any).javaFields || {}
           const entries = Object.entries(data)
-          const allFields: HashField[] = entries.map(([field, value]) => ({
-            field,
-            value,
-          }))
+
+          // Process each field, deserialize Java objects
+          const allFields: HashField[] = await Promise.all(
+            entries.map(async ([field, value]) => {
+              // Check if this field is a Java serialized object
+              if (javaFields[field] && Array.isArray(value)) {
+                try {
+                  if (window.electronAPI?.javaDeserialize) {
+                    const deserialized = await window.electronAPI.javaDeserialize(value)
+                    if (deserialized.success && deserialized.data) {
+                      return {
+                        field,
+                        value: JSON.stringify(value),
+                        isJavaBinary: true,
+                        javaObject: deserialized.data
+                      }
+                    }
+                  }
+                } catch (e) {
+                  // Fall through to regular value
+                }
+              }
+              return {
+                field,
+                value: String(value)
+              }
+            })
+          )
+
           setFields(allFields)
 
           // 先加载第一页数据，立即显示
@@ -500,18 +540,34 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                         </div>
                       </td>
                       <td className="py-2.5 px-2">
-                        <div
-                          className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                          title={f.value}
-                          onClick={() => setEditModal({
-                            isOpen: true,
-                            type: 'edit',
-                            initialField: f.field,
-                            initialValue: f.value,
-                          })}
-                        >
-                          {f.value || '<empty>'}
-                        </div>
+                        {f.isJavaBinary && f.javaObject ? (
+                          <div
+                            className="font-mono text-xs text-purple-600 dark:text-purple-400 truncate cursor-pointer hover:text-purple-800 dark:hover:text-purple-300 transition-colors flex items-center gap-1"
+                            onClick={() => setJavaViewerData({
+                              isOpen: true,
+                              data: f.javaObject,
+                              className: f.javaObject?.className || 'Unknown'
+                            })}
+                          >
+                            <Box className="w-3 h-3 flex-shrink-0" />
+                            <span title={`Java Object: ${f.javaObject?.className || 'Unknown'}`}>
+                              {f.javaObject?.className || 'Java Object'}
+                            </span>
+                          </div>
+                        ) : (
+                          <div
+                            className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            title={f.value}
+                            onClick={() => setEditModal({
+                              isOpen: true,
+                              type: 'edit',
+                              initialField: f.field,
+                              initialValue: f.value,
+                            })}
+                          >
+                            {f.value || '<empty>'}
+                          </div>
+                        )}
                       </td>
                       <td className="py-2.5 px-2">
                         <div className="flex items-center justify-center gap-1">
@@ -591,6 +647,29 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
         }}
         onCancel={() => setDeleteConfirm({ isOpen: false, callback: () => {}, title: '', message: '' })}
       />
+
+      {/* Java Object Viewer Modal */}
+      {javaViewerData.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <Box className="w-4 h-4 text-purple-500" />
+                Java Object: {javaViewerData.className}
+              </h3>
+              <button
+                onClick={() => setJavaViewerData({ isOpen: false, data: null, className: '' })}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <JavaObjectViewer data={javaViewerData.data} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

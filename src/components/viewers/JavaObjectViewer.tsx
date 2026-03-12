@@ -2,17 +2,31 @@ import { useEffect, useState } from 'react'
 import { AlertCircle, Lock } from 'lucide-react'
 
 export interface JavaObjectViewerProps {
-  byteArray: number[]
+  byteArray?: number[]
+  data?: any  // Allow passing pre-deserialized data
 }
 
-export default function JavaObjectViewer({ byteArray }: JavaObjectViewerProps) {
+export default function JavaObjectViewer({ byteArray, data: propData }: JavaObjectViewerProps) {
   const [loading, setLoading] = useState<boolean>(true)
   const [data, setData] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // If data is passed directly, use it
+    if (propData) {
+      setData(propData)
+      setLoading(false)
+      return
+    }
+
+    // Otherwise, deserialize from byteArray
+    if (!byteArray || byteArray.length === 0) {
+      setLoading(false)
+      return
+    }
+
     loadKey()
-  }, [byteArray])
+  }, [byteArray, propData])
 
   const loadKey = async () => {
     if (!byteArray || byteArray.length === 0) return
@@ -24,7 +38,6 @@ export default function JavaObjectViewer({ byteArray }: JavaObjectViewerProps) {
     try {
       if (window.electronAPI && window.electronAPI.javaDeserialize) {
         const result = await window.electronAPI.javaDeserialize(byteArray)
-
 
         if (result.success && result.data) {
           setData(result.data)
@@ -39,8 +52,8 @@ export default function JavaObjectViewer({ byteArray }: JavaObjectViewerProps) {
     }
   }
 
-  // Custom JSON stringify with indentation and handling for special types
-  function formatJSON(obj: any, indent: number = 0): string {
+  // Custom JSON stringify with proper formatting
+  const formatJSON = (obj: any, indent: number = 0): string => {
     const spaces = '  '.repeat(indent)
     const nextSpaces = '  '.repeat(indent + 1)
 
@@ -66,39 +79,17 @@ export default function JavaObjectViewer({ byteArray }: JavaObjectViewerProps) {
       return `[\n${nextSpaces}${items.join(',\n' + nextSpaces)}\n${spaces}]`
     }
 
-    // Handle special objects with type field
     if (obj && typeof obj === 'object') {
       const entries = Object.entries(obj)
 
-      // Handle special wrapped types
-      if ('type' in obj && 'value' in obj) {
-        if (obj.type === 'bigint') {
-          return `${obj.value}n`
-        }
-        if (obj.type === 'date') {
-          return `"${obj.value}"`
-        }
-      }
-
-      // Handle JavaObject-like structures (className, serialVersionUid, fields, value)
-      if (obj.className && obj.serialVersionUid !== undefined) {
-        const classInfo = {
-          _className: obj.className,
-          _serialVersionUID: obj.serialVersionUid,
-          ...(obj.value || {})
-        }
-        const keys = Object.entries(classInfo).map(([key, value]) => [`"${key}"`, formatJSON(value, indent + 1)])
-
-        if (keys.length === 0) return '{}'
-        return `{\n${nextSpaces}${keys.map(([k, v]) => `${k}: ${v}`).join(',\n' + nextSpaces)}\n${spaces}}`
-      }
-
-      // Regular object
       if (entries.length === 0) return '{}'
 
-      const keys = entries.map(([key, value]) => [`"${key}"`, formatJSON(value, indent + 1)])
-      if (keys.length === 0) return '{}'
-      return `{\n${nextSpaces}${keys.map(([k, v]) => `${k}: ${v}`).join(',\n' + nextSpaces)}\n${spaces}}`
+      // Format each key-value pair
+      const items = entries.map(([key, value]) => {
+        return `"${key}": ${formatJSON(value, indent + 1)}`
+      })
+
+      return `{\n${nextSpaces}${items.join(',\n' + nextSpaces)}\n${spaces}}`
     }
 
     return String(obj)
@@ -129,11 +120,13 @@ export default function JavaObjectViewer({ byteArray }: JavaObjectViewerProps) {
       {/* Header info */}
       {data && (
         <div className="flex items-center gap-2 mb-3 flex-shrink-0 text-xs">
-          <span className="text-gray-500 dark:text-gray-400">
-            {byteArray.length} bytes
-          </span>
+          {byteArray && (
+            <span className="text-gray-500 dark:text-gray-400">
+              {byteArray.length} bytes
+            </span>
+          )}
           {data.className && (
-            <span className="text-gray-600 dark:text-gray-400 truncate font-mono">
+            <span className="text-purple-600 dark:text-purple-400 truncate font-mono">
               {data.className}
             </span>
           )}
