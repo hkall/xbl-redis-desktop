@@ -3,7 +3,7 @@ import { Trash2, Database, CheckCircle, XCircle, Loader2, AlertCircle, Edit3, Li
 import { useRedisStore, RedisConnection } from '@/store/redisStore'
 import ConfirmDialog from './ConfirmDialog'
 
-const APP_VERSION = '1.1.0'
+const APP_VERSION = '1.2.0'
 
 type PanelType = 'keys' | 'command' | 'server' | 'batch' | 'export'
 
@@ -69,8 +69,16 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
     hasUpdate: boolean
     latestVersion: string
     releaseUrl: string
+    downloadUrl?: string
   } | null>(null)
   const [showUpdateDialog, setShowUpdateDialog] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState<{ percent: number; downloaded: number; total: number; speed?: number } | null>(null)
+  const [downloadComplete, setDownloadComplete] = useState<{ filePath: string; downloadsDir: string } | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  // For calculating download speed
+  const downloadSpeedRef = React.useRef({ lastTime: 0, lastDownloaded: 0, speed: 0 })
 
   // Check for updates
   const checkForUpdate = async () => {
@@ -97,10 +105,22 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
           }
         }
 
+        // Find Windows installer download URL
+        let downloadUrl = ''
+        if (data.assets && Array.isArray(data.assets)) {
+          const exeAsset = data.assets.find((asset: { name: string; browser_download_url: string }) =>
+            asset.name.endsWith('.exe') && !asset.name.includes('blockmap')
+          )
+          if (exeAsset) {
+            downloadUrl = exeAsset.browser_download_url
+          }
+        }
+
         setUpdateInfo({
           hasUpdate,
           latestVersion,
-          releaseUrl: data.html_url || 'https://github.com/hkall/xbl-redis-desktop/releases'
+          releaseUrl: data.html_url || 'https://github.com/hkall/xbl-redis-desktop/releases',
+          downloadUrl
         })
         setShowUpdateDialog(true)
       }
@@ -108,6 +128,82 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
       console.error('Failed to check for updates:', error)
     } finally {
       setCheckingUpdate(false)
+    }
+  }
+
+  // Listen for download progress
+  useEffect(() => {
+    if (window.electronAPI?.onUpdateProgress) {
+      window.electronAPI.onUpdateProgress((data) => {
+        const now = Date.now()
+        const ref = downloadSpeedRef.current
+
+        // Calculate speed every 500ms
+        if (now - ref.lastTime >= 500) {
+          const downloadedDiff = data.downloaded - ref.lastDownloaded
+          const timeDiff = (now - ref.lastTime) / 1000 // seconds
+          ref.speed = downloadedDiff / timeDiff // bytes per second
+          ref.lastTime = now
+          ref.lastDownloaded = data.downloaded
+        }
+
+        setDownloadProgress({
+          ...data,
+          speed: ref.speed
+        })
+      })
+    }
+  }, [])
+
+  // Download update handler
+  const handleDownloadUpdate = async () => {
+    // Reset states
+    setDownloadError(null)
+    setDownloadProgress(null)
+    setDownloadComplete(null)
+
+    // Check if download API is available
+    if (!window.electronAPI?.downloadUpdate) {
+      setDownloadError('Download feature not available. Please update manually.')
+      return
+    }
+
+    if (!updateInfo?.downloadUrl) {
+      setDownloadError('No download URL available.')
+      return
+    }
+
+    setDownloading(true)
+
+    // Reset speed calculation
+    downloadSpeedRef.current = { lastTime: 0, lastDownloaded: 0, speed: 0 }
+
+    const filename = `Xbl-Redis-Desktop-Setup-${updateInfo.latestVersion}.exe`
+
+    try {
+      const result = await window.electronAPI.downloadUpdate(updateInfo.downloadUrl, filename)
+      if (result?.success) {
+        setDownloadComplete({ filePath: result.filePath!, downloadsDir: result.downloadsDir! })
+      } else {
+        setDownloadError(result?.error || 'Download failed')
+      }
+    } catch (error) {
+      console.error('Download failed:', error)
+      setDownloadError(error instanceof Error ? error.message : 'Download failed')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const handleOpenFile = async () => {
+    if (downloadComplete && window.electronAPI?.openUpdateFile) {
+      await window.electronAPI.openUpdateFile(downloadComplete.filePath)
+    }
+  }
+
+  const handleOpenFolder = async () => {
+    if (downloadComplete && window.electronAPI?.openUpdateFolder) {
+      await window.electronAPI.openUpdateFolder(downloadComplete.downloadsDir)
     }
   }
 
@@ -433,12 +529,15 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm">
             <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                {updateInfo.hasUpdate ? 'Update Available' : 'Up to Date'}
+                {downloadComplete ? 'Download Complete' : updateInfo.hasUpdate ? 'Update Available' : 'Up to Date'}
               </h3>
               <button
                 onClick={() => {
                   setShowUpdateDialog(false)
                   setUpdateInfo(null)
+                  setDownloadProgress(null)
+                  setDownloadComplete(null)
+                  setDownloadError(null)
                 }}
                 className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
@@ -446,7 +545,100 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
               </button>
             </div>
             <div className="p-6 text-center">
-              {updateInfo.hasUpdate ? (
+              {downloadComplete ? (
+                <>
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">
+                    Update downloaded successfully!
+                  </p>
+                  <div className="flex gap-2 justify-center">
+                    <button
+                      onClick={handleOpenFile}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Open Installer
+                    </button>
+                    <button
+                      onClick={handleOpenFolder}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      Open Folder
+                    </button>
+                  </div>
+                </>
+              ) : downloadError ? (
+                <>
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <p className="text-red-600 dark:text-red-400 mb-2 font-medium">
+                    Download Failed
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    {downloadError}
+                  </p>
+                  <div className="flex gap-2 justify-center">
+                    <button
+                      onClick={handleDownloadUpdate}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Retry
+                    </button>
+                    <button
+                      onClick={() => window.open(updateInfo.releaseUrl, '_blank')}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Manual Download
+                    </button>
+                  </div>
+                </>
+              ) : downloading ? (
+                <>
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Download className="w-6 h-6 text-blue-600 dark:text-blue-400 animate-bounce" />
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 mb-3">
+                    Downloading update...
+                  </p>
+                  {downloadProgress && (
+                    <div className="w-full">
+                      {/* Progress bar */}
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-3 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-300 relative"
+                          style={{ width: `${downloadProgress.percent}%` }}
+                        >
+                          <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                        </div>
+                      </div>
+
+                      {/* Progress info */}
+                      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                        <span>{downloadProgress.percent}%</span>
+                        <span>
+                          {(downloadProgress.downloaded / 1024 / 1024).toFixed(1)} MB / {(downloadProgress.total / 1024 / 1024).toFixed(1)} MB
+                        </span>
+                      </div>
+
+                      {/* Download speed */}
+                      {downloadProgress.speed && downloadProgress.speed > 0 && (
+                        <div className="flex items-center justify-center gap-1 text-sm text-blue-600 dark:text-blue-400">
+                          <span className="font-medium">
+                            {downloadProgress.speed > 1024 * 1024
+                              ? `${(downloadProgress.speed / 1024 / 1024).toFixed(1)} MB/s`
+                              : `${(downloadProgress.speed / 1024).toFixed(0)} KB/s`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : updateInfo.hasUpdate ? (
                 <>
                   <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                     <RefreshCw className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -458,14 +650,10 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
                     Current: <span className="font-mono">v{APP_VERSION}</span> → Latest: <span className="font-mono text-green-600 dark:text-green-400">v{updateInfo.latestVersion}</span>
                   </p>
                   <button
-                    onClick={() => {
-                      if (window.electronAPI?.openExternal) {
-                        window.electronAPI.openExternal(updateInfo.releaseUrl)
-                      }
-                    }}
+                    onClick={handleDownloadUpdate}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <Download className="w-4 h-4" />
                     Download Update
                   </button>
                 </>

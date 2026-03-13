@@ -47,4 +47,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Open external URL in default browser
   openExternal: (url) => shell.openExternal(url),
+
+  // Update download
+  downloadUpdate: (url, filename) => ipcRenderer.invoke('update:download', url, filename),
+  openUpdateFile: (filePath) => ipcRenderer.invoke('update:openFile', filePath),
+  openUpdateFolder: (folderPath) => ipcRenderer.invoke('update:openFolder', folderPath),
+  onUpdateProgress: (callback) => ipcRenderer.on('update:progress', (_event, data) => callback(data)),
 })

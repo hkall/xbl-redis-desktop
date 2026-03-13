@@ -307,6 +307,10 @@ declare global {
       redisGetServerInfo: (id: string, section?: string) => Promise<any>
       openExternal: (url: string) => Promise<void>
       createAndDownloadArchive: (options: { filename: string; files: { name: string; content: string }[] }) => Promise<{ success: boolean; error?: string }>
+      downloadUpdate: (url: string, filename: string) => Promise<{ success: boolean; filePath?: string; downloadsDir?: string; error?: string }>
+      openUpdateFile: (filePath: string) => Promise<{ success: boolean; error?: string }>
+      openUpdateFolder: (folderPath: string) => Promise<{ success: boolean; error?: string }>
+      onUpdateProgress: (callback: (data: { percent: number; downloaded: number; total: number }) => void) => void
     }
   }
 }

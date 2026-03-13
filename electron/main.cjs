@@ -869,6 +869,166 @@ ipcMain.handle('redis:getServerInfo', async (_event, id, section = 'default') =>
     }
   }
 })
+
+// Download update file
+ipcMain.handle('update:download', async (_event, downloadUrl, filename) => {
+  const https = require('https')
+  const http = require('http')
+
+  if (!mainWindow) {
+    return { success: false, error: 'Window not available' }
+  }
+
+  try {
+    // Get downloads directory
+    const downloadsDir = path.join(app.getPath('downloads'), 'XblRedisDesktop')
+    await fs.mkdir(downloadsDir, { recursive: true })
+    const filePath = path.join(downloadsDir, filename)
+
+    // Helper function to download with redirect support
+    const downloadWithRedirect = (url, redirectCount = 0) => {
+      return new Promise((resolve, reject) => {
+        if (redirectCount > 10) {
+          resolve({ success: false, error: 'Too many redirects' })
+          return
+        }
+
+        const protocol = url.startsWith('https') ? https : http
+        const file = require('fs').createWriteStream(filePath)
+
+        let totalSize = 0
+        let downloaded = 0
+        let lastProgressTime = 0
+        let connectionEstablished = false
+
+        const request = protocol.get(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': '*/*',
+            'Accept-Encoding': 'identity'
+          }
+        }, (response) => {
+          connectionEstablished = true
+
+          // Handle redirects
+          if (response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307 || response.statusCode === 308) {
+            const redirectUrl = response.headers.location
+            if (redirectUrl) {
+              file.close()
+              try { require('fs').unlinkSync(filePath) } catch (e) {}
+              // Follow redirect
+              downloadWithRedirect(redirectUrl, redirectCount + 1)
+                .then(resolve)
+                .catch(reject)
+              return
+            }
+          }
+
+          if (response.statusCode !== 200) {
+            file.close()
+            try { require('fs').unlinkSync(filePath) } catch (e) {}
+            resolve({ success: false, error: `HTTP ${response.statusCode}` })
+            return
+          }
+
+          totalSize = parseInt(response.headers['content-length'] || '0', 10)
+
+          // Send initial progress
+          if (mainWindow && totalSize > 0) {
+            mainWindow.webContents.send('update:progress', {
+              percent: 0,
+              downloaded: 0,
+              total: totalSize
+            })
+          }
+
+          response.on('data', (chunk) => {
+            downloaded += chunk.length
+            // Send progress every 200ms to avoid flooding
+            const now = Date.now()
+            if (totalSize > 0 && mainWindow && now - lastProgressTime > 200) {
+              lastProgressTime = now
+              const percent = Math.round((downloaded / totalSize) * 100)
+              mainWindow.webContents.send('update:progress', {
+                percent,
+                downloaded,
+                total: totalSize
+              })
+            }
+          })
+
+          response.pipe(file)
+
+          file.on('finish', () => {
+            file.close()
+            // Send final progress
+            if (mainWindow && totalSize > 0) {
+              mainWindow.webContents.send('update:progress', {
+                percent: 100,
+                downloaded: totalSize,
+                total: totalSize
+              })
+            }
+            resolve({
+              success: true,
+              filePath,
+              downloadsDir
+            })
+          })
+        })
+
+        request.on('error', (err) => {
+          file.close()
+          try { require('fs').unlinkSync(filePath) } catch (e) {}
+          resolve({ success: false, error: err.message })
+        })
+
+        file.on('error', (err) => {
+          file.close()
+          try { require('fs').unlinkSync(filePath) } catch (e) {}
+          resolve({ success: false, error: err.message })
+        })
+
+        // Set connection timeout only (not download timeout)
+        request.setTimeout(60000, () => {
+          if (!connectionEstablished) {
+            request.destroy()
+            file.close()
+            try { require('fs').unlinkSync(filePath) } catch (e) {}
+            resolve({ success: false, error: 'Connection timeout - please check your network' })
+          }
+        })
+      })
+    }
+
+    return await downloadWithRedirect(downloadUrl)
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+})
+
+// Open the downloaded file
+ipcMain.handle('update:openFile', async (_event, filePath) => {
+  const { shell } = require('electron')
+  try {
+    await shell.openPath(filePath)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+})
+
+// Open downloads folder
+ipcMain.handle('update:openFolder', async (_event, folderPath) => {
+  const { shell } = require('electron')
+  try {
+    await shell.openPath(folderPath)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+})
+
 // Archive operations - create and download zip archive
 ipcMain.handle('archive:createAndDownload', async (_event, options) => {
   const { filename, files } = options
