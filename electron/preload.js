@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Database info
   redisInfo: (id) => ipcRenderer.invoke('redis:info', id),
   redisSelectDb: (id, db) => ipcRenderer.invoke('redis:selectDb', id, db),
+  redisDbSize: (id) => ipcRenderer.invoke('redis:dbsize', id),
 
   // New features
   redisExecuteCommand: (id, command) => ipcRenderer.invoke('redis:executeCommand', id, command),

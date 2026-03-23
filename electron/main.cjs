@@ -695,6 +695,25 @@ ipcMain.handle('redis:selectDb', async (_event, id, db) => {
   }
 })
 
+// Get current database key count
+ipcMain.handle('redis:dbsize', async (_event, id) => {
+  try {
+    const client = redisConnections.get(id)
+    if (!client) {
+      throw new Error('Not connected to Redis')
+    }
+
+    const count = await client.dbsize()
+
+    return { success: true, data: count }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get database size',
+    }
+  }
+})
+
 ipcMain.handle('java:deserialize', async (_event, byteArray) => {
   try {
     const bytes = Array.isArray(byteArray) ? new Uint8Array(byteArray) : byteArray

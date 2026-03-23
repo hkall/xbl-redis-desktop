@@ -233,6 +233,7 @@ export default function KeyBrowser() {
   const [showRenameModal, setShowRenameModal] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
   const [renameKey, setRenameKey] = useState<string | null>(null)
+  const [totalKeysInDb, setTotalKeysInDb] = useState<number | null>(null)
 
   const activeConnection = activeConnectionId
     ? connections.find((c) => c.id === activeConnectionId)
@@ -381,15 +382,40 @@ export default function KeyBrowser() {
     setKeysLoading(true)
     try {
       if (window.electronAPI && window.electronAPI.redisScan) {
-        const result = await window.electronAPI.redisScan(
-          activeConnectionId,
-          '*',
-          1000
-        )
+        // Get real key count from DBSIZE
+        if (window.electronAPI.redisDbSize) {
+          const sizeResult = await window.electronAPI.redisDbSize(activeConnectionId)
+          if (sizeResult.success && sizeResult.data !== undefined) {
+            setTotalKeysInDb(sizeResult.data)
+          }
+        }
 
-        if (result.success && result.data) {
+        // Use SCAN with pagination to get all keys
+        let allKeys: string[] = []
+        let cursor = '0'
+        let iterations = 0
+        const maxIterations = 1000 // Safety limit
+
+        do {
+          const result = await window.electronAPI.redisScan(
+            activeConnectionId,
+            '*',
+            1000,
+            cursor
+          )
+
+          if (result.success && result.data) {
+            allKeys = allKeys.concat(result.data)
+            cursor = result.cursor
+            iterations++
+          } else {
+            break
+          }
+        } while (cursor !== '0' && iterations < maxIterations)
+
+        if (allKeys.length > 0) {
           const keyInfos = await Promise.all(
-            result.data.map(async (key) => {
+            allKeys.map(async (key) => {
               const infoResult = await window.electronAPI.redisKeyInfo(activeConnectionId, key)
               if (infoResult.success && infoResult.data) {
                 return infoResult.data
@@ -400,6 +426,8 @@ export default function KeyBrowser() {
 
           const validKeys = keyInfos.filter(Boolean)
           setKeys(validKeys)
+        } else {
+          setKeys([])
         }
       } else {
         const mockKeys = [
@@ -852,7 +880,17 @@ export default function KeyBrowser() {
       </div>
 
       <div className="h-[52px] px-2 border-t border-black/10 dark:border-white/10 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 flex items-center">
-        {getFilteredCount} key{getFilteredCount !== 1 ? 's' : ''}{keys.length !== getFilteredCount && ` of ${keys.length} total`}
+        {totalKeysInDb !== null ? (
+          <span>
+            {getFilteredCount} key{getFilteredCount !== 1 ? 's' : ''} displayed
+            {totalKeysInDb !== keys.length && ` of ${totalKeysInDb} total in DB`}
+          </span>
+        ) : (
+          <span>
+            {getFilteredCount} key{getFilteredCount !== 1 ? 's' : ''}
+            {keys.length !== getFilteredCount && ` of ${keys.length} total`}
+          </span>
+        )}
       </div>
 
       {/* Add Key Modal */}

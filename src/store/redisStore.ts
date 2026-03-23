@@ -302,6 +302,7 @@ declare global {
       redisClearTTL: (id: string, key: string) => Promise<any>
       redisInfo: (id: string) => Promise<any>
       redisSelectDb: (id: string, db: number) => Promise<any>
+      redisDbSize: (id: string) => Promise<{ success: boolean; data?: number; error?: string }>
       javaDeserialize: (byteArray: number[]) => Promise<any>
       redisExecuteCommand: (id: string, command: string) => Promise<any>
       redisGetServerInfo: (id: string, section?: string) => Promise<any>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import ConnectionPanel from './components/ConnectionPanel'
 import KeyBrowser from './components/KeyBrowser'
 import DataPanel from './components/DataPanel'
@@ -7,7 +7,7 @@ import ServerInfo from './components/ServerInfo'
 import BatchOperations from './components/BatchOperations'
 import DataExport from './components/DataExport'
 import { useRedisStore } from './store/redisStore'
-import { Terminal, Server, List, Download, X, ChevronDown } from 'lucide-react'
+import { Terminal, Server, List, Download, X, ChevronDown, GripVertical } from 'lucide-react'
 
 type PanelType = 'keys' | 'command' | 'server' | 'batch' | 'export'
 type ViewMode = 'split' | 'full' // split = 两栏, full = 占满右侧区域
@@ -28,15 +28,80 @@ const COLOR_CLASSES = {
   green: 'bg-white dark:bg-gray-800',
 }
 
+// Resizable divider component
+function ResizableDivider({
+  onResize,
+  minWidth = 200,
+  maxWidth = 800
+}: {
+  onResize: (delta: number) => void
+  minWidth?: number
+  maxWidth?: number
+}) {
+  const isDragging = useRef(false)
+  const startX = useRef(0)
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    isDragging.current = true
+    startX.current = e.clientX
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }, [])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return
+      const delta = startX.current - e.clientX
+      startX.current = e.clientX
+      onResize(-delta)
+    }
+
+    const handleMouseUp = () => {
+      isDragging.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [onResize])
+
+  return (
+    <div
+      className="w-1.5 flex-shrink-0 bg-transparent hover:bg-red-500/30 dark:hover:bg-red-400/30 cursor-col-resize transition-colors group flex items-center justify-center"
+      onMouseDown={handleMouseDown}
+    >
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+        <GripVertical className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const { activeConnectionId, connections, selectedKey, setSelectedKey, loadConfig } = useRedisStore()
   const [darkMode] = useState(true)
   const [selectedPanel, setSelectedPanel] = useState<PanelType>('keys')
   const [viewMode, setViewMode] = useState<ViewMode>('split')
+  const [keysPanelWidth, setKeysPanelWidth] = useState(350) // Default width for keys panel
 
   const activeConnection = activeConnectionId
     ? connections.find((c) => c.id === activeConnectionId)
     : null
+
+  // Handle keys panel resize
+  const handleKeysPanelResize = useCallback((delta: number) => {
+    setKeysPanelWidth(prev => {
+      const newWidth = prev + delta
+      return Math.max(200, Math.min(800, newWidth))
+    })
+  }, [])
 
   // Auto switch to full mode for CLI/Server/Batch/Export panels
   useEffect(() => {
@@ -104,9 +169,15 @@ export default function App() {
           // SPLIT VIEW: Keys Panel (center) + Data Panel (right)
           <>
             {/* Center Panel - Keys */}
-            <div className="w-[30%] min-w-0 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
+            <div
+              className="min-w-0 flex-shrink-0 rounded-lg overflow-hidden shadow-lg"
+              style={{ width: `${keysPanelWidth}px` }}
+            >
               <KeyBrowser />
             </div>
+
+            {/* Resizable Divider */}
+            <ResizableDivider onResize={handleKeysPanelResize} />
 
             {/* Right Panel - Data */}
             <div className="flex-1 min-w-0 rounded-lg overflow-hidden shadow-lg">
