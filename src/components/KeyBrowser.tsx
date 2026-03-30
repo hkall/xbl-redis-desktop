@@ -211,6 +211,7 @@ export default function KeyBrowser() {
   } = useRedisStore()
 
   const [refreshing, setRefreshing] = useState(false)
+  const [refreshingFolders, setRefreshingFolders] = useState<Set<string>>(new Set())
   const [searchInput, setSearchInput] = useState('')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [showAddKeyModal, setShowAddKeyModal] = useState(false)
@@ -260,10 +261,13 @@ export default function KeyBrowser() {
   const buildTree = useMemo(() => {
     const tree: TreeNode[] = []
 
+    // Ensure keys is an array
+    const safeKeys = keys || []
+
     // First, collect keys grouped by their type
     const filteredByType = keysTypeFilter === 'all'
-      ? keys
-      : keys.filter((k) => k.type === keysTypeFilter)
+      ? safeKeys
+      : safeKeys.filter((k) => k.type === keysTypeFilter)
 
     // Apply search filter
     const filteredKeys = searchInput.trim()
@@ -464,6 +468,67 @@ export default function KeyBrowser() {
     if (refreshing || !activeConnection?.connected) return
     setRefreshing(true)
     loadKeys()
+  }
+
+  const handleRefreshFolder = async (folderPath: string) => {
+    if (!activeConnection?.connected || !activeConnectionId) return
+    if (refreshingFolders.has(folderPath)) return
+
+    setRefreshingFolders(prev => new Set(prev).add(folderPath))
+
+    try {
+      if (window.electronAPI && window.electronAPI.redisScan) {
+        // Use folder path as pattern prefix
+        const pattern = `${folderPath}:*`
+        let allKeys: string[] = []
+        let cursor = '0'
+        let iterations = 0
+        const maxIterations = 100
+
+        do {
+          const result = await window.electronAPI.redisScan(
+            activeConnectionId,
+            pattern,
+            1000,
+            cursor
+          )
+
+          if (result.success && result.data) {
+            allKeys = allKeys.concat(result.data)
+            cursor = result.cursor
+            iterations++
+          } else {
+            break
+          }
+        } while (cursor !== '0' && iterations < maxIterations)
+
+        // Get key info for each key
+        const keyInfos = await Promise.all(
+          allKeys.map(async (key) => {
+            const infoResult = await window.electronAPI.redisKeyInfo(activeConnectionId, key)
+            if (infoResult.success && infoResult.data) {
+              return infoResult.data
+            }
+            return null
+          })
+        )
+
+        const validKeys = keyInfos.filter(Boolean)
+
+        // Update keys: remove keys that belong to this folder, then add new ones
+        const currentKeys = useRedisStore.getState().keys || []
+        const otherKeys = currentKeys.filter(k => !k.name.startsWith(`${folderPath}:`))
+        setKeys([...otherKeys, ...validKeys])
+      }
+    } catch {
+      // Ignore errors
+    } finally {
+      setRefreshingFolders(prev => {
+        const next = new Set(prev)
+        next.delete(folderPath)
+        return next
+      })
+    }
   }
 
   const handleTypeFilterChange = (filter: RedisDataType | 'all') => {
@@ -686,19 +751,32 @@ export default function KeyBrowser() {
         <div key={node.path}>
           <div
             onClick={() => handleToggleFolder(node.path)}
-            className="flex items-center gap-1 py-1 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+            className="group flex items-center gap-1 py-1 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
             style={{ paddingLeft: `${8 + level * 16}px` }}
           >
-            {isExpanded ? (
-              <ChevronDown className="w-3 h-3 text-gray-400" />
-            ) : (
-              <ChevronRight className="w-3 h-3 text-gray-400" />
-            )}
-            <Database className="w-3 h-3 text-gray-500" />
-            <span className="text-sm text-gray-700 dark:text-gray-300">{node.name}</span>
-            {node.count !== undefined && node.count > 0 && (
-              <span className="text-xs text-gray-400 dark:text-gray-500">({node.count})</span>
-            )}
+            <div className="flex-1 flex items-center gap-1 min-w-0">
+              {isExpanded ? (
+                <ChevronDown className="w-3 h-3 text-gray-400" />
+              ) : (
+                <ChevronRight className="w-3 h-3 text-gray-400" />
+              )}
+              <Database className="w-3 h-3 text-gray-500" />
+              <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{node.name}</span>
+              {node.count !== undefined && node.count > 0 && (
+                <span className="text-xs text-gray-400 dark:text-gray-500">({node.count})</span>
+              )}
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleRefreshFolder(node.path)
+              }}
+              disabled={refreshingFolders.has(node.path)}
+              className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity flex-shrink-0 disabled:opacity-50"
+              title="Refresh folder"
+            >
+              <RefreshCw className={`w-3 h-3 ${refreshingFolders.has(node.path) ? 'animate-spin' : ''}`} />
+            </button>
           </div>
           {isExpanded && node.children && (
             <div>
