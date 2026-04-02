@@ -1099,3 +1099,105 @@ ipcMain.handle('archive:createAndDownload', async (_event, options) => {
     }
   }
 })
+
+// ==================== HTTP Request (API Tester) ====================
+
+// Store for pending requests (for cancellation)
+const pendingRequests = new Map()
+
+// HTTP Request handler
+ipcMain.handle('http:request', async (_event, config) => {
+  const { method, url, headers, body, timeout = 30000 } = config
+  const requestId = crypto.randomUUID()
+  const startTime = Date.now()
+
+  try {
+    // Parse URL
+    const urlObj = new URL(url)
+
+    // Build request options
+    const options = {
+      method: method,
+      headers: {},
+      timeout: timeout,
+    }
+
+    // Add headers
+    if (headers && Array.isArray(headers)) {
+      headers.filter(h => h.enabled && h.key).forEach(h => {
+        options.headers[h.key] = h.value
+      })
+    }
+
+    // Add body for methods that support it
+    const methodsWithBody = ['POST', 'PUT', 'PATCH']
+    if (methodsWithBody.includes(method) && body && body.content) {
+      options.body = body.content
+      // Set content-type if not already set
+      if (!options.headers['Content-Type'] && body.type === 'json') {
+        options.headers['Content-Type'] = 'application/json'
+      }
+    }
+
+    // Create AbortController for cancellation
+    const controller = new AbortController()
+    options.signal = controller.signal
+    pendingRequests.set(requestId, controller)
+
+    // Make request
+    const response = await fetch(url, options)
+
+    // Remove from pending
+    pendingRequests.delete(requestId)
+
+    // Get response headers
+    const responseHeaders = {}
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value
+    })
+
+    // Get response body
+    const responseBody = await response.text()
+
+    const endTime = Date.now()
+
+    return {
+      success: true,
+      data: {
+        status: response.status,
+        statusText: response.statusText,
+        headers: responseHeaders,
+        body: responseBody,
+        time: endTime - startTime,
+        size: Buffer.byteLength(responseBody, 'utf8')
+      }
+    }
+  } catch (error) {
+    // Remove from pending
+    pendingRequests.delete(requestId)
+
+    // Handle abort
+    if (error.name === 'AbortError') {
+      return {
+        success: false,
+        error: 'Request cancelled'
+      }
+    }
+
+    return {
+      success: false,
+      error: error.message || 'Request failed'
+    }
+  }
+})
+
+// Cancel HTTP request
+ipcMain.handle('http:cancel', async (_event, requestId) => {
+  const controller = pendingRequests.get(requestId)
+  if (controller) {
+    controller.abort()
+    pendingRequests.delete(requestId)
+    return { success: true }
+  }
+  return { success: false, error: 'Request not found' }
+})

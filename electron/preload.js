@@ -54,4 +54,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openUpdateFile: (filePath) => ipcRenderer.invoke('update:openFile', filePath),
   openUpdateFolder: (folderPath) => ipcRenderer.invoke('update:openFolder', folderPath),
   onUpdateProgress: (callback) => ipcRenderer.on('update:progress', (_event, data) => callback(data)),
+
+  // HTTP Request (API Tester)
+  httpRequest: (config) => ipcRenderer.invoke('http:request', config),
+  httpCancel: (requestId) => ipcRenderer.invoke('http:cancel', requestId),
 })

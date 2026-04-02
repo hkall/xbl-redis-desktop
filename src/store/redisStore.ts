@@ -312,6 +312,26 @@ declare global {
       openUpdateFile: (filePath: string) => Promise<{ success: boolean; error?: string }>
       openUpdateFolder: (folderPath: string) => Promise<{ success: boolean; error?: string }>
       onUpdateProgress: (callback: (data: { percent: number; downloaded: number; total: number }) => void) => void
+      // HTTP Request (API Tester)
+      httpRequest: (config: {
+        method: string
+        url: string
+        headers?: { key: string; value: string; enabled: boolean }[]
+        body?: { type: string; content: string }
+        timeout?: number
+      }) => Promise<{
+        success: boolean
+        data?: {
+          status: number
+          statusText: string
+          headers: Record<string, string>
+          body: string
+          time: number
+          size: number
+        }
+        error?: string
+      }>
+      httpCancel: (requestId: string) => Promise<{ success: boolean; error?: string }>
     }
   }
 }
