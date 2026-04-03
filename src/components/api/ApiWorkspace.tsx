@@ -170,6 +170,7 @@ export default function ApiWorkspace() {
   const [requestPanelPercent, setRequestPanelPercent] = useState(55) // 默认 55%
   const containerRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const currentRequestIdRef = useRef<string | null>(null)
 
   const handlePanelResize = useCallback((delta: number) => {
     if (!containerRef.current) return
@@ -214,10 +215,18 @@ export default function ApiWorkspace() {
 
   // 取消请求
   const handleCancel = () => {
+    // Electron 环境
+    if (window.electronAPI?.httpCancel && currentRequestIdRef.current) {
+      window.electronAPI.httpCancel(currentRequestIdRef.current)
+      currentRequestIdRef.current = null
+    }
+    // 浏览器环境
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
       abortControllerRef.current = null
     }
+    setLoading(false)
+    setCurrentError('请求已取消')
   }
 
   // 发送请求
@@ -383,7 +392,11 @@ export default function ApiWorkspace() {
       let result
 
       if (window.electronAPI?.httpRequest) {
-        // Electron环境 - 需要将FormData转换为可序列化格式
+        // Electron环境 - 生成 requestId 用于取消
+        const requestId = crypto.randomUUID()
+        currentRequestIdRef.current = requestId
+
+        // 需要将FormData转换为可序列化格式
         let bodyForElectron: any = undefined
         if (requestBody) {
           if (typeof requestBody === 'string') {
@@ -421,7 +434,8 @@ export default function ApiWorkspace() {
           headers: [...allHeaders, ...(contentType ? [{ key: 'Content-Type', value: contentType, enabled: true }] : [])],
           body: bodyForElectron,
           timeout: currentRequest.timeout || 30000,
-        })
+          requestId,
+        } as any)
       } else {
         // 浏览器环境
         const headers: Record<string, string> = {}
@@ -512,6 +526,7 @@ export default function ApiWorkspace() {
     } finally {
       setLoading(false)
       abortControllerRef.current = null
+      currentRequestIdRef.current = null
 
       // 无论请求成功失败，都显示请求信息
       try {
@@ -1447,10 +1462,26 @@ function VariableInput({
 
   return (
     <div ref={containerRef} className="relative w-full">
-      {/* 变量高亮显示层 - 失去焦点时显示 */}
-      {showHighlight ? (
+      {/* 输入框 - 始终存在 */}
+      <input
+        ref={inputRef}
+        type={type}
+        value={value}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        placeholder={placeholder}
+        spellCheck={false}
+        autoComplete="off"
+        className={`${inputClass} ${showHighlight ? 'opacity-0 absolute inset-0 z-0' : ''}`}
+      />
+
+      {/* 变量高亮显示层 - 失去焦点时覆盖显示 */}
+      {showHighlight && (
         <div
-          className={`${inputClass} cursor-text select-none min-h-[34px] flex items-center flex-wrap gap-0.5`}
+          className={`${inputClass} cursor-text min-h-[34px] flex items-center flex-wrap gap-0.5 relative z-10`}
           onClick={() => inputRef.current?.focus()}
         >
           {parts.map((part, index) => (
@@ -1468,22 +1499,6 @@ function VariableInput({
             )
           ))}
         </div>
-      ) : (
-        /* 输入框 */
-        <input
-          ref={inputRef}
-          type={type}
-          value={value}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onKeyUp={handleKeyUp}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholder={placeholder}
-          spellCheck={false}
-          autoComplete="off"
-          className={inputClass}
-        />
       )}
 
       {/* 悬浮提示 */}

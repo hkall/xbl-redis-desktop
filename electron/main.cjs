@@ -1107,9 +1107,11 @@ const pendingRequests = new Map()
 
 // HTTP Request handler
 ipcMain.handle('http:request', async (_event, config) => {
-  const { method, url, headers, body, timeout = 30000 } = config
-  const requestId = crypto.randomUUID()
+  const { method, url, headers, body, timeout = 30000, requestId } = config
   const startTime = Date.now()
+
+  // 如果没有传入 requestId，生成一个
+  const reqId = requestId || crypto.randomUUID()
 
   try {
     // Parse URL
@@ -1119,7 +1121,6 @@ ipcMain.handle('http:request', async (_event, config) => {
     const options = {
       method: method,
       headers: {},
-      timeout: timeout,
     }
 
     // Add headers
@@ -1139,16 +1140,24 @@ ipcMain.handle('http:request', async (_event, config) => {
       }
     }
 
-    // Create AbortController for cancellation
+    // Create AbortController for cancellation and timeout
     const controller = new AbortController()
     options.signal = controller.signal
-    pendingRequests.set(requestId, controller)
+    pendingRequests.set(reqId, controller)
+
+    // Setup timeout
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, timeout)
 
     // Make request
     const response = await fetch(url, options)
 
+    // Clear timeout
+    clearTimeout(timeoutId)
+
     // Remove from pending
-    pendingRequests.delete(requestId)
+    pendingRequests.delete(reqId)
 
     // Get response headers
     const responseHeaders = {}
@@ -1163,6 +1172,7 @@ ipcMain.handle('http:request', async (_event, config) => {
 
     return {
       success: true,
+      requestId: reqId,
       data: {
         status: response.status,
         statusText: response.statusText,
@@ -1174,19 +1184,21 @@ ipcMain.handle('http:request', async (_event, config) => {
     }
   } catch (error) {
     // Remove from pending
-    pendingRequests.delete(requestId)
+    pendingRequests.delete(reqId)
 
-    // Handle abort
+    // Handle abort (timeout or cancel)
     if (error.name === 'AbortError') {
       return {
         success: false,
-        error: 'Request cancelled'
+        requestId: reqId,
+        error: error.message?.includes('timeout') ? '请求超时' : '请求已取消'
       }
     }
 
     return {
       success: false,
-      error: error.message || 'Request failed'
+      requestId: reqId,
+      error: error.message || '请求失败'
     }
   }
 })

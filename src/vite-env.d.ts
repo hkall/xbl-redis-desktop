@@ -22,6 +22,28 @@ declare global {
       loadConfig: (key: string) => Promise<{ success: boolean; data?: any; error?: string }>
       getUserDataPath: () => Promise<string>
       openExternal: (url: string) => Promise<void>
+      // HTTP Request (API Tester)
+      httpRequest: (config: {
+        method: string
+        url: string
+        headers?: { key: string; value: string; enabled: boolean }[]
+        body?: { type: string; content: string; contentType?: string } | { type: string; entries: { key: string; value: string; type: string; fileName?: string }[] }
+        timeout?: number
+        requestId?: string
+      }) => Promise<{
+        success: boolean
+        requestId?: string
+        data?: {
+          status: number
+          statusText: string
+          headers: Record<string, string>
+          body: string
+          time: number
+          size: number
+        }
+        error?: string
+      }>
+      httpCancel: (requestId: string) => Promise<{ success: boolean; error?: string }>
     }
   }
 }

@@ -58,4 +58,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // HTTP Request (API Tester)
   httpRequest: (config) => ipcRenderer.invoke('http:request', config),
   httpCancel: (requestId) => ipcRenderer.invoke('http:cancel', requestId),
+
+  // 用于渲染进程生成唯一ID
+  generateRequestId: () => crypto.randomUUID(),
 })
