@@ -75,7 +75,7 @@ export default function ConfirmDialog({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/50 flex justify-end gap-3">
+        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-3">
           <button
             onClick={onCancel}
             className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"

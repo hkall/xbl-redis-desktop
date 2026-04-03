@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import {
   Send, Save, X, ChevronDown, Plus, Trash2, Lock, FileJson,
   FormInput, FileCode, XCircle, Clock, HardDrive, Copy, Check,
-  Upload, FileText, Code, Braces, Pencil, GripVertical, Terminal, Settings, ChevronLeft, ChevronRight, MapPin
+  Upload, FileText, Code, Braces, Pencil, GripVertical, Terminal, Settings, ChevronLeft, ChevronRight, MapPin, Paperclip
 } from 'lucide-react'
 import { useApiStore } from '@/store/apiStore'
 import { KeyValue, HttpMethod, RequestBody, AuthConfig, RequestFolder, isFolder, SavedRequest, FormField } from '@/store/types'
@@ -64,7 +64,7 @@ const getMethodColor = (method: string) => {
   return colors[method] || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
 }
 
-// Resizable Divider Component
+// Resizable Divider Component (Horizontal - for width)
 function ResizableDivider({
   onResize,
 }: {
@@ -110,6 +110,59 @@ function ResizableDivider({
       onMouseDown={handleMouseDown}
     >
       <div className="absolute inset-y-2 w-0.5 bg-gray-200 dark:bg-gray-700 group-hover:bg-blue-400 rounded-full transition-colors" />
+    </div>
+  )
+}
+
+// Vertical Resizable Divider (for height)
+function VerticalResizableDivider({
+  onResize,
+}: {
+  onResize: (delta: number) => void
+}) {
+  const isDragging = useRef(false)
+  const startY = useRef(0)
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation() // 阻止事件冒泡
+    isDragging.current = true
+    startY.current = e.clientY
+    document.body.style.cursor = 'row-resize'
+    document.body.style.userSelect = 'none'
+  }, [])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return
+      // 向上拖拽：delta > 0（高度增加）
+      // 向下拖拽：delta < 0（高度减小）
+      const delta = startY.current - e.clientY
+      startY.current = e.clientY
+      onResize(delta)
+    }
+
+    const handleMouseUp = () => {
+      isDragging.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [onResize])
+
+  return (
+    <div
+      className="h-2 flex-shrink-0 bg-transparent hover:bg-blue-500/50 dark:hover:bg-blue-400/50 cursor-row-resize transition-colors flex items-center justify-center"
+      onMouseDown={handleMouseDown}
+    >
+      <div className="w-full h-0.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
     </div>
   )
 }
@@ -168,6 +221,9 @@ export default function ApiWorkspace() {
 
   // 拖拽调整宽度
   const [requestPanelPercent, setRequestPanelPercent] = useState(55) // 默认 55%
+  // 拖拽调整实际发送请求区域高度
+  const [sentRequestHeight, setSentRequestHeight] = useState(200) // 默认 200px
+  const [sentRequestOpen, setSentRequestOpen] = useState(true) // 默认展开
   const containerRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const currentRequestIdRef = useRef<string | null>(null)
@@ -179,6 +235,13 @@ export default function ApiWorkspace() {
     setRequestPanelPercent(prev => {
       const newPercent = prev + deltaPercent
       return Math.max(25, Math.min(75, newPercent)) // 限制 25% - 75%
+    })
+  }, [])
+
+  const handleSentRequestResize = useCallback((delta: number) => {
+    setSentRequestHeight(prev => {
+      const newHeight = prev + delta
+      return Math.max(100, Math.min(500, newHeight)) // 限制 100px - 500px
     })
   }, [])
 
@@ -740,13 +803,13 @@ export default function ApiWorkspace() {
     }, [activeTabId])
 
     return (
-      <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 relative">
+      <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 relative">
         <div className="flex items-center h-9">
           {/* 左滚动按钮 */}
           {canScrollLeft && (
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-gray-100 dark:from-gray-900 to-transparent z-10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+              className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-gray-100 dark:from-gray-800 to-transparent z-10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
               <ChevronLeft className="w-4 h-4 text-gray-500" />
             </button>
@@ -769,7 +832,7 @@ export default function ApiWorkspace() {
                 <div
                   key={tabId}
                   data-tab-id={tabId}
-                  className={`group flex items-center h-full px-3 border-r border-gray-200 dark:border-gray-700 cursor-pointer transition-colors flex-shrink-0 ${
+                  className={`group flex items-center h-full px-3 border-r border-gray-200 dark:border-gray-700 cursor-pointer transition-colors flex-shrink-0 select-none ${
                     isActive
                       ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
                       : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800/50'
@@ -807,7 +870,7 @@ export default function ApiWorkspace() {
           {canScrollRight && (
             <button
               onClick={() => scroll('right')}
-              className="absolute right-10 top-0 bottom-0 w-6 bg-gradient-to-l from-gray-100 dark:from-gray-900 to-transparent z-10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+              className="absolute right-10 top-0 bottom-0 w-6 bg-gradient-to-l from-gray-100 dark:from-gray-800 to-transparent z-10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
               <ChevronRight className="w-4 h-4 text-gray-500" />
             </button>
@@ -840,7 +903,7 @@ export default function ApiWorkspace() {
   // 显示空状态或Tab栏+内容
   if (openTabs.length === 0) {
     return (
-      <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-800">
         <RequestTabsBar />
         <div className="flex-1 flex items-center justify-center text-gray-400">
           <div className="text-center">
@@ -854,7 +917,7 @@ export default function ApiWorkspace() {
 
   if (!currentRequest) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-400 bg-gray-50 dark:bg-gray-900">
+      <div className="h-full flex items-center justify-center text-gray-400 bg-gray-50 dark:bg-gray-800">
         <div className="text-center">
           <Send className="w-12 h-12 mx-auto mb-3 opacity-20" />
           <p>选择一个请求或创建新请求</p>
@@ -876,7 +939,7 @@ export default function ApiWorkspace() {
           style={{ width: `${requestPanelPercent}%` }}
         >
           {/* Request Name */}
-          <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
             {editingRequestName ? (
               <input
                 type="text"
@@ -909,7 +972,7 @@ export default function ApiWorkspace() {
                   }
                   setEditingRequestName(false)
                 }}
-                className="w-full px-2 py-1 text-sm font-medium bg-gray-50 dark:bg-gray-900 border border-blue-500 rounded outline-none transition-all duration-200"
+                className="w-full px-2 py-1 text-sm font-medium bg-gray-100 dark:bg-gray-800 border border-blue-500 rounded outline-none transition-all duration-200"
                 autoFocus
               />
             ) : (
@@ -941,13 +1004,13 @@ export default function ApiWorkspace() {
           </div>
 
           {/* Request Bar */}
-        <div className="flex-shrink-0 px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50">
+        <div className="flex-shrink-0 px-3 py-2.5 bg-gray-100 dark:bg-gray-800/50">
           <div className="flex items-center gap-2">
             {/* Method Selector */}
             <div className="relative">
               <button
                 onClick={() => setShowMethodDropdown(!showMethodDropdown)}
-                className={`px-3 py-1.5 rounded-lg text-white text-sm font-semibold min-w-[80px] flex items-center justify-between transition-all duration-200 ${METHOD_COLORS[currentRequest.method].bg}`}
+                className={`select-none px-3 py-1.5 rounded-lg text-white text-sm font-semibold min-w-[80px] flex items-center justify-between transition-all duration-200 ${METHOD_COLORS[currentRequest.method].bg}`}
               >
                 <span>{currentRequest.method}</span>
                 <ChevronDown className="w-3.5 h-3.5 ml-1" />
@@ -955,7 +1018,7 @@ export default function ApiWorkspace() {
               {showMethodDropdown && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowMethodDropdown(false)} />
-                  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[100px] py-1">
+                  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[100px] py-1 select-none">
                     {HTTP_METHODS.map((method) => (
                       <button
                         key={method}
@@ -992,13 +1055,13 @@ export default function ApiWorkspace() {
             {loading ? (
               <button
                 onClick={handleCancel}
-                className="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-200"
+                className="select-none px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-200"
               >
                 <XCircle className="w-3.5 h-3.5" />
                 <span>取消</span>
               </button>
             ) : (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 select-none">
                 <button
                   onClick={handleSend}
                   disabled={!currentRequest.url}
@@ -1011,7 +1074,7 @@ export default function ApiWorkspace() {
                 <div className="relative">
                   <button
                     onClick={() => setShowTimeoutDropdown(!showTimeoutDropdown)}
-                    className="px-2 py-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all flex items-center gap-1 text-xs"
+                    className="select-none px-2 py-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all flex items-center gap-1 text-xs"
                     title="超时设置"
                   >
                     <Clock className="w-3.5 h-3.5" />
@@ -1020,7 +1083,7 @@ export default function ApiWorkspace() {
                   {showTimeoutDropdown && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowTimeoutDropdown(false)} />
-                      <div className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[120px] py-1">
+                      <div className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[120px] py-1 select-none">
                         {[5000, 10000, 30000, 60000, 120000, 300000].map((ms) => (
                           <button
                             key={ms}
@@ -1069,7 +1132,7 @@ export default function ApiWorkspace() {
         </div>
 
         {/* Request Tabs */}
-        <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
           <div className="flex items-center">
             {([
               { id: 'params', label: 'Params', count: currentRequest.params.filter(p => p.enabled && p.key).length },
@@ -1101,7 +1164,7 @@ export default function ApiWorkspace() {
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-auto min-h-0">
+        <div className="flex-1 overflow-hidden min-h-0">
           {activeTab === 'params' && (
             <KeyValueEditor
               data={currentRequest.params}
@@ -1138,47 +1201,59 @@ export default function ApiWorkspace() {
 
         {/* Sent Request Preview - 在发送后显示实际请求信息 */}
         {sentRequest && (
-          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
-            <details open className="group">
-              <summary className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 flex items-center gap-2">
-                <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
-                实际发送的请求
-              </summary>
-              <div className="px-3 pb-3 space-y-2 text-xs">
-                {/* Request Line */}
-                <div className="flex items-center gap-2">
-                  <span className={`px-1.5 py-0.5 rounded font-bold ${getMethodColor(sentRequest.method)}`}>
-                    {sentRequest.method}
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400 break-all">{sentRequest.url}</span>
-                </div>
+          <div
+            className="border-t border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
+            style={{ height: sentRequestOpen ? sentRequestHeight + 60 : 45 }}
+          >
+            {/* Header - 固定高度 */}
+            <div
+              className="h-[45px] flex-shrink-0 px-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 select-none"
+              onClick={() => setSentRequestOpen(!sentRequestOpen)}
+            >
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${sentRequestOpen ? 'rotate-180' : ''}`} />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">实际发送的请求</span>
+            </div>
+            {/* 拖拽条 */}
+            {sentRequestOpen && <VerticalResizableDivider onResize={handleSentRequestResize} />}
+            {/* Content */}
+            {sentRequestOpen && (
+              <div className="flex-1 min-h-0 overflow-auto bg-white/50 dark:bg-gray-800/20">
+                <div className="px-3 py-2 space-y-2 text-xs">
+                  {/* Request Line */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`px-1.5 py-0.5 rounded font-bold select-none flex-shrink-0 ${getMethodColor(sentRequest.method)}`}>
+                      {sentRequest.method}
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-400 truncate" title={sentRequest.url}>{sentRequest.url}</span>
+                  </div>
 
-                {/* Request Headers */}
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
-                  <div className="text-gray-500 dark:text-gray-500 mb-1">Headers:</div>
-                  {Object.keys(sentRequest.headers).length > 0 ? (
-                    Object.entries(sentRequest.headers).map(([key, value]) => (
-                      <div key={key} className="flex gap-2 py-0.5">
-                        <span className="text-gray-600 dark:text-gray-400 font-medium">{key}:</span>
-                        <span className="text-gray-800 dark:text-gray-300 break-all">{value}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-gray-400">无自定义请求头</div>
+                  {/* Request Headers */}
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                    <div className="text-gray-500 dark:text-gray-500 mb-1 select-none">Headers:</div>
+                    {Object.keys(sentRequest.headers).length > 0 ? (
+                      Object.entries(sentRequest.headers).map(([key, value]) => (
+                        <div key={key} className="flex gap-2 py-0.5 min-w-0">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium flex-shrink-0">{key}:</span>
+                          <span className="text-gray-800 dark:text-gray-300 truncate" title={value as string}>{value as string}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-400 select-none">无自定义请求头</div>
+                    )}
+                  </div>
+
+                  {/* Request Body */}
+                  {sentRequest.body && (
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                      <div className="text-gray-500 dark:text-gray-500 mb-1 select-none">Body:</div>
+                      <pre className="text-gray-800 dark:text-gray-300 whitespace-pre-wrap break-words overflow-auto max-h-32">
+                        {sentRequest.body}
+                      </pre>
+                    </div>
                   )}
                 </div>
-
-                {/* Request Body */}
-                {sentRequest.body && (
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
-                    <div className="text-gray-500 dark:text-gray-500 mb-1">Body:</div>
-                    <pre className="text-gray-800 dark:text-gray-300 whitespace-pre-wrap break-all max-h-24 overflow-auto">
-                      {sentRequest.body}
-                    </pre>
-                  </div>
-                )}
               </div>
-            </details>
+            )}
           </div>
         )}
       </div>
@@ -1188,7 +1263,7 @@ export default function ApiWorkspace() {
 
       {/* Right: Response Panel */}
       <div
-        className="flex flex-col min-w-0 bg-gray-50 dark:bg-gray-900/30"
+        className="flex flex-col min-w-0 bg-gray-50 dark:bg-gray-800/30"
         style={{ width: `${100 - requestPanelPercent}%` }}
       >
         <ResponsePanel
@@ -1221,7 +1296,7 @@ export default function ApiWorkspace() {
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
                   placeholder="输入请求名称"
-                  className="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleSave()}
                 />
@@ -1241,7 +1316,7 @@ export default function ApiWorkspace() {
                 </select>
               </div>
             </div>
-            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 flex justify-end gap-2">
+            <div className="px-4 py-3 bg-gray-100 dark:bg-gray-800/50 flex justify-end gap-2">
               <button
                 onClick={() => setShowSaveModal(false)}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -1291,13 +1366,13 @@ export default function ApiWorkspace() {
 
             {/* Code Preview */}
             <div className="p-4 max-h-[400px] overflow-auto">
-              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm font-mono whitespace-pre-wrap overflow-auto">
+              <pre className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-4 rounded-lg text-sm font-mono whitespace-pre-wrap overflow-auto">
                 {generateCode(currentRequest, codeTarget)}
               </pre>
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 flex justify-end gap-2">
+            <div className="px-4 py-3 bg-gray-100 dark:bg-gray-800/50 flex justify-end gap-2">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(generateCode(currentRequest, codeTarget))
@@ -1331,6 +1406,7 @@ function VariableInput({
   variables,
   className = '',
   type = 'text',
+  onKeyDown,
 }: {
   value: string
   onChange: (value: string) => void
@@ -1338,6 +1414,7 @@ function VariableInput({
   variables: { key: string; value: string }[]
   className?: string
   type?: 'text' | 'password'
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
 }) {
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -1405,20 +1482,27 @@ function VariableInput({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showDropdown || variables.length === 0) return
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setSelectedIndex(prev => Math.min(prev + 1, variables.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSelectedIndex(prev => Math.max(prev - 1, 0))
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      selectVariable(variables[selectedIndex].key)
-    } else if (e.key === 'Escape') {
-      setShowDropdown(false)
+    // 先处理变量下拉选择
+    if (showDropdown && variables.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex(prev => Math.min(prev + 1, variables.length - 1))
+        return
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex(prev => Math.max(prev - 1, 0))
+        return
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        selectVariable(variables[selectedIndex].key)
+        return
+      } else if (e.key === 'Escape') {
+        setShowDropdown(false)
+        return
+      }
     }
+    // 调用外部的 onKeyDown
+    onKeyDown?.(e)
   }
 
   const selectVariable = (varKey: string) => {
@@ -1454,6 +1538,18 @@ function VariableInput({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // 当其他输入框获得焦点时清除悬浮提示
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      // 如果焦点不在当前组件内，清除悬浮提示
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setHoveredVar(null)
+      }
+    }
+    document.addEventListener('focusin', handleFocusIn)
+    return () => document.removeEventListener('focusin', handleFocusIn)
+  }, [])
+
   const inputClass = className || 'w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
 
   const parts = parseVariables(value)
@@ -1470,7 +1566,10 @@ function VariableInput({
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
-        onFocus={() => setIsFocused(true)}
+        onFocus={() => {
+          setIsFocused(true)
+          setHoveredVar(null) // 获得焦点时清除悬浮提示
+        }}
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
         spellCheck={false}
@@ -1483,6 +1582,7 @@ function VariableInput({
         <div
           className={`${inputClass} cursor-text min-h-[34px] flex items-center flex-wrap gap-0.5 relative z-10`}
           onClick={() => inputRef.current?.focus()}
+          onMouseLeave={handleVarLeave}
         >
           {parts.map((part, index) => (
             part.isVar ? (
@@ -1504,7 +1604,7 @@ function VariableInput({
       {/* 悬浮提示 */}
       {hoveredVar && createPortal(
         <div
-          className="fixed z-[100] bg-gray-900 dark:bg-gray-700 text-white text-xs px-3 py-2 rounded-lg shadow-xl max-w-[300px] overflow-hidden border border-gray-700 dark:border-gray-600"
+          className="fixed z-[100] bg-gray-800 dark:bg-gray-700 text-white text-xs px-3 py-2 rounded-lg shadow-xl max-w-[300px] overflow-hidden border border-gray-600 dark:border-gray-600"
           style={{
             top: hoveredVar.rect.top - 36,
             left: hoveredVar.rect.left + hoveredVar.rect.width / 2,
@@ -1582,81 +1682,159 @@ function KeyValueEditor({
     updateRow(index, 'enabled', !data[index].enabled)
   }
 
+  const enabledCount = data.filter(item => item.enabled).length
+
   return (
-    <div className="p-3">
-      {/* Rows */}
-      <div className="space-y-2">
-        {data.map((item, index) => (
-          <div key={index} className={`flex items-center gap-2 ${!item.enabled ? 'opacity-50' : ''}`}>
-            {/* Toggle Button */}
-            <button
-              onClick={() => toggleEnabled(index)}
-              className={`w-7 h-7 flex items-center justify-center rounded-md transition-all ${
-                item.enabled
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-              title={item.enabled ? '点击禁用' : '点击启用'}
-            >
-              {item.enabled ? (
-                <Check className="w-4 h-4" />
-              ) : (
-                <X className="w-4 h-4" />
-              )}
-            </button>
+    <div className="flex flex-col h-full">
+      {/* Table Header */}
+      <div className="flex-shrink-0 h-10 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 flex items-center px-3 select-none gap-0">
+        <div className="w-12 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">启用</div>
+        <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+        <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{keyPlaceholder}</div>
+        <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+        <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{valuePlaceholder}</div>
+        <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+        <div className="w-14 text-xs text-gray-500 text-center pl-2 whitespace-nowrap">
+          {data.length > 0 && <span>{enabledCount}/{data.length}</span>}
+        </div>
+      </div>
 
-            {/* Key Input */}
-            <input
-              type="text"
-              value={item.key}
-              onChange={(e) => updateRow(index, 'key', e.target.value)}
-              placeholder={keyPlaceholder}
-              className={`flex-1 min-w-0 px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                item.enabled ? 'border-gray-300 dark:border-gray-600' : 'border-gray-200 dark:border-gray-700'
-              }`}
-              list={suggestions.length > 0 ? `suggestions-${keyPlaceholder}` : undefined}
-            />
-
-            {/* Value Input */}
-            <div className="flex-1 min-w-0">
-              <VariableInput
-                value={item.value}
-                onChange={(val) => updateRow(index, 'value', val)}
-                placeholder={valuePlaceholder}
-                variables={variables}
-                className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  item.enabled ? 'border-gray-300 dark:border-gray-600' : 'border-gray-200 dark:border-gray-700'
-                }`}
-              />
-            </div>
-
-            {/* Delete Button */}
-            <button
-              onClick={() => removeRow(index)}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-              title="删除此行"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+      {/* Table Body */}
+      <div className="flex-1 overflow-auto min-h-0">
+        {data.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+            <div className="text-sm">暂无参数</div>
           </div>
-        ))}
+        ) : (
+          data.map((item, index) => (
+            <div
+              key={index}
+              className={`group flex items-center h-10 px-3 border-b border-gray-100 dark:border-gray-800 transition-colors gap-0 ${
+                !item.enabled ? 'opacity-40' : 'hover:bg-gray-50 dark:hover:bg-gray-800/30'
+              }`}
+            >
+              {/* Enable Toggle */}
+              <div className="w-12 flex justify-center flex-shrink-0">
+                <button
+                  onClick={() => toggleEnabled(index)}
+                  className={`w-4 h-4 rounded flex items-center justify-center transition-colors ${
+                    item.enabled
+                      ? 'bg-blue-500 text-white'
+                      : 'border-2 border-gray-300 dark:border-gray-600'
+                  }`}
+                >
+                  {item.enabled && <Check className="w-3 h-3" />}
+                </button>
+              </div>
+
+              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+
+              {/* Key Input */}
+              <div className="flex-1 min-w-0 min-w-[80px] overflow-hidden pl-3 flex-shrink-0">
+                <input
+                  type="text"
+                  value={item.key}
+                  onChange={(e) => updateRow(index, 'key', e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && item.key && addRow()}
+                  placeholder={keyPlaceholder}
+                  spellCheck={false}
+                  className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
+                  title={item.key}
+                  list={suggestions.length > 0 ? `kv-suggestions-${keyPlaceholder}` : undefined}
+                />
+              </div>
+
+              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+
+              {/* Value Input */}
+              <div className="flex-1 min-w-0 min-w-[80px] overflow-hidden pl-3 flex-shrink-0">
+                <VariableInput
+                  value={item.value}
+                  onChange={(val) => updateRow(index, 'value', val)}
+                  onKeyDown={(e) => e.key === 'Enter' && addRow()}
+                  placeholder={valuePlaceholder}
+                  variables={variables}
+                  className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
+                  title={item.value}
+                />
+              </div>
+
+              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+
+              {/* Delete Button */}
+              <div className="w-14 flex justify-center flex-shrink-0">
+                <button
+                  onClick={() => removeRow(index)}
+                  className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                  title="删除"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Add Button */}
-      <button
-        onClick={addRow}
-        className="mt-3 w-full py-2 flex items-center justify-center gap-2 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium rounded-lg transition-colors"
-      >
-        <Plus className="w-4 h-4" />
-        添加参数
-      </button>
+      <div className="flex-shrink-0 h-11 px-3 flex items-center border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        <button
+          onClick={addRow}
+          className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          添加参数
+        </button>
+      </div>
 
       {suggestions.length > 0 && (
-        <datalist id={`suggestions-${keyPlaceholder}`}>
-          {suggestions.map((s) => (
-            <option key={s} value={s} />
-          ))}
+        <datalist id={`kv-suggestions-${keyPlaceholder}`}>
+          {suggestions.map((s) => <option key={s} value={s} />)}
         </datalist>
+      )}
+    </div>
+  )
+}
+
+// Type Select Dropdown for Multipart
+function TypeSelect({
+  type,
+  onChange,
+}: {
+  type: 'text' | 'file'
+  onChange: (type: 'text' | 'file') => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1 px-2 py-0.5 text-xs rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors min-w-[52px] justify-between"
+      >
+        <span className={type === 'file' ? 'text-orange-500' : 'text-gray-600 dark:text-gray-400'}>
+          {type === 'file' ? '文件' : '文本'}
+        </span>
+        <ChevronDown className="w-3 h-3 text-gray-400" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-20 overflow-hidden py-0.5">
+            <button
+              onClick={() => { onChange('text'); setOpen(false) }}
+              className={`w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'text' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
+            >
+              文本
+            </button>
+            <button
+              onClick={() => { onChange('file'); setOpen(false) }}
+              className={`w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'file' ? 'text-orange-500 bg-orange-50 dark:bg-orange-900/20' : ''}`}
+            >
+              文件
+            </button>
+          </div>
+        </>
       )}
     </div>
   )
@@ -1731,7 +1909,7 @@ function BodyEditor({
       const newFormData = [...(body.formData || [])]
       newFormData[index] = {
         ...newFormData[index],
-        value: base64.split(',')[1], // 去掉base64前缀
+        value: base64.split(',')[1],
         fileName: file.name,
         fileType: file.type,
       }
@@ -1760,58 +1938,68 @@ function BodyEditor({
     reader.readAsDataURL(file)
   }
 
+  const formData = body.formData || []
+  const enabledCount = formData.filter(f => f.enabled).length
+  const totalCount = formData.length
+  const isMultipart = body.type === 'form-data'
+
   return (
-    <div className="p-3 h-full flex flex-col">
+    <div className="h-full flex flex-col">
       {/* Type Selector */}
-      <div className="flex items-center gap-1 mb-3 flex-wrap">
-        {bodyTypes.map((t) => (
-          <button
-            key={t.type}
-            onClick={() => {
-              onChange({ ...body, type: t.type })
-              if (t.type === 'form-data' || t.type === 'x-www-form-urlencoded') {
-                ensureFormData()
-              }
-            }}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
-              body.type === t.type
-                ? 'bg-blue-500 text-white shadow-md'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
-          >
-            {t.icon}
-            {t.label}
-          </button>
-        ))}
+      <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-1 flex-wrap select-none">
+          {bodyTypes.map((t) => (
+            <button
+              key={t.type}
+              onClick={() => {
+                onChange({ ...body, type: t.type })
+                if (t.type === 'form-data' || t.type === 'x-www-form-urlencoded') {
+                  ensureFormData()
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                body.type === t.type
+                  ? 'bg-blue-500 text-white shadow-md'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+            >
+              {t.icon}
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Raw Type Selector */}
       {body.type === 'raw' && (
-        <div className="flex items-center gap-1 mb-2">
-          {rawTypes.map((rt) => (
-            <button
-              key={rt}
-              onClick={() => onChange({ ...body, rawType: rt })}
-              className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
-                (body.rawType || 'text') === rt
-                  ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                  : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
-            >
-              {rt}
-            </button>
-          ))}
+        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 select-none">
+          <span className="text-xs text-gray-500">格式:</span>
+          <div className="flex items-center gap-1">
+            {rawTypes.map((rt) => (
+              <button
+                key={rt}
+                onClick={() => onChange({ ...body, rawType: rt })}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                  (body.rawType || 'text') === rt
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                {rt}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Editor - JSON / Raw */}
       {(body.type === 'json' || body.type === 'raw') && (
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-h-0">
           <textarea
             value={body.content}
             onChange={(e) => onChange({ ...body, content: e.target.value })}
             placeholder={body.type === 'json' ? '{\n  "key": "value"\n}' : '请求体内容...'}
-            className="w-full h-full min-h-[200px] px-4 py-3 bg-gray-900 text-gray-100 font-mono text-sm border-0 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full h-full px-4 py-3 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-mono text-sm border-0 resize-none focus:outline-none"
             spellCheck={false}
           />
         </div>
@@ -1819,103 +2007,172 @@ function BodyEditor({
 
       {/* Editor - Form Data / X-WWW-Form-URLEncoded */}
       {(body.type === 'form-data' || body.type === 'x-www-form-urlencoded') && (
-        <div className="flex-1 overflow-auto">
-          <div className="space-y-2">
-            {(body.formData || []).map((field, index) => (
-              <div key={index} className={`flex items-center gap-2 ${!field.enabled ? 'opacity-50' : ''}`}>
-                {/* Toggle Button */}
-                <button
-                  onClick={() => updateFormField(index, 'enabled', !field.enabled)}
-                  className={`w-7 h-7 flex items-center justify-center rounded-md transition-all ${
-                    field.enabled
-                      ? 'bg-blue-500 text-white hover:bg-blue-600'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
+        <>
+          {/* Table Header */}
+          <div className="flex-shrink-0 h-10 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 flex items-center px-3 select-none gap-0">
+            <div className="w-12 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">启用</div>
+            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+            <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">字段名</div>
+            {isMultipart && (
+              <>
+                <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+                <div className="w-16 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">类型</div>
+              </>
+            )}
+            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+            <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">值</div>
+            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+            <div className="w-14 text-xs text-gray-500 text-center pl-2 whitespace-nowrap">
+              {totalCount > 0 && <span>{enabledCount}/{totalCount}</span>}
+            </div>
+          </div>
+
+          {/* Table Body */}
+          <div className="flex-1 overflow-auto min-h-0">
+            {totalCount === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+                <div className="text-sm">暂无表单字段</div>
+              </div>
+            ) : (
+              formData.map((field, index) => (
+                <div
+                  key={index}
+                  className={`group flex items-center h-10 px-3 border-b border-gray-100 dark:border-gray-800 transition-colors gap-0 ${
+                    !field.enabled ? 'opacity-40' : 'hover:bg-gray-50 dark:hover:bg-gray-800/30'
                   }`}
-                  title={field.enabled ? '点击禁用' : '点击启用'}
                 >
-                  {field.enabled ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-                </button>
-
-                {/* Key Input */}
-                <input
-                  type="text"
-                  value={field.key}
-                  onChange={(e) => updateFormField(index, 'key', e.target.value)}
-                  placeholder="字段名"
-                  className="flex-1 min-w-0 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-
-                {/* Type Toggle (only for form-data) */}
-                {body.type === 'form-data' && (
-                  <button
-                    onClick={() => toggleFieldType(index)}
-                    className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      field.type === 'file'
-                        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                    }`}
-                    title={field.type === 'text' ? '切换为文件' : '切换为文本'}
-                  >
-                    {field.type === 'file' ? 'FILE' : 'TEXT'}
-                  </button>
-                )}
-
-                {/* Value Input */}
-                {field.type === 'text' ? (
-                  <input
-                    type="text"
-                    value={field.value}
-                    onChange={(e) => updateFormField(index, 'value', e.target.value)}
-                    placeholder="值"
-                    className="flex-1 min-w-0 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                ) : (
-                  <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <input
-                      type="file"
-                      onChange={(e) => handleFileSelect(index, e)}
-                      className="hidden"
-                      id={`file-${index}`}
-                    />
+                  {/* Enable Toggle */}
+                  <div className="w-12 flex justify-center flex-shrink-0">
                     <button
-                      onClick={() => document.getElementById(`file-${index}`)?.click()}
-                      className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-left hover:border-blue-500 transition-colors"
+                      onClick={() => updateFormField(index, 'enabled', !field.enabled)}
+                      className={`w-4 h-4 rounded flex items-center justify-center transition-colors ${
+                        field.enabled
+                          ? 'bg-blue-500 text-white'
+                          : 'border-2 border-gray-300 dark:border-gray-600'
+                      }`}
                     >
-                      {field.fileName ? (
-                        <span className="text-blue-600 dark:text-blue-400 truncate">{field.fileName}</span>
-                      ) : (
-                        <span className="text-gray-400">选择文件...</span>
-                      )}
+                      {field.enabled && <Check className="w-3 h-3" />}
                     </button>
                   </div>
-                )}
 
-                {/* Delete Button */}
-                <button
-                  onClick={() => removeFormField(index)}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-                  title="删除此行"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+                  <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+
+                  {/* Key Input */}
+                  <div className="flex-1 min-w-[80px] overflow-hidden pl-3 flex-shrink-0">
+                    <input
+                      type="text"
+                      value={field.key}
+                      onChange={(e) => updateFormField(index, 'key', e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && field.key && addFormField()}
+                      placeholder="字段名"
+                      spellCheck={false}
+                      className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
+                      title={field.key}
+                    />
+                  </div>
+
+                  {/* Type Select (only for form-data) */}
+                  {isMultipart && (
+                    <>
+                      <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+                      <div className="w-16 flex justify-center flex-shrink-0">
+                        <TypeSelect
+                          type={field.type}
+                          onChange={(newType) => {
+                            if (newType !== field.type) {
+                              toggleFieldType(index)
+                            }
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+
+                  {/* Value Input */}
+                  <div className="flex-1 min-w-[80px] overflow-hidden pl-3 flex-shrink-0">
+                    {(!isMultipart || field.type === 'text') ? (
+                      <input
+                        type="text"
+                        value={field.value || ''}
+                        onChange={(e) => updateFormField(index, 'value', e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && addFormField()}
+                        placeholder="值"
+                        spellCheck={false}
+                        className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
+                        title={field.value}
+                      />
+                    ) : (
+                      <div className="flex items-center min-w-0">
+                        <input
+                          type="file"
+                          onChange={(e) => handleFileSelect(index, e)}
+                          className="hidden"
+                          id={`file-${index}`}
+                        />
+                        <button
+                          onClick={() => document.getElementById(`file-${index}`)?.click()}
+                          className="flex-1 text-left px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors truncate"
+                          title={field.fileName}
+                        >
+                          {field.fileName ? (
+                            <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1 truncate">
+                              <Paperclip className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{field.fileName}</span>
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">选择文件</span>
+                          )}
+                        </button>
+                        {field.fileName && (
+                          <button
+                            onClick={() => {
+                              const newFormData = [...formData]
+                              newFormData[index] = { ...newFormData[index], value: '', fileName: '', fileType: '' }
+                              onChange({ ...body, formData: newFormData })
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-500 rounded flex-shrink-0"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+
+                  {/* Delete Button */}
+                  <div className="w-14 flex justify-center flex-shrink-0">
+                    <button
+                      onClick={() => removeFormField(index)}
+                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Add Button */}
-          <button
-            onClick={addFormField}
-            className="mt-3 w-full py-2 flex items-center justify-center gap-2 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium rounded-lg transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            添加字段
-          </button>
-        </div>
+          <div className="flex-shrink-0 h-11 px-3 flex items-center border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <button
+              onClick={addFormField}
+              className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              添加字段
+            </button>
+          </div>
+        </>
       )}
 
       {/* Editor - Binary */}
       {body.type === 'binary' && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
           <input
             type="file"
             ref={fileInputRef}
@@ -1946,10 +2203,10 @@ function BodyEditor({
 
       {/* None */}
       {body.type === 'none' && (
-        <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+        <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
           <div className="text-center">
-            <FileCode className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">此请求没有Body</p>
+            <FileCode className="w-10 h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">此请求没有 Body</p>
           </div>
         </div>
       )}
@@ -1977,7 +2234,7 @@ function AuthEditor({
   return (
     <div className="p-3">
       {/* Type Selector */}
-      <div className="grid grid-cols-2 gap-1.5 mb-4">
+      <div className="grid grid-cols-2 gap-1.5 mb-4 select-none">
         {authTypes.map((t) => (
           <button
             key={t.type}
@@ -2062,7 +2319,7 @@ function AuthEditor({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">添加到</label>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 select-none">
               {['header', 'query'].map((loc) => (
                 <button
                   key={loc}
@@ -2118,7 +2375,7 @@ function ResponsePanel({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Response</span>
           {response && (
@@ -2163,7 +2420,7 @@ function ResponsePanel({
         ) : response ? (
           <>
             {/* Tabs */}
-            <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
               <div className="flex items-center">
                 <button
                   onClick={() => setActiveTab('body')}

@@ -13,7 +13,7 @@ import { ToastProvider } from './components/common/Toast'
 import { useRedisStore } from './store/redisStore'
 import { useApiStore } from './store/apiStore'
 import { ToolType } from './store/types'
-import { Terminal, Server, List, Download, X } from 'lucide-react'
+import { Terminal, Server, List, Download, X, Sun, Moon } from 'lucide-react'
 
 type PanelType = 'keys' | 'command' | 'server' | 'batch' | 'export'
 type ViewMode = 'split' | 'full' // split = 两栏, full = 占满右侧区域
@@ -89,7 +89,10 @@ function ResizableDivider({
 export default function App() {
   const { activeConnectionId, connections, selectedKey, setSelectedKey, loadConfig } = useRedisStore()
   const { loadFromStorage: loadApiData } = useApiStore()
-  const [darkMode] = useState(true)
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('theme')
+    return saved ? saved === 'dark' : true // 默认深色模式
+  })
   const [activeTool, setActiveTool] = useState<ToolType>('redis')
   const [selectedPanel, setSelectedPanel] = useState<PanelType>('keys')
   const [viewMode, setViewMode] = useState<ViewMode>('split')
@@ -137,10 +140,16 @@ export default function App() {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
     } else {
       document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
     }
   }, [darkMode])
+
+  const toggleTheme = () => {
+    setDarkMode(!darkMode)
+  }
 
   const handlePanelChange = (panel: PanelType) => {
     setSelectedPanel(panel)
@@ -201,7 +210,7 @@ export default function App() {
           } transition-all duration-300`}
         >
           {/* Panel Header */}
-          <div className="flex-shrink-0 h-9 px-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+          <div className="flex-shrink-0 h-9 px-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm">
             <div className="flex items-center gap-2">
               {(() => {
                 const Icon = PANEL_CONFIG[selectedPanel].icon
@@ -246,9 +255,9 @@ export default function App() {
 
   return (
     <ToastProvider>
-      <div className="w-screen h-screen bg-gray-100 dark:bg-gray-900 flex flex-col overflow-hidden">
+      <div className="w-screen h-screen bg-gray-100 dark:bg-gray-800 flex flex-col overflow-hidden">
         {/* Top Toolbar */}
-        <Toolbar activeTool={activeTool} onToolChange={setActiveTool} />
+        <Toolbar activeTool={activeTool} onToolChange={setActiveTool} darkMode={darkMode} onToggleTheme={toggleTheme} />
 
         {/* Main Content */}
         <div className="flex-1 flex gap-3 p-3 pt-2 min-h-0">

@@ -113,7 +113,7 @@ function EditModal({ isOpen, type, originalMember, onClose, onSave }: EditModalP
               </button>
             </div>
             <div
-              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 overflow-hidden"
+              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800/50 overflow-hidden"
               style={{ height: '320px' }}
             >
               <CodeEditor

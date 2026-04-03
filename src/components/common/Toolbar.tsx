@@ -1,10 +1,12 @@
 import React from 'react'
-import { Database, Globe, Box } from 'lucide-react'
+import { Database, Globe, Box, Sun, Moon } from 'lucide-react'
 import { ToolType, TOOL_CONFIGS } from '@/store/types'
 
 interface ToolbarProps {
   activeTool: ToolType
   onToolChange: (tool: ToolType) => void
+  darkMode?: boolean
+  onToggleTheme?: () => void
 }
 
 // 图标映射
@@ -23,7 +25,7 @@ const TOOL_COLORS: Record<ToolType, { active: string; hover: string }> = {
   mongodb: { active: 'bg-green-500', hover: 'hover:bg-green-500/10 hover:text-green-500' },
 }
 
-export default function Toolbar({ activeTool, onToolChange }: ToolbarProps) {
+export default function Toolbar({ activeTool, onToolChange, darkMode = true, onToggleTheme }: ToolbarProps) {
   const tools: ToolType[] = ['redis', 'api'] // 目前只显示已实现的工具
 
   return (
@@ -70,14 +72,23 @@ export default function Toolbar({ activeTool, onToolChange }: ToolbarProps) {
       </div>
 
       {/* Right side actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         {/* 快捷键提示 */}
-        <div className="text-xs text-gray-400 dark:text-gray-500">
+        <div className="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">
           <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl</kbd>
           <span className="mx-0.5">+</span>
           <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Enter</kbd>
           <span className="ml-1">发送请求</span>
         </div>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={onToggleTheme}
+          className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          title={darkMode ? '切换到浅色模式' : '切换到深色模式'}
+        >
+          {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
       </div>
     </div>
   )

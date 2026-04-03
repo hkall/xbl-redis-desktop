@@ -140,7 +140,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
       {/* JSON Display */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {data ? (
-          <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900 rounded-lg">
+          <div className="h-full overflow-auto bg-gray-100 dark:bg-gray-800 rounded-lg">
             <pre className="p-4 text-sm leading-relaxed">
               <code className="font-mono text-gray-800 dark:text-gray-200 whitespace-pre">
                 {formatJSON(data)}

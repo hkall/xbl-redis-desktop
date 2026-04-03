@@ -107,7 +107,7 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
               value={field}
               onChange={(e) => setField(e.target.value)}
               placeholder="Enter field name..."
-              className="w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
             />
           </div>
 
@@ -135,7 +135,7 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
               </button>
             </div>
             <div
-              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 overflow-hidden flex flex-col"
+              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800/50 overflow-hidden flex flex-col"
               style={{ height: '320px' }}
            >
               <CodeEditor

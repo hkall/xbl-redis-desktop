@@ -72,7 +72,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               value={keyName}
               onChange={(e) => setKeyName(e.target.value)}
               placeholder="e.g., user:123"
-              className="w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
             />
           </div>
 
@@ -156,7 +156,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
                 'Enter value...'
               }
               rows={4}
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm resize-none"
+              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm resize-none"
             />
           </div>
 
@@ -170,7 +170,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               value={ttl}
               onChange={(e) => setTtl(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="Leave empty for no expiration"
-              className="w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
             />
           </div>
         </div>
@@ -1003,7 +1003,7 @@ export default function KeyBrowser() {
                   type="text"
                   value={renameKey || ''}
                   readOnly
-                  className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400"
+                  className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400"
                 />
               </div>
               <div>
@@ -1015,7 +1015,7 @@ export default function KeyBrowser() {
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder="Enter new key name"
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   autoFocus
                 />
               </div>

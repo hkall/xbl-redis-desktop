@@ -106,7 +106,7 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
               value={score}
               onChange={(e) => setScore(parseFloat(e.target.value) || 0)}
               step={0.01}
-              className="w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
             />
           </div>
 
@@ -134,7 +134,7 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
               </button>
             </div>
             <div
-              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 overflow-hidden"
+              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800/50 overflow-hidden"
               style={{ height: '320px' }}
             >
               <CodeEditor

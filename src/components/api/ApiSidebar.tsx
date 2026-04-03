@@ -717,7 +717,7 @@ export default function ApiSidebar() {
   return (
     <div className="h-full bg-white dark:bg-gray-800 flex flex-col">
       {/* Header */}
-      <div className="px-4 h-11 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex items-center justify-between bg-gray-50 dark:bg-gray-900/50">
+      <div className="px-4 h-11 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex items-center justify-between bg-gray-100 dark:bg-gray-800/50">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-blue-500" />
           <span className="text-sm font-semibold text-gray-800 dark:text-white">API Tester</span>
@@ -740,7 +740,7 @@ export default function ApiSidebar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索请求..."
-            className="w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
           {searchQuery && (
             <button
@@ -1160,7 +1160,7 @@ export default function ApiSidebar() {
       </div>
 
       {/* Footer - Import/Export */}
-      <div className="flex-shrink-0 h-14 px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex items-center gap-2">
+      <div className="flex-shrink-0 h-14 px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 flex items-center gap-2">
         <button onClick={() => {
           setImportText('')
           setImportMode('new')
@@ -1310,7 +1310,7 @@ export default function ApiSidebar() {
         <>
           <div className="fixed inset-0 z-[99]" onClick={() => { setMovingRequestId(null); setMoveMenuPosition(null) }} />
           <div className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[200px] z-[100] animate-in fade-in-0 zoom-in-95 duration-200" style={{ top: moveMenuPosition.top, left: moveMenuPosition.left }}>
-            <div className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/50">选择目标文件夹</div>
+            <div className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50">选择目标文件夹</div>
             <div className="max-h-56 overflow-y-auto py-1">
               {folderOptions.map((opt) => {
                 const isCurrentLocation = opt.id === null ? !isInFolder(activeProject?.requestFolders || [], movingRequestId) : isInSpecificFolder(activeProject?.requestFolders || [], movingRequestId, opt.id)
@@ -1329,7 +1329,7 @@ export default function ApiSidebar() {
                 )
               })}
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 p-2 bg-gray-50/80 dark:bg-gray-900/50">
+            <div className="border-t border-gray-200 dark:border-gray-700 p-2 bg-gray-100/80 dark:bg-gray-800/50">
               <button onClick={() => { setMovingRequestId(null); setMoveMenuPosition(null) }} className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">取消</button>
             </div>
           </div>
@@ -1491,7 +1491,7 @@ export default function ApiSidebar() {
                       <select
                         value={importTargetProjectId || ''}
                         onChange={(e) => setImportTargetProjectId(e.target.value || null)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">选择项目</option>
                         {projects.map(p => (
@@ -1532,12 +1532,12 @@ export default function ApiSidebar() {
                     <div className="absolute inset-y-0 left-0 right-0 top-0 flex items-center justify-center pointer-events-none">
                       <span className="text-xs text-gray-400 bg-white dark:bg-gray-800 px-2">或粘贴内容</span>
                     </div>
-                    <textarea value={importText} onChange={(e) => setImportText(e.target.value)} placeholder=" " className="w-full h-32 px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <textarea value={importText} onChange={(e) => setImportText(e.target.value)} placeholder=" " className="w-full h-32 px-3 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                   </div>
                 </div>
               )}
             </div>
-            <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/50 flex justify-end gap-3">
+            <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-3">
               <button onClick={() => setShowImportExport(null)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">取消</button>
               {showImportExport === 'export' ? (
                 <button onClick={() => selectedExportProjectId && handleExport(selectedExportProjectId)} disabled={!selectedExportProjectId} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">导出</button>
@@ -1687,7 +1687,7 @@ function EnvironmentModal({ environment, isNew, onClose, onSave }: { environment
         <div className="px-5 py-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">环境名称</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="例如：开发环境" className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" autoFocus />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="例如：开发环境" className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" autoFocus />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -1701,8 +1701,8 @@ function EnvironmentModal({ environment, isNew, onClose, onSave }: { environment
                 variables.map((v, i) => (
                   <div key={i} className="flex items-center gap-2 group">
                     <input type="checkbox" checked={v.enabled} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], enabled: e.target.checked }; setVariables(newVars) }} className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500" />
-                    <input type="text" value={v.key} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], key: e.target.value }; setVariables(newVars) }} placeholder="变量名" className="flex-1 px-2.5 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-                    <input type="text" value={v.value} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], value: e.target.value }; setVariables(newVars) }} placeholder="值" className="flex-1 px-2.5 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <input type="text" value={v.key} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], key: e.target.value }; setVariables(newVars) }} placeholder="变量名" className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <input type="text" value={v.value} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], value: e.target.value }; setVariables(newVars) }} placeholder="值" className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                     <button onClick={() => setVariables(variables.filter((_, idx) => idx !== i))} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 ))
@@ -1710,7 +1710,7 @@ function EnvironmentModal({ environment, isNew, onClose, onSave }: { environment
             </div>
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/50 flex justify-end gap-3">
+        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">取消</button>
           <button onClick={() => { if (!name.trim()) { showToast('请输入名称', 'error'); return } onSave({ ...environment, name, variables }) }} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm">保存</button>
         </div>

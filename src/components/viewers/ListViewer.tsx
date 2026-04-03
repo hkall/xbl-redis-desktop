@@ -108,7 +108,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
                   className={`flex-1 px-3 py-2 text-xs rounded-lg transition-colors ${
                     direction === 'left'
                       ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+                      : 'bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   Left (LPUSH)
@@ -118,7 +118,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
                   className={`flex-1 px-3 py-2 text-xs rounded-lg transition-colors ${
                     direction === 'right'
                       ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800'
+                      : 'bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   Right (RPUSH)
@@ -151,7 +151,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
               </button>
             </div>
             <div
-              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 overflow-hidden"
+              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800/50 overflow-hidden"
               style={{ height: '320px' }}
             >
               <CodeEditor
