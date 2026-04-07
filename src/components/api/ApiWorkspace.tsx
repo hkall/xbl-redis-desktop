@@ -1407,6 +1407,7 @@ function VariableInput({
   className = '',
   type = 'text',
   onKeyDown,
+  title,
 }: {
   value: string
   onChange: (value: string) => void
@@ -1415,6 +1416,7 @@ function VariableInput({
   className?: string
   type?: 'text' | 'password'
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  title?: string
 }) {
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -1572,6 +1574,7 @@ function VariableInput({
         }}
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
+        title={title}
         spellCheck={false}
         autoComplete="off"
         className={`${inputClass} ${showHighlight ? 'opacity-0 absolute inset-0 z-0' : ''}`}

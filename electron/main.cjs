@@ -1132,11 +1132,35 @@ ipcMain.handle('http:request', async (_event, config) => {
 
     // Add body for methods that support it
     const methodsWithBody = ['POST', 'PUT', 'PATCH']
-    if (methodsWithBody.includes(method) && body && body.content) {
-      options.body = body.content
-      // Set content-type if not already set
-      if (!options.headers['Content-Type'] && body.type === 'json') {
-        options.headers['Content-Type'] = 'application/json'
+    if (methodsWithBody.includes(method) && body) {
+      if (body.type === 'text' && body.content) {
+        options.body = body.content
+        if (body.contentType && !options.headers['Content-Type']) {
+          options.headers['Content-Type'] = body.contentType
+        }
+      } else if (body.type === 'form-data' && body.entries) {
+        // Handle form-data
+        const FormData = require('form-data')
+        const formData = new FormData()
+        for (const entry of body.entries) {
+          if (entry.type === 'file' && entry.fileName) {
+            // For files, the content should be base64 encoded
+            const buffer = Buffer.from(entry.value, 'base64')
+            formData.append(entry.key, buffer, entry.fileName)
+          } else if (entry.type === 'text') {
+            formData.append(entry.key, entry.value)
+          }
+        }
+        options.body = formData
+        // Merge formData headers (includes boundary)
+        options.headers = { ...options.headers, ...formData.getHeaders() }
+      } else if (body.type === 'binary' && body.content) {
+        // Handle binary
+        const buffer = Buffer.from(body.content, 'base64')
+        options.body = buffer
+        if (body.contentType && !options.headers['Content-Type']) {
+          options.headers['Content-Type'] = body.contentType
+        }
       }
     }
 

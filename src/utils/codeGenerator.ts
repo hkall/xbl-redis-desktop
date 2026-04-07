@@ -138,9 +138,17 @@ function generateAxios(request: SavedRequest): string {
 
   // Params
   const enabledParams = request.params.filter(p => p.enabled && p.key)
-  if (enabledParams.length > 0) {
+  const authQueryParams: { key: string; value: string }[] = []
+
+  // Auth query params
+  if (request.auth.type === 'api-key' && request.auth.apiKeyName && request.auth.apiKeyValue && request.auth.apiKeyLocation === 'query') {
+    authQueryParams.push({ key: request.auth.apiKeyName, value: request.auth.apiKeyValue })
+  }
+
+  if (enabledParams.length > 0 || authQueryParams.length > 0) {
     lines.push(`  params: {`)
-    enabledParams.forEach((p, index, arr) => {
+    const allParams = [...enabledParams, ...authQueryParams]
+    allParams.forEach((p, index, arr) => {
       lines.push(`    ${p.key}: '${escapeJs(p.value)}'${index < arr.length - 1 ? ',' : ''}`)
     })
     lines.push(`  },`)
@@ -158,15 +166,8 @@ function generateAxios(request: SavedRequest): string {
   } else if (request.auth.type === 'basic' && request.auth.username) {
     const credentials = btoa(`${request.auth.username}:${request.auth.password || ''}`)
     headers['Authorization'] = `Basic ${credentials}`
-  } else if (request.auth.type === 'api-key' && request.auth.apiKeyName && request.auth.apiKeyValue) {
-    if (request.auth.apiKeyLocation === 'query') {
-      lines.push(`  params: {`)
-      lines.push(`    ...params,`)
-      lines.push(`    ${request.auth.apiKeyName}: '${escapeJs(request.auth.apiKeyValue)}'`)
-      lines.push(`  },`)
-    } else {
-      headers[request.auth.apiKeyName] = request.auth.apiKeyValue
-    }
+  } else if (request.auth.type === 'api-key' && request.auth.apiKeyName && request.auth.apiKeyValue && request.auth.apiKeyLocation !== 'query') {
+    headers[request.auth.apiKeyName] = request.auth.apiKeyValue
   }
 
   if (Object.keys(headers).length > 0) {

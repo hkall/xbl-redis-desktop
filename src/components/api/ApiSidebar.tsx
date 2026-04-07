@@ -1055,7 +1055,7 @@ export default function ApiSidebar() {
                 <div className="px-2 space-y-0.5">
                   {history.slice(0, 20).map((item) => (
                     <div key={item.id} onClick={() => handleSelectHistory(item)} className="group mx-2 px-3 py-2 flex items-center gap-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/70 rounded-lg transition-colors">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${METHOD_BG[item.request.method]} ${METHOD_COLORS[item.request.method]}`}>{item.request.method}</span>
+                      <span className={`w-[52px] text-center py-0.5 rounded text-xs font-bold ${METHOD_BG[item.request.method]} ${METHOD_COLORS[item.request.method]}`}>{item.request.method}</span>
                       <span className="text-sm text-gray-600 dark:text-gray-400 truncate flex-1" title={item.request.url}>{item.request.url}</span>
                       <span className="text-xs text-gray-400">{formatDate(item.timestamp)}</span>
                       <button onClick={(e) => { e.stopPropagation(); deleteHistoryItem(item.id) }} className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-all">
@@ -1652,7 +1652,7 @@ function RequestTree({
           style={{ marginLeft: depth > 0 ? `${depth * 12 + 8}px` : undefined }}
         >
           <Globe className="w-4 h-4 text-blue-400 flex-shrink-0" />
-          <span className={`px-2 py-0.5 rounded text-xs font-bold ${METHOD_BG[request.method]} ${METHOD_COLORS[request.method]}`}>{request.method}</span>
+          <span className={`w-[52px] text-center py-0.5 rounded text-xs font-bold ${METHOD_BG[request.method]} ${METHOD_COLORS[request.method]}`}>{request.method}</span>
           {editingRequestId === request.id ? (
             <div className="flex-1 min-w-0 flex items-center gap-1 bg-white dark:bg-gray-700 rounded px-1.5 py-0.5 shadow-sm border border-blue-400 dark:border-blue-500">
               <input type="text" value={editingRequestName} onChange={(e) => setEditingRequestName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditRequest(); if (e.key === 'Escape') onCancelEditRequest() }} placeholder="输入名称..." className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
