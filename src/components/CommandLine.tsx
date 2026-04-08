@@ -416,197 +416,185 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
           <p className="text-gray-400 dark:text-gray-500 text-sm">Please connect to a Redis server first</p>
         </div>
       ) : (
-        <div className="w-full h-full bg-gray-900 dark:bg-black flex flex-col rounded-lg overflow-hidden font-mono text-sm">
-          {/* Header */}
-          <div className="flex-shrink-0 px-3 py-2 bg-gray-800 dark:bg-gray-950 border-b border-black/10 dark:border-white/10 flex items-center justify-between">
+        <div className="w-full h-full bg-gray-100 dark:bg-black flex flex-col overflow-hidden font-mono text-sm">
+          {/* History panel */}
+          {showHistory && (
+            <div className="flex-shrink-0 bg-gray-200 dark:bg-gray-950 border-b border-gray-300 dark:border-white/10 p-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">Command History</span>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {[...history].reverse().map((item, index) => (
+                  <button
+                    key={index}
+                    onClick={() => applyHistory(item)}
+                    className="w-full text-left px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 rounded truncate"
+                  >
+                    {item.command}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Output area */}
+          <div
+            ref={outputRef}
+            className="flex-1 overflow-y-auto p-3 space-y-2 bg-white dark:bg-gray-900"
+            style={{ minHeight: '150px' }}
+          >
+            {output.map((item, index) => (
+              <div key={index} className="space-y-1">
+                {/* Command input */}
+                {item.type === 'command' && (
+                  <div className="text-gray-500 dark:text-gray-400 whitespace-pre-wrap break-words">
+                    {item.content}
+                  </div>
+                )}
+
+                {/* Result output */}
+                {item.type === 'result' && (
+                  <div className="text-green-600 dark:text-green-400">
+                    {item.data ? (
+                      <div className="space-y-1">
+                        {/* Summary */}
+                        <div className="whitespace-pre-wrap break-words">{item.content}</div>
+
+                        {/* Formatted Java object or structured data */}
+                        {Array.isArray(item.data) && item.data.length > 0 && item.data.some((d: any) => d.className) ? (
+                          <div className="ml-2 space-y-1 border-l-2 border-green-400 dark:border-green-600 pl-2">
+                            {item.data.map((d: any, i: number) => (
+                              <div key={i} className="text-xs">
+                                <div className="text-yellow-600 dark:text-yellow-400 font-medium">[{i}] {d.className || 'Unknown'}</div>
+                                {d.data && (
+                                  <pre className="mt-1 text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">
+                                    {formatJavaObject(d.data)}
+                                  </pre>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : item.data && typeof item.data === 'object' && item.data.className ? (
+                          <pre className="ml-2 mt-1 border-l-2 border-green-400 dark:border-green-600 pl-2 text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">
+                            {formatJavaObject(item.data)}
+                          </pre>
+                        ) : typeof item.data === 'string' ? (
+                          <pre className="ml-2 mt-1 border-l-2 border-blue-400 dark:border-blue-600 pl-2 text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">
+                            {item.data}
+                          </pre>
+                        ) : item.data && typeof item.data === 'object' ? (
+                          <pre className="ml-2 mt-1 border-l-2 border-green-400 dark:border-green-600 pl-2 text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">
+                            {JSON.stringify(item.data, null, 2)}
+                          </pre>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="whitespace-pre-wrap break-words">{item.content}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Error output */}
+                {item.type === 'error' && (
+                  <div className="text-red-500 dark:text-red-400 whitespace-pre-wrap break-words">
+                    {item.content}
+                  </div>
+                )}
+              </div>
+            ))}
+            {loading && (
+              <div className="text-yellow-500 dark:text-yellow-400 animate-pulse">Executing...</div>
+            )}
+          </div>
+
+          {/* Autocomplete dropdown */}
+          {showAutocomplete && autocompleteSuggestions.length > 0 && (
+            <div className="flex-shrink-0 bg-gray-200 dark:bg-gray-950 border-t border-gray-300 dark:border-white/10 p-1">
+              <div className="text-xs text-gray-500 dark:text-gray-500 mb-1 px-1">Press Tab to autocomplete</div>
+              <div className="space-y-0.5">
+                {autocompleteSuggestions.map((suggestion, index) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => applyAutocomplete(suggestion)}
+                    className={`w-full text-left px-2 py-1 text-xs transition-colors ${
+                      index === autocompleteIndex
+                        ? 'bg-green-500 text-white'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input area */}
+          <div className="flex-shrink-0 border-t border-gray-300 dark:border-white/10 py-2 px-3 bg-gray-50 dark:bg-gray-900">
             <div className="flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-red-500" />
-              <span className="text-gray-300 font-medium">Redis CLI</span>
+              <span className="text-red-500 font-bold">&gt;</span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={command}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a Redis command..."
+                className="flex-1 bg-transparent text-gray-700 dark:text-gray-300 focus:outline-none placeholder-gray-400 dark:placeholder-gray-600 py-1"
+                disabled={!connectionId || loading}
+                autoFocus
+              />
+              <button
+                onClick={handleExecute}
+                disabled={!connectionId || loading || !command.trim()}
+                className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Execute (Enter)"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+              <div className="w-px h-4 bg-gray-300 dark:bg-gray-700" />
               {history.length > 0 && (
                 <button
                   onClick={() => setShowHistory(!showHistory)}
-                  className="text-gray-400 hover:text-gray-300 text-xs"
+                  className={`p-1.5 transition-colors text-xs ${
+                    showHistory
+                      ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  title="Command history"
                 >
-                  History ({history.length})
+                  <Terminal className="w-4 h-4" />
                 </button>
               )}
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setConfirmClear(true)}
-                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
-                title="Clear history"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
               <button
                 onClick={clearOutput}
-                className="p-1.5 text-gray-400 hover:text-gray-300 transition-colors"
+                className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                 title="Clear output"
               >
                 <X className="w-4 h-4" />
               </button>
+              {history.length > 0 && (
+                <button
+                  onClick={() => setConfirmClear(true)}
+                  className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
+                  title="Clear history"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">Enter</kbd> Execute</span>
+              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">Tab</kbd> Autocomplete</span>
+              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">↑↓</kbd> History</span>
             </div>
           </div>
-
-      {/* History panel */}
-      {showHistory && (
-        <div className="flex-shrink-0 bg-gray-800 dark:bg-gray-950 border-b border-black/10 dark:border-white/10 p-2">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-400 font-medium">Command History</span>
-            <button
-              onClick={() => setShowHistory(false)}
-              className="text-gray-400 hover:text-gray-300"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="max-h-40 overflow-y-auto space-y-1">
-            {[...history].reverse().map((item, index) => (
-              <button
-                key={index}
-                onClick={() => applyHistory(item)}
-                className="w-full text-left px-2 py-1 text-xs text-gray-300 hover:bg-gray-700 rounded truncate"
-              >
-                {item.command}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Output area */}
-      <div
-        ref={outputRef}
-        className="flex-1 overflow-y-auto p-3 space-y-2"
-        style={{ minHeight: '150px' }}
-      >
-        {output.map((item, index) => (
-          <div key={index} className="space-y-1">
-            {/* Command input */}
-            {item.type === 'command' && (
-              <div className="text-gray-400 whitespace-pre-wrap break-words">
-                {item.content}
-              </div>
-            )}
-
-            {/* Result output */}
-            {item.type === 'result' && (
-              <div className="text-green-400">
-                {item.data ? (
-                  <div className="space-y-1">
-                    {/* Summary */}
-                    <div className="whitespace-pre-wrap break-words">{item.content}</div>
-
-                    {/* Formatted Java object or structured data */}
-                    {Array.isArray(item.data) && item.data.length > 0 && item.data.some((d: any) => d.className) ? (
-                      <div className="ml-2 space-y-1 border-l-2 border-green-600 pl-2">
-                        {item.data.map((d: any, i: number) => (
-                          <div key={i} className="text-xs">
-                            <div className="text-yellow-400 font-medium">[{i}] {d.className || 'Unknown'}</div>
-                            {d.data && (
-                              <pre className="mt-1 text-gray-300 whitespace-pre-wrap break-words">
-                                {formatJavaObject(d.data)}
-                              </pre>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : item.data && typeof item.data === 'object' && item.data.className ? (
-                      <pre className="ml-2 mt-1 border-l-2 border-green-600 pl-2 text-xs text-gray-300 whitespace-pre-wrap break-words">
-                        {formatJavaObject(item.data)}
-                      </pre>
-                    ) : typeof item.data === 'string' ? (
-                      <pre className="ml-2 mt-1 border-l-2 border-blue-600 pl-2 text-xs text-gray-300 whitespace-pre-wrap break-words">
-                        {item.data}
-                      </pre>
-                    ) : item.data && typeof item.data === 'object' ? (
-                      <pre className="ml-2 mt-1 border-l-2 border-green-600 pl-2 text-xs text-gray-300 whitespace-pre-wrap break-words">
-                        {JSON.stringify(item.data, null, 2)}
-                      </pre>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="whitespace-pre-wrap break-words">{item.content}</div>
-                )}
-              </div>
-            )}
-
-            {/* Error output */}
-            {item.type === 'error' && (
-              <div className="text-red-400 whitespace-pre-wrap break-words">
-                {item.content}
-              </div>
-            )}
-          </div>
-        ))}
-        {loading && (
-          <div className="text-yellow-400 animate-pulse">Executing...</div>
-        )}
-      </div>
-
-      {/* Autocomplete dropdown */}
-      {showAutocomplete && autocompleteSuggestions.length > 0 && (
-        <div className="flex-shrink-0 bg-gray-800 dark:bg-gray-950 border-t border-black/10 dark:border-white/10 p-1">
-          <div className="text-xs text-gray-500 mb-1 px-1">Press Tab to autocomplete</div>
-          <div className="space-y-0.5">
-            {autocompleteSuggestions.map((suggestion, index) => (
-              <button
-                key={suggestion}
-                onClick={() => applyAutocomplete(suggestion)}
-                className={`w-full text-left px-2 py-1 text-xs transition-colors ${
-                  index === autocompleteIndex
-                    ? 'bg-green-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input area */}
-      <div className="flex-shrink-0 border-t border-black/10 dark:border-white/10 h-[52px] flex items-center px-3">
-        <div className="flex items-center gap-2 w-full">
-          <span className="text-red-500 font-bold">&gt;</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={command}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a Redis command..."
-            className="flex-1 bg-transparent text-gray-300 focus:outline-none placeholder-gray-600 py-1"
-            disabled={!connectionId || loading}
-            autoFocus
-          />
-          <button
-            onClick={handleExecute}
-            disabled={!connectionId || loading || !command.trim()}
-            className="p-1.5 text-gray-400 hover:text-green-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Execute command"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex items-center gap-3 text-xs text-gray-500 ml-4">
-          <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-gray-700 rounded">Enter</kbd>
-            <span>Execute</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-gray-700 rounded">Tab</kbd>
-            <span>Autocomplete</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-gray-700 rounded">↑</kbd>
-            <kbd className="px-1.5 py-0.5 bg-gray-700 rounded">↓</kbd>
-            <span>History</span>
-          </span>
-        </div>
-      </div>
 
       <ConfirmDialog
         isOpen={confirmClear}

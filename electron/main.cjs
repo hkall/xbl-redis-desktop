@@ -209,7 +209,7 @@ const createWindow = () => {
       contextIsolation: true,
       nodeIntegration: false,
     },
-    title: 'Xbl Redis Desktop'
+    title: 'XBL DevTools'
   })
 
   if (process.env.NODE_ENV === 'development') {

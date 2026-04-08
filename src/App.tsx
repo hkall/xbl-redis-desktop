@@ -214,9 +214,9 @@ export default function App() {
             <div className="flex items-center gap-2">
               {(() => {
                 const Icon = PANEL_CONFIG[selectedPanel].icon
-                return Icon && <Icon className="w-4 h-4" />
+                return Icon && <Icon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
               })()}
-              <span className="text-sm font-semibold">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 {PANEL_CONFIG[selectedPanel].label}
               </span>
             </div>

@@ -1,4 +1,4 @@
-# Xbl Redis Desktop
+# XBL DevTools
 
 [![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](../../releases)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](../../releases)
@@ -10,7 +10,7 @@
 
 A powerful and intuitive Redis desktop management tool to help you easily visualize and manage Redis databases.
 
-![Xbl Redis Desktop](./screenshots/main.png)
+![XBL DevTools](./screenshots/main.png)
 
 ---
 
@@ -141,13 +141,13 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
 
 #### Windows Installer
 
-1. Download the latest installer `Xbl Redis Desktop Setup 1.2.0.exe` from [Releases](../../releases)
+1. Download the latest installer `XBL DevTools Setup 1.2.0.exe` from [Releases](../../releases)
 2. Double-click to run the installer and follow the prompts to complete installation
 3. A shortcut will be created on the desktop, click to launch
 
 #### Windows Portable
 
-1. Download the portable version `Xbl Redis Desktop 1.2.0.exe` from [Releases](../../releases)
+1. Download the portable version `XBL DevTools 1.2.0.exe` from [Releases](../../releases)
 2. Unzip and run directly, no installation required
 
 **Recommend using portable version** - requires no admin privileges, can be carried on USB drive.
@@ -158,7 +158,7 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
 
 ### Create New Connection
 
-1. Launch Xbl Redis Desktop
+1. Launch XBL DevTools
 2. Click the "New Connection" button (red link icon) in the top left
 3. Fill in connection information:
 
@@ -567,8 +567,8 @@ After building, installer and portable version will be output to `dist` director
 
 ```
 dist/
-├── Xbl Redis Desktop Setup 1.2.0.exe    # Installer
-└── Xbl Redis Desktop 1.2.0.exe           # Portable version
+├── XBL DevTools Setup 1.2.0.exe    # Installer
+└── XBL DevTools 1.2.0.exe           # Portable version
 ```
 
 ---
@@ -589,7 +589,7 @@ dist/
 
 ### Q: Chinese text shows garbled?
 
-**Answer**: Xbl Redis Desktop perfectly supports Chinese. If garbled text appears, please check:
+**Answer**: XBL DevTools perfectly supports Chinese. If garbled text appears, please check:
 
 1. Is Redis data stored in UTF-8 encoding?
 2. Confirm display settings in app are correct
@@ -731,6 +731,6 @@ If this project helps you, please give us a ⭐️ Star!
 
 ---
 
-**Xbl Redis Desktop** - Making Redis management simpler and more efficient!
+**XBL DevTools** - Making Redis management simpler and more efficient!
 
 > [Back to Top](#xbl-redis-desktop)

@@ -467,7 +467,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
   if (loading && fields.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
       </div>
     )
   }
@@ -515,7 +515,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-4 pb-4">
         {filteredFields.length === 0 ? (
           <div className="flex-1 overflow-auto">
-            <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
               {searchTerm ? 'No matching fields found' : 'No fields found'}
             </div>
           </div>

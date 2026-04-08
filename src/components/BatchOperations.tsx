@@ -327,10 +327,10 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
           <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
             {getSelectedCount()} selected
           </span>
-          <span className="text-xs text-gray-400">/</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">/</span>
           <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
             {keysFoundCount} keys
-            {!allScanned && <span className="ml-1 text-xs text-gray-400">(more...)</span>}
+            {!allScanned && <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(more...)</span>}
           </span>
 
           {/* Execute Buttons */}
@@ -388,12 +388,12 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
       {/* Key List */}
       <div className="px-3 overflow-hidden flex-1 min-h-0 flex flex-col">
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-400 text-sm min-h-[200px]">
+          <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400 text-sm min-h-[200px]">
             <RefreshCw className="w-5 h-5 animate-spin mr-2" />
             Loading...
           </div>
         ) : visibleKeys.length === 0 ? (
-          <div className="flex items-center justify-center py-20 text-gray-400 text-sm min-h-[200px]">
+          <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400 text-sm min-h-[200px]">
             No keys found matching pattern "{searchPattern}"
           </div>
         ) : (

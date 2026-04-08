@@ -98,7 +98,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400 dark:text-gray-500 text-sm">Deserializing...</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">Deserializing...</div>
       </div>
     )
   }
@@ -149,7 +149,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 text-sm">No data to display</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No data to display</p>
           </div>
         )}
       </div>

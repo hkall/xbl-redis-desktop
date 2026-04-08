@@ -47,7 +47,7 @@
   },
   "build": {
     "appId": "com.xbl.redis-desktop",
-    "productName": "Xbl Redis Desktop",
+    "productName": "XBL DevTools",
     "artifactName": "${productName}-${os}-${version}.${ext}",
     "copyright": "Copyright © 2024 hukun",
     "files": [

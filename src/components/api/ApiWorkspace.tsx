@@ -905,7 +905,7 @@ export default function ApiWorkspace() {
     return (
       <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-800">
         <RequestTabsBar />
-        <div className="flex-1 flex items-center justify-center text-gray-400">
+        <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
           <div className="text-center">
             <Send className="w-12 h-12 mx-auto mb-3 opacity-20" />
             <p>点击 + 新建请求</p>
@@ -917,7 +917,7 @@ export default function ApiWorkspace() {
 
   if (!currentRequest) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-400 bg-gray-50 dark:bg-gray-800">
+      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800">
         <div className="text-center">
           <Send className="w-12 h-12 mx-auto mb-3 opacity-20" />
           <p>选择一个请求或创建新请求</p>
@@ -1229,7 +1229,7 @@ export default function ApiWorkspace() {
 
                   {/* Request Headers */}
                   <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
-                    <div className="text-gray-500 dark:text-gray-500 mb-1 select-none">Headers:</div>
+                    <div className="text-gray-500 dark:text-gray-400 mb-1 select-none">Headers:</div>
                     {Object.keys(sentRequest.headers).length > 0 ? (
                       Object.entries(sentRequest.headers).map(([key, value]) => (
                         <div key={key} className="flex gap-2 py-0.5 min-w-0">
@@ -1238,14 +1238,14 @@ export default function ApiWorkspace() {
                         </div>
                       ))
                     ) : (
-                      <div className="text-gray-400 select-none">无自定义请求头</div>
+                      <div className="text-gray-500 dark:text-gray-400 select-none">无自定义请求头</div>
                     )}
                   </div>
 
                   {/* Request Body */}
                   {sentRequest.body && (
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
-                      <div className="text-gray-500 dark:text-gray-500 mb-1 select-none">Body:</div>
+                      <div className="text-gray-500 dark:text-gray-400 mb-1 select-none">Body:</div>
                       <pre className="text-gray-800 dark:text-gray-300 whitespace-pre-wrap break-words overflow-auto max-h-32">
                         {sentRequest.body}
                       </pre>
@@ -1705,7 +1705,7 @@ function KeyValueEditor({
       {/* Table Body */}
       <div className="flex-1 overflow-auto min-h-0">
         {data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 py-8">
             <div className="text-sm">暂无参数</div>
           </div>
         ) : (
@@ -1826,13 +1826,13 @@ function TypeSelect({
           <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-20 overflow-hidden py-0.5">
             <button
               onClick={() => { onChange('text'); setOpen(false) }}
-              className={`w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'text' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
+              className={`w-full px-3 py-1.5 text-xs text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'text' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
             >
               文本
             </button>
             <button
               onClick={() => { onChange('file'); setOpen(false) }}
-              className={`w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'file' ? 'text-orange-500 bg-orange-50 dark:bg-orange-900/20' : ''}`}
+              className={`w-full px-3 py-1.5 text-xs text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'file' ? 'text-orange-500 bg-orange-50 dark:bg-orange-900/20' : ''}`}
             >
               文件
             </button>
@@ -2033,7 +2033,7 @@ function BodyEditor({
           {/* Table Body */}
           <div className="flex-1 overflow-auto min-h-0">
             {totalCount === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 py-8">
                 <div className="text-sm">暂无表单字段</div>
               </div>
             ) : (
@@ -2125,7 +2125,7 @@ function BodyEditor({
                               <span className="truncate">{field.fileName}</span>
                             </span>
                           ) : (
-                            <span className="text-gray-400">选择文件</span>
+                            <span className="text-gray-500 dark:text-gray-400">选择文件</span>
                           )}
                         </button>
                         {field.fileName && (
@@ -2206,7 +2206,7 @@ function BodyEditor({
 
       {/* None */}
       {body.type === 'none' && (
-        <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
+        <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
           <div className="text-center">
             <FileCode className="w-10 h-10 mx-auto mb-2 opacity-30" />
             <p className="text-sm">此请求没有 Body</p>
@@ -2485,11 +2485,11 @@ function ResponsePanel({
             )}
           </>
         ) : (
-          <div className="h-full flex items-center justify-center text-gray-400">
+          <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
             <div className="text-center">
               <Send className="w-8 h-8 mx-auto mb-2 opacity-20" />
               <p className="text-sm">发送请求后查看响应</p>
-              <p className="text-xs text-gray-400 mt-1">Ctrl + Enter</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Ctrl + Enter</p>
             </div>
           </div>
         )}

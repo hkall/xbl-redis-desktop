@@ -334,7 +334,7 @@ export default function ZSetViewer({ connectionId, keyName }: ZSetViewerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
       </div>
     )
   }
@@ -382,7 +382,7 @@ export default function ZSetViewer({ connectionId, keyName }: ZSetViewerProps) {
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-4 pb-4">
         <div className="flex-1 overflow-auto">
           {paginatedMembers.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
               No members found
             </div>
           ) : (

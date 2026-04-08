@@ -306,10 +306,15 @@ export default function DataPanel() {
 
   if (!selectedKey) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-800">
-        <p className="text-gray-400 text-sm">
-          Select a key to view and edit its data
-        </p>
+      <div className="w-full h-full flex flex-col bg-white dark:bg-gray-800">
+        <div className="px-3 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center">
+          <h2 className="text-sm font-medium text-gray-900 dark:text-white">Data</h2>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-400 dark:text-gray-500 text-sm">
+            Select a key to view and edit its data
+          </p>
+        </div>
       </div>
     )
   }
@@ -388,7 +393,7 @@ export default function DataPanel() {
       <div className="flex-1 overflow-hidden min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
+            <div className="text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
           </div>
         ) : keyInfo ? (
           <div className="h-full min-h-0">
@@ -410,7 +415,7 @@ export default function DataPanel() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 dark:text-gray-500 text-sm">Failed to load key</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Failed to load key</p>
           </div>
         )}
       </div>

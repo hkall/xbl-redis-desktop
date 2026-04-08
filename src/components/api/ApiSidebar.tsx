@@ -1050,7 +1050,7 @@ export default function ApiSidebar() {
           {expandedSections.has('history') && (
             <div className="pb-1">
               {history.length === 0 ? (
-                <div className="px-8 py-4 text-xs text-gray-400 text-center">暂无历史记录</div>
+                <div className="px-8 py-4 text-xs text-gray-500 dark:text-gray-400 text-center">暂无历史记录</div>
               ) : (
                 <div className="px-2 space-y-0.5">
                   {history.slice(0, 20).map((item) => (
@@ -1665,7 +1665,7 @@ function RequestTree({
         </div>
       ))}
       {folders.length === 0 && rootRequests.length === 0 && depth === 0 && (
-        <div className="px-8 py-4 text-xs text-gray-400 text-center">暂无请求，点击上方按钮创建</div>
+        <div className="px-8 py-4 text-xs text-gray-500 dark:text-gray-400 text-center">暂无请求，点击上方按钮创建</div>
       )}
     </div>
   )

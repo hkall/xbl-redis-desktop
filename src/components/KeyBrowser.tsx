@@ -828,7 +828,7 @@ export default function KeyBrowser() {
           <h2 className="text-sm font-medium text-gray-900 dark:text-white">Keys</h2>
         </div>
         <div className="flex-1 flex items-center justify-center min-w-0">
-          <p className="text-gray-400 text-center text-sm">
+          <p className="text-gray-400 dark:text-gray-500 text-center text-sm">
             Select a connection to view keys
           </p>
         </div>
@@ -843,7 +843,7 @@ export default function KeyBrowser() {
           <h2 className="text-sm font-medium text-gray-900 dark:text-white">Keys</h2>
         </div>
         <div className="flex-1 flex items-center justify-center min-w-0">
-          <p className="text-gray-400 text-center text-sm">
+          <p className="text-gray-400 dark:text-gray-500 text-center text-sm">
             Connect to view keys
           </p>
         </div>
