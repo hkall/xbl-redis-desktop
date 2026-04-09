@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AlertCircle, Lock } from 'lucide-react'
+import { useTranslation } from '@/store/i18nStore'
 
 export interface JavaObjectViewerProps {
   byteArray?: number[]
@@ -7,6 +8,7 @@ export interface JavaObjectViewerProps {
 }
 
 export default function JavaObjectViewer({ byteArray, data: propData }: JavaObjectViewerProps) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState<boolean>(true)
   const [data, setData] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
@@ -98,7 +100,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">Deserializing...</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">{t('redis.deserializing')}</div>
       </div>
     )
   }
@@ -108,7 +110,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
       <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
         <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
         <div>
-          <h3 className="font-medium text-red-800 dark:text-red-400 mb-1">Deserialization Error</h3>
+          <h3 className="font-medium text-red-800 dark:text-red-400 mb-1">{t('redis.deserializationError')}</h3>
           <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
         </div>
       </div>
@@ -122,7 +124,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
         <div className="flex items-center gap-2 mb-3 flex-shrink-0 text-xs">
           {byteArray && (
             <span className="text-gray-500 dark:text-gray-400">
-              {byteArray.length} bytes
+              {t('redis.bytesCount', { count: byteArray.length })}
             </span>
           )}
           {data.className && (
@@ -149,7 +151,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">No data to display</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t('redis.noDataDisplay')}</p>
           </div>
         )}
       </div>

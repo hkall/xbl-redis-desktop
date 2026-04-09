@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Terminal, Send, ChevronUp, ChevronDown, X, Trash2 } from 'lucide-react'
+import { useTranslation } from '@/store/i18nStore'
 import ConfirmDialog from './ConfirmDialog'
 
 interface CommandHistory {
@@ -36,6 +37,7 @@ const REDIS_COMMANDS = [
 ]
 
 export default function CommandLine({ connectionId }: CommandLineProps) {
+  const { t } = useTranslation()
   const [command, setCommand] = useState('')
   const [history, setHistory] = useState<CommandHistory[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
@@ -413,7 +415,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
       {/* Content */}
       {!connectionId ? (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-400 dark:text-gray-500 text-sm">Please connect to a Redis server first</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">{t('redis.pleaseConnect')}</p>
         </div>
       ) : (
         <div className="w-full h-full bg-gray-100 dark:bg-black flex flex-col overflow-hidden font-mono text-sm">
@@ -421,7 +423,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
           {showHistory && (
             <div className="flex-shrink-0 bg-gray-200 dark:bg-gray-950 border-b border-gray-300 dark:border-white/10 p-2">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">Command History</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">{t('redis.commandHistory')}</span>
                 <button
                   onClick={() => setShowHistory(false)}
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -509,14 +511,14 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
               </div>
             ))}
             {loading && (
-              <div className="text-yellow-500 dark:text-yellow-400 animate-pulse">Executing...</div>
+              <div className="text-yellow-500 dark:text-yellow-400 animate-pulse">{t('redis.executing')}</div>
             )}
           </div>
 
           {/* Autocomplete dropdown */}
           {showAutocomplete && autocompleteSuggestions.length > 0 && (
             <div className="flex-shrink-0 bg-gray-200 dark:bg-gray-950 border-t border-gray-300 dark:border-white/10 p-1">
-              <div className="text-xs text-gray-500 dark:text-gray-500 mb-1 px-1">Press Tab to autocomplete</div>
+              <div className="text-xs text-gray-500 dark:text-gray-500 mb-1 px-1">{t('redis.pressTabAutocomplete')}</div>
               <div className="space-y-0.5">
                 {autocompleteSuggestions.map((suggestion, index) => (
                   <button
@@ -545,7 +547,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
                 value={command}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a Redis command..."
+                placeholder={t('toolbar.typeRedisCommand')}
                 className="flex-1 bg-transparent text-gray-700 dark:text-gray-300 focus:outline-none placeholder-gray-400 dark:placeholder-gray-600 py-1"
                 disabled={!connectionId || loading}
                 autoFocus
@@ -554,7 +556,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
                 onClick={handleExecute}
                 disabled={!connectionId || loading || !command.trim()}
                 className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Execute (Enter)"
+                title={t('toolbar.executeEnter')}
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -567,7 +569,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
                       ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
-                  title="Command history"
+                  title={t('toolbar.commandHistory')}
                 >
                   <Terminal className="w-4 h-4" />
                 </button>
@@ -575,7 +577,7 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
               <button
                 onClick={clearOutput}
                 className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                title="Clear output"
+                title={t('toolbar.clearOutput')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -583,25 +585,25 @@ export default function CommandLine({ connectionId }: CommandLineProps) {
                 <button
                   onClick={() => setConfirmClear(true)}
                   className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
-                  title="Clear history"
+                  title={t('toolbar.clearHistory')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
             </div>
             <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 mt-1.5">
-              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">Enter</kbd> Execute</span>
-              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">Tab</kbd> Autocomplete</span>
-              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">↑↓</kbd> History</span>
+              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">Enter</kbd> {t('redis.enterExecute')}</span>
+              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">Tab</kbd> {t('redis.tabAutocomplete')}</span>
+              <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px]">↑↓</kbd> {t('redis.arrowHistory')}</span>
             </div>
           </div>
 
       <ConfirmDialog
         isOpen={confirmClear}
-        title="Clear History"
-        message="Are you sure you want to clear all command history?"
-        confirmText="Clear"
-        cancelText="Cancel"
+        title={t('redis.clearHistory')}
+        message={t('redis.clearHistoryConfirm')}
+        confirmText={t('redis.clear')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={clearHistory}
         onCancel={() => setConfirmClear(false)}

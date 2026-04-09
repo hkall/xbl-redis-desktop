@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import { Trash2, Database, CheckCircle, XCircle, Loader2, AlertCircle, Edit3, Link, X, ChevronDown, Terminal, Server, List, Download, Key, Copy } from 'lucide-react'
 import { useRedisStore, RedisConnection } from '@/store/redisStore'
+import { useTranslation } from '@/store/i18nStore'
 import ConfirmDialog from './ConfirmDialog'
 
 type PanelType = 'keys' | 'command' | 'server' | 'batch' | 'export'
 
 const PANEL_CONFIG = {
-  keys: { label: 'Keys', icon: Key, color: 'blue' as const },
-  command: { label: 'CLI', icon: Terminal, color: 'gray' as const },
-  server: { label: 'Server', icon: Server, color: 'purple' as const },
-  batch: { label: 'Batch', icon: List, color: 'orange' as const },
-  export: { label: 'Export', icon: Download, color: 'green' as const },
+  keys: { labelKey: 'redis.keys', icon: Key, color: 'blue' as const },
+  command: { labelKey: 'redis.cli', icon: Terminal, color: 'gray' as const },
+  server: { labelKey: 'redis.server', icon: Server, color: 'purple' as const },
+  batch: { labelKey: 'redis.batch', icon: List, color: 'orange' as const },
+  export: { labelKey: 'redis.export', icon: Download, color: 'green' as const },
 }
 
 export default function ConnectionPanel({ selectedPanel, onPanelChange }: { selectedPanel: PanelType; onPanelChange: (panel: PanelType) => void }) {
+  const { t } = useTranslation()
   const {
     connections,
     activeConnectionId,
@@ -240,7 +242,7 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
         <div className="flex items-center gap-1.5 min-w-0">
           <Database className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
           <span className="text-sm font-medium text-gray-900 dark:text-white flex-shrink-0">
-            Connections
+            {t('redis.connections')}
           </span>
           {activeConnection?.connected && (
             <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 min-w-0">
@@ -266,7 +268,7 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
               setShowAddForm(true)
             }}
             className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-medium text-xs py-1 px-2.5 rounded-md transition-colors flex-shrink-0 whitespace-nowrap"
-            title="New Connection"
+            title={t('toolbar.newConnection')}
           >
             <Link className="w-3 h-3" />
           </button>
@@ -276,7 +278,7 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
       <div className="flex-1 overflow-y-auto min-h-0 pb-16">
         {connections.length === 0 ? (
           <div className="p-4 text-center text-gray-400 text-sm">
-            No connections yet
+            {t('redis.noConnections')}
           </div>
         ) : (
           <div className="p-2 space-y-1">
@@ -290,8 +292,8 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
                 onDelete={() => setDeleteConfirm({
                   isOpen: true,
                   callback: () => removeConnection(connection.id),
-                  title: 'Delete Connection',
-                  message: `Are you sure you want to delete connection "${connection.name}"?`,
+                  title: t('redis.deleteConnection'),
+                  message: t('redis.deleteConfirm'),
                 })}
                 onEdit={() => openEditForm(connection)}
                 onSelectDatabase={(db) => handleSelectDatabase(connection, db)}
@@ -316,10 +318,10 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
                     : 'bg-blue-500 text-white shadow-md'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
-              title={panel.label}
+              title={t(panel.labelKey)}
             >
               {panel.icon && <panel.icon className="w-3.5 h-3.5" />}
-              <span className="text-[10px] font-medium leading-none">{panel.label}</span>
+              <span className="text-[10px] font-medium leading-none">{t(panel.labelKey)}</span>
             </button>
           ))}
         </div>
@@ -342,8 +344,8 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
         isOpen={deleteConfirm.isOpen}
         title={deleteConfirm.title}
         message={deleteConfirm.message}
-        confirmText="Delete"
-        cancelText="Cancel"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={() => {
           deleteConfirm.callback()
@@ -354,10 +356,10 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
 
       <ConfirmDialog
         isOpen={copyConfirm.isOpen}
-        title="Copy Connection"
-        message={`Create a copy of "${copyConfirm.connection?.name}"? The new connection will be named "${copyConfirm.connection?.name} (copy)".`}
-        confirmText="Copy"
-        cancelText="Cancel"
+        title={t('common.copy') + ' ' + t('redis.connectionName')}
+        message={t('redis.copyConfirm', { name: copyConfirm.connection?.name || '' })}
+        confirmText={t('common.copy')}
+        cancelText={t('common.cancel')}
         variant="info"
         onConfirm={handleCopyConnection}
         onCancel={() => setCopyConfirm({ isOpen: false, connection: null })}
@@ -385,6 +387,7 @@ function ConnectionItem({
   onSelectDatabase: (db: number) => void
   onCopy: () => void
 }) {
+  const { t } = useTranslation()
   const [showDbDropdown, setShowDbDropdown] = useState(false)
 
   const databaseInfo = connection.databaseInfo || {}
@@ -426,7 +429,7 @@ function ConnectionItem({
               onCopy()
             }}
             className="text-gray-400 hover:text-green-500 transition-colors"
-            title="Copy connection"
+            title={t('toolbar.copyConnection')}
           >
             <Copy className="w-3 h-3" />
           </button>
@@ -436,7 +439,7 @@ function ConnectionItem({
               onEdit()
             }}
             className="text-gray-400 hover:text-blue-500 transition-colors"
-            title="Edit connection"
+            title={t('toolbar.editConnection')}
           >
             <Edit3 className="w-3 h-3" />
           </button>
@@ -446,7 +449,7 @@ function ConnectionItem({
               onDelete()
             }}
             className="text-gray-400 hover:text-red-500 transition-colors"
-            title="Delete connection"
+            title={t('toolbar.deleteConnection')}
           >
             <Trash2 className="w-3 h-3" />
           </button>
@@ -578,6 +581,8 @@ function StatusIndicator({
   onConnect: () => void
   onDisconnect: () => void
 }) {
+  const { t } = useTranslation()
+
   if (connection.connecting) {
     return (
       <button
@@ -585,7 +590,7 @@ function StatusIndicator({
         className="text-xs text-gray-500 flex items-center gap-1"
       >
         <Loader2 className="w-3 h-3 animate-spin" />
-        Connecting...
+        {t('redis.connecting')}
       </button>
     )
   }
@@ -600,7 +605,7 @@ function StatusIndicator({
         className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 hover:text-green-700 dark:hover:text-green-300"
       >
         <CheckCircle className="w-3 h-3" />
-        Connected
+        {t('redis.connected')}
       </button>
     )
   }
@@ -614,7 +619,7 @@ function StatusIndicator({
       className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 hover:text-red-500 dark:hover:text-red-400"
     >
       <XCircle className="w-3 h-3" />
-      Connect
+      {t('redis.connect')}
     </button>
   )
 }
@@ -632,10 +637,12 @@ function AddConnectionForm({
   onCancel: () => void
   isEdit: boolean
 }) {
+  const { t } = useTranslation()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!connection.name.trim()) {
-      alert('Please enter a connection name')
+      alert(t('redis.connectionName') + ' is required')
       return
     }
     await onSubmit()
@@ -650,12 +657,12 @@ function AddConnectionForm({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-            {isEdit ? 'Edit Connection' : 'New Connection'}
+            {isEdit ? t('redis.editConnection') : t('redis.newConnection')}
           </h3>
           <button
             onClick={onCancel}
             className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Close"
+            title={t('toolbar.closeBtn')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -665,7 +672,7 @@ function AddConnectionForm({
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Name *
+              {t('redis.connectionName')} *
             </label>
             <input
               type="text"
@@ -678,7 +685,7 @@ function AddConnectionForm({
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Host *
+              {t('redis.host')} *
             </label>
             <input
               type="text"
@@ -691,7 +698,7 @@ function AddConnectionForm({
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Port *
+              {t('redis.port')} *
             </label>
             <input
               type="number"
@@ -706,7 +713,7 @@ function AddConnectionForm({
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Database
+              {t('redis.database')}
             </label>
             <input
               type="number"
@@ -729,7 +736,7 @@ function AddConnectionForm({
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Password (optional)
+              {t('redis.passwordOptional')}
             </label>
             <input
               type="password"
@@ -747,13 +754,13 @@ function AddConnectionForm({
             onClick={onCancel}
             className="px-4 py-2 text-xs font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             className="px-4 py-2 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
           >
-            {isEdit ? 'Update' : 'Add'}
+            {isEdit ? t('common.update') : t('common.add')}
           </button>
         </div>
       </div>

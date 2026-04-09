@@ -7,6 +7,7 @@ import {
   isLikelyBinary,
 } from '@/utils/deserializer'
 import { formatDataForEdit } from '@/utils/formatter'
+import { useTranslation } from '@/store/i18nStore'
 import JavaObjectViewer from './JavaObjectViewer'
 import CodeEditor from '../CodeEditor'
 
@@ -23,6 +24,7 @@ export interface DisplayResult {
 }
 
 export default function StringViewer({ connectionId, keyName }: StringViewerProps) {
+  const { t } = useTranslation()
   const [value, setValue] = useState<string | null>(null)
   const [editing, setEditing] = useState<boolean>(false)
   const [editValue, setEditValue] = useState<string>('')
@@ -177,7 +179,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">{t('common.loading')}</div>
       </div>
     )
   }
@@ -190,7 +192,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
           {/* Java Serialized indicator - other info shown in JavaObjectViewer */}
           {javaByteArray ? (
             <span className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded font-medium flex-shrink-0">
-              Java Serialized
+              {t('redis.javaSerialized')}
             </span>
           ) : value ? (
             <>
@@ -199,9 +201,9 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
                 <button
                   onClick={() => setShowFormatMenu(!showFormatMenu)}
                   className="flex items-center gap-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1.5 rounded transition-colors"
-                  title="Select Data Format"
+                  title={t('toolbar.selectDataFormat')}
                 >
-                  <span>Format</span>
+                  <span>{t('redis.formatLabel')}</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
 
@@ -258,7 +260,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
               className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0 font-medium"
             >
               <Save className="w-3 h-3" />
-              编辑
+              {t('redis.editDataBtn')}
             </button>
           </div>
         )}
@@ -271,14 +273,14 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
               className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 font-medium"
             >
               <Save className="w-3 h-3 flex-shrink-0" />
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? t('redis.saving') : t('redis.saveBtn')}
             </button>
             <button
               onClick={handleCancel}
               disabled={saving}
               className="text-xs border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
             >
-              取消
+              {t('redis.cancel')}
             </button>
           </div>
         )}
@@ -290,7 +292,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
           {/* Edit info bar */}
           <div className="flex-shrink-0 mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-xs text-blue-800 dark:text-blue-400">
-              编辑原始数据 - 更改将直接保存到 Redis
+              {t('redis.editRawData')}
             </p>
           </div>
           {/* Editor container */}
@@ -305,7 +307,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
           </div>
           {/* Keyboard shortcuts hint */}
           <div className="flex-shrink-0 mt-2 text-xs text-gray-500 dark:text-gray-400">
-            Tab 缩进 · Ctrl+Enter 保存
+            {t('redis.tabIndent')} · {t('redis.ctrlEnterSave')}
           </div>
         </div>
       ) : javaByteArray ? (
@@ -320,14 +322,14 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
               {format === 'raw' && !error && value && isLikelyBinary(value) && (
                 <div className="mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <p className="text-xs text-yellow-800 dark:text-yellow-400">
-                    数据似乎包含二进制字符。尝试使用 Base64 或 Hex 格式来解码。
+                    {t('redis.binaryDataHint')}
                   </p>
                 </div>
               )}
               {error && (
                 <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                   <p className="text-xs text-red-800 dark:text-red-400">
-                    {error} - 显示原始数据
+                    {error} - {t('redis.showErrorRaw')}
                   </p>
                 </div>
               )}

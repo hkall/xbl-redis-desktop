@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
-import { Database, Globe, Sun, Moon, RefreshCw, Loader2, Download, ExternalLink, X, CheckCircle, AlertCircle } from 'lucide-react'
+import { Database, Globe, Sun, Moon, RefreshCw, Loader2, Download, ExternalLink, X, CheckCircle, AlertCircle, Languages } from 'lucide-react'
 import { ToolType, TOOL_CONFIGS } from '@/store/types'
+import { useI18n, Language, LANGUAGE_CONFIG } from '@/store/i18nStore'
+import { useTranslation } from '@/store/i18nStore'
 
 const APP_VERSION = '1.2.0'
 
@@ -27,8 +29,58 @@ const TOOL_COLORS: Record<ToolType, { active: string; hover: string }> = {
   mongodb: { active: 'bg-green-500', hover: 'hover:bg-green-500/10 hover:text-green-500' },
 }
 
+// 语言切换组件
+function LanguageSwitcher() {
+  const { language, setLanguage } = useI18n()
+  const { t } = useTranslation()
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        title={t('toolbar.switchLanguage')}
+      >
+        <Languages className="w-4 h-4" />
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-20 min-w-[120px]">
+            {(Object.keys(LANGUAGE_CONFIG) as Language[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => {
+                  setLanguage(lang)
+                  setIsOpen(false)
+                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                  language === lang
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <span className="flex-1 text-left">{LANGUAGE_CONFIG[lang].nativeLabel}</span>
+                {language === lang && (
+                  <CheckCircle className="w-4 h-4" />
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function Toolbar({ activeTool, onToolChange, darkMode = true, onToggleTheme }: ToolbarProps) {
-  const tools: ToolType[] = ['redis', 'api'] // 目前只显示已实现的工具
+  const { t } = useTranslation()
+  const tools: ToolType[] = ['redis', 'api', 'mysql'] // 显示已实现的工具
   const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [showUpdateDialog, setShowUpdateDialog] = useState(false)
   const [updateInfo, setUpdateInfo] = useState<{ hasUpdate: boolean; latestVersion: string; downloadUrl?: string } | null>(null)
@@ -201,7 +253,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
             onClick={checkForUpdate}
             disabled={checkingUpdate}
             className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
-            title="Check for updates"
+            title={t('toolbar.checkUpdates')}
           >
             <span className="font-mono">v{APP_VERSION}</span>
             {checkingUpdate ? (
@@ -218,10 +270,13 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
           <button
             onClick={onToggleTheme}
             className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title={darkMode ? '切换到浅色模式' : '切换到深色模式'}
+            title={darkMode ? t('toolbar.switchToLightMode') : t('toolbar.switchToDarkMode')}
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
+
+          {/* Language Switcher */}
+          <LanguageSwitcher />
         </div>
       </div>
 
@@ -231,7 +286,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm">
             <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                {downloadComplete ? 'Download Complete' : updateInfo.hasUpdate ? 'Update Available' : 'Up to Date'}
+                {downloadComplete ? t('update.downloadComplete') : updateInfo.hasUpdate ? t('update.updateAvailable') : t('update.upToDateTitle')}
               </h3>
               <button
                 onClick={() => {
@@ -253,7 +308,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                     <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    Update downloaded successfully!
+                    {t('update.downloadComplete')}
                   </p>
                   <div className="flex gap-2 justify-center">
                     <button
@@ -261,13 +316,13 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                       className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      Open Installer
+                      {t('update.openInstaller')}
                     </button>
                     <button
                       onClick={handleOpenFolder}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
                     >
-                      Open Folder
+                      {t('update.openFolder')}
                     </button>
                   </div>
                 </>
@@ -277,7 +332,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                     <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
                   </div>
                   <p className="text-red-600 dark:text-red-400 mb-2 font-medium">
-                    Download Failed
+                    {t('update.downloadFailed')}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{downloadError}</p>
                 </>
@@ -287,7 +342,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                     <Download className="w-6 h-6 text-blue-600 dark:text-blue-400 animate-bounce" />
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 mb-2">
-                    Downloading update...
+                    {t('update.downloadingUpdate')}
                   </p>
                   {downloadProgress && (
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
@@ -309,17 +364,17 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                     <RefreshCw className="w-6 h-6 text-green-600 dark:text-green-400" />
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 mb-2">
-                    A new version is available!
+                    {t('update.newVersionAvailableMsg')}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    Current: <span className="font-mono">v{APP_VERSION}</span> → Latest: <span className="font-mono text-green-600 dark:text-green-400">v{updateInfo.latestVersion}</span>
+                    {t('update.currentLabel')}: <span className="font-mono">v{APP_VERSION}</span> → {t('update.latestLabel')}: <span className="font-mono text-green-600 dark:text-green-400">v{updateInfo.latestVersion}</span>
                   </p>
                   <button
                     onClick={handleDownloadUpdate}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     <Download className="w-4 h-4" />
-                    Download Update
+                    {t('update.downloadUpdate')}
                   </button>
                 </>
               ) : (
@@ -328,7 +383,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                     <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <p className="text-gray-600 dark:text-gray-300">
-                    You're using the latest version!
+                    {t('update.upToDate')}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                     <span className="font-mono">v{APP_VERSION}</span>

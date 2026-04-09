@@ -9,6 +9,7 @@ import { useApiStore } from '@/store/apiStore'
 import { KeyValue, HttpMethod, RequestBody, AuthConfig, RequestFolder, isFolder, SavedRequest, FormField } from '@/store/types'
 import { useToast } from '@/components/common/Toast'
 import { generateCode, CodeTarget } from '@/utils/codeGenerator'
+import { useTranslation } from '@/store/i18nStore'
 
 // HTTP方法选项
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
@@ -169,6 +170,7 @@ function VerticalResizableDivider({
 
 export default function ApiWorkspace() {
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const {
     currentRequest,
     currentResponse,
@@ -258,14 +260,14 @@ export default function ApiWorkspace() {
           if (r.id !== excludeId && r.name === name) return true
         }
       }
-      // 检查文件夹中的请求
+      // 检查{t('api.file')}夹中的请求
       for (const f of folders) {
         if (folderId === null || f.id === folderId) {
           for (const c of f.children) {
             if ('method' in c && c.id !== excludeId && c.name === name) return true
           }
         }
-        // 递归检查子文件夹
+        // 递归检查子{t('api.file')}夹
         const childFolders = f.children.filter(isFolder) as RequestFolder[]
         if (childFolders.length > 0) {
           if (checkInFolder(childFolders, [])) return true
@@ -276,7 +278,7 @@ export default function ApiWorkspace() {
     return checkInFolder(requestFolders, rootRequests)
   }
 
-  // 取消请求
+  // {t('common.cancel')}请求
   const handleCancel = () => {
     // Electron 环境
     if (window.electronAPI?.httpCancel && currentRequestIdRef.current) {
@@ -289,21 +291,21 @@ export default function ApiWorkspace() {
       abortControllerRef.current = null
     }
     setLoading(false)
-    setCurrentError('请求已取消')
+    setCurrentError(t('api.requestCancelled'))
   }
 
   // 发送请求
   const handleSend = async () => {
     if (!currentRequest?.url) {
-      showToast('请输入URL', 'error')
+      showToast(t('api.pleaseEnterUrl'), 'error')
       return
     }
 
-    // 创建 AbortController 用于取消请求
+    // 创建 AbortController 用于{t('common.cancel')}请求
     const controller = new AbortController()
     abortControllerRef.current = controller
 
-    // 获取当前项目的环境变量（确保是最新的）
+    // 获取当前项目的{t('api.environmentVariables')}（确保是最新的）
     const state = useApiStore.getState()
     const project = state.getActiveProject()
     const activeEnv = project?.environments.find(e => e.id === project.activeEnvId)
@@ -387,7 +389,7 @@ export default function ApiWorkspace() {
             const formData = new FormData()
             ;(currentRequest.body.formData || []).filter(f => f.enabled && f.key).forEach(f => {
               if (f.type === 'file' && f.value) {
-                // 从base64恢复文件
+                // 从base64恢复{t('api.file')}
                 const byteCharacters = atob(f.value)
                 const byteNumbers = new Array(byteCharacters.length)
                 for (let i = 0; i < byteCharacters.length; i++) {
@@ -455,7 +457,7 @@ export default function ApiWorkspace() {
       let result
 
       if (window.electronAPI?.httpRequest) {
-        // Electron环境 - 生成 requestId 用于取消
+        // Electron环境 - 生成 requestId 用于{t('common.cancel')}
         const requestId = crypto.randomUUID()
         currentRequestIdRef.current = requestId
 
@@ -471,7 +473,7 @@ export default function ApiWorkspace() {
             const entries: { key: string; value: string; type: string; fileName?: string }[] = []
             requestBody.forEach((value, key) => {
               if (value instanceof File) {
-                // 需要异步读取文件，这里简化处理
+                // 需要异步读取{t('api.file')}，这里简化处理
                 entries.push({ key, value: '', type: 'file', fileName: value.name })
               } else {
                 entries.push({ key, value, type: 'text' })
@@ -554,7 +556,7 @@ export default function ApiWorkspace() {
           response: result.data,
         })
       } else {
-        setCurrentError(result?.error || '请求失败')
+        setCurrentError(result?.error || t('api.requestFailed'))
         addHistory({
           request: {
             method: currentRequest.method,
@@ -564,15 +566,15 @@ export default function ApiWorkspace() {
             body: currentRequest.body,
             auth: currentRequest.auth,
           },
-          error: result?.error || '请求失败',
+          error: result?.error || t('api.requestFailed'),
         })
       }
     } catch (error) {
-      // 处理取消请求
+      // 处理{t('common.cancel')}请求
       if (error instanceof Error && error.name === 'AbortError') {
-        setCurrentError('请求已取消')
+        setCurrentError(t('api.requestCancelled'))
       } else {
-        const errorMsg = error instanceof Error ? error.message : '请求失败'
+        const errorMsg = error instanceof Error ? error.message : t('api.requestFailed')
         setCurrentError(errorMsg)
         addHistory({
           request: {
@@ -675,13 +677,13 @@ export default function ApiWorkspace() {
   // 保存请求
   const handleSave = () => {
     if (!saveName.trim()) {
-      showToast('请输入名称', 'error')
+      showToast(t('api.pleaseEnterName'), 'error')
       return
     }
 
     // 检查名称唯一性
     if (checkNameExists(saveName.trim(), saveFolderId, currentRequest?.id)) {
-      showToast('该名称已存在', 'error')
+      showToast(t('api.nameAlreadyExists'), 'error')
       return
     }
 
@@ -720,10 +722,10 @@ export default function ApiWorkspace() {
     setSaveFolderId(null)
   }
 
-  // 获取所有文件夹选项（扁平化）
+  // 获取所有{t('api.file')}夹选项（扁平化）
   const getFolderOptions = (folders: RequestFolder[], depth = 0): { id: string | null; name: string; depth: number }[] => {
     const result: { id: string | null; name: string; depth: number }[] = [
-      { id: null, name: '根目录', depth: 0 }
+      { id: null, name: t('api.rootDirectory'), depth: 0 }
     ]
     for (const f of folders) {
       result.push({ id: f.id, name: f.name, depth: depth + 1 })
@@ -838,7 +840,7 @@ export default function ApiWorkspace() {
                       : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800/50'
                   }`}
                   onClick={() => switchTab(tabId)}
-                  title={tabRequest.name || '未命名'}
+                  title={tabRequest.name || t('api.unnamed')}
                 >
                   {/* 方法标签 */}
                   <span className={`text-xs font-semibold mr-2 ${METHOD_TAB_COLORS[tabRequest.method]}`}>
@@ -847,17 +849,17 @@ export default function ApiWorkspace() {
 
                   {/* 名称 */}
                   <span className="text-xs truncate max-w-[100px]">
-                    {tabRequest.name || '未命名'}
+                    {tabRequest.name || t('api.unnamed')}
                   </span>
 
-                  {/* 关闭按钮 */}
+                  {/* {t('common.close')}按钮 */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       closeTab(tabId)
                     }}
                     className="ml-2 p-0.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                    title="关闭"
+                    title={t('common.close')}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -880,7 +882,7 @@ export default function ApiWorkspace() {
           <button
             onClick={() => {
               const newRequest: Omit<SavedRequest, 'id' | 'createdAt' | 'updatedAt'> = {
-                name: '新请求',
+                name: t('api.newRequest'),
                 method: 'GET',
                 url: '',
                 headers: [],
@@ -891,7 +893,7 @@ export default function ApiWorkspace() {
               saveRequest(newRequest, null)
             }}
             className="flex-shrink-0 px-2 h-full text-gray-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors"
-            title="新建请求"
+            title={t('api.newRequest')}
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -908,7 +910,7 @@ export default function ApiWorkspace() {
         <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
           <div className="text-center">
             <Send className="w-12 h-12 mx-auto mb-3 opacity-20" />
-            <p>点击 + 新建请求</p>
+            <p>{t('api.clickToAddRequest')}</p>
           </div>
         </div>
       </div>
@@ -920,7 +922,7 @@ export default function ApiWorkspace() {
       <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800">
         <div className="text-center">
           <Send className="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p>选择一个请求或创建新请求</p>
+          <p>{t('api.selectOrCreateRequest')}</p>
         </div>
       </div>
     )
@@ -984,7 +986,7 @@ export default function ApiWorkspace() {
                 }}
               >
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate flex-1">
-                  {currentRequest?.name || '未命名请求'}
+                  {currentRequest?.name || t('api.unnamedRequest')}
                 </span>
                 {currentRequest?.id && (
                   <button
@@ -993,7 +995,7 @@ export default function ApiWorkspace() {
                       setLocateRequestId(currentRequest.id)
                     }}
                     className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-opacity opacity-0 group-hover:opacity-100"
-                    title="在侧边栏中定位"
+                    title={t('api.locateInSidebar')}
                   >
                     <MapPin className="w-3.5 h-3.5" />
                   </button>
@@ -1045,7 +1047,7 @@ export default function ApiWorkspace() {
               <VariableInput
                 value={currentRequest.url}
                 onChange={(url) => updateCurrentRequest({ url })}
-                placeholder="输入URL"
+                placeholder={t('api.enterUrl')}
                 variables={activeVariables}
                 className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
@@ -1058,7 +1060,7 @@ export default function ApiWorkspace() {
                 className="select-none px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-200"
               >
                 <XCircle className="w-3.5 h-3.5" />
-                <span>取消</span>
+                <span>{t('common.cancel')}</span>
               </button>
             ) : (
               <div className="flex items-center gap-1 select-none">
@@ -1068,14 +1070,14 @@ export default function ApiWorkspace() {
                   className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-200 disabled:cursor-not-allowed"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>发送</span>
+                  <span>{t('api.send')}</span>
                 </button>
                 {/* Timeout Dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setShowTimeoutDropdown(!showTimeoutDropdown)}
                     className="select-none px-2 py-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all flex items-center gap-1 text-xs"
-                    title="超时设置"
+                    title={t('api.timeoutSettings')}
                   >
                     <Clock className="w-3.5 h-3.5" />
                     <span>{Math.round((currentRequest.timeout || 30000) / 1000)}s</span>
@@ -1097,7 +1099,7 @@ export default function ApiWorkspace() {
                                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                             }`}
                           >
-                            {ms >= 60000 ? `${ms / 60000}分钟` : `${ms / 1000}秒`}
+                            {ms >= 60000 ? `${ms / 60000}${t('api.minutes')}` : `${ms / 1000}${t('api.seconds')}`}
                           </button>
                         ))}
                       </div>
@@ -1115,7 +1117,7 @@ export default function ApiWorkspace() {
                 setShowSaveModal(true)
               }}
               className="p-1.5 text-gray-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
-              title="保存请求 (Ctrl+S)"
+              title={t('api.saveRequest')}
             >
               <Save className="w-4 h-4" />
             </button>
@@ -1124,7 +1126,7 @@ export default function ApiWorkspace() {
             <button
               onClick={() => setShowCodeModal(true)}
               className="p-1.5 text-gray-500 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all"
-              title="生成代码"
+              title={t('api.generateCode')}
             >
               <Terminal className="w-4 h-4" />
             </button>
@@ -1135,10 +1137,10 @@ export default function ApiWorkspace() {
         <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
           <div className="flex items-center">
             {([
-              { id: 'params', label: 'Params', count: currentRequest.params.filter(p => p.enabled && p.key).length },
-              { id: 'headers', label: 'Headers', count: currentRequest.headers.filter(h => h.enabled && h.key).length },
-              { id: 'body', label: 'Body' },
-              { id: 'auth', label: 'Auth' },
+              { id: 'params', label: t('api.params'), count: currentRequest.params.filter(p => p.enabled && p.key).length },
+              { id: 'headers', label: t('api.headers'), count: currentRequest.headers.filter(h => h.enabled && h.key).length },
+              { id: 'body', label: t('api.body') },
+              { id: 'auth', label: t('api.auth') },
             ] as const).map((tab) => (
               <button
                 key={tab.id}
@@ -1169,8 +1171,8 @@ export default function ApiWorkspace() {
             <KeyValueEditor
               data={currentRequest.params}
               onChange={(params) => updateCurrentRequest({ params })}
-              keyPlaceholder="参数名"
-              valuePlaceholder="参数值"
+              keyPlaceholder={t('api.paramName')}
+              valuePlaceholder={t('api.paramValue')}
               variables={activeVariables}
             />
           )}
@@ -1178,8 +1180,8 @@ export default function ApiWorkspace() {
             <KeyValueEditor
               data={currentRequest.headers}
               onChange={(headers) => updateCurrentRequest({ headers })}
-              keyPlaceholder="Header名"
-              valuePlaceholder="Header值"
+              keyPlaceholder={t('api.headerName')}
+              valuePlaceholder={t('api.headerValue')}
               suggestions={['Content-Type', 'Authorization', 'Accept', 'User-Agent', 'Cache-Control', 'Cookie']}
               variables={activeVariables}
             />
@@ -1211,7 +1213,7 @@ export default function ApiWorkspace() {
               onClick={() => setSentRequestOpen(!sentRequestOpen)}
             >
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${sentRequestOpen ? 'rotate-180' : ''}`} />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">实际发送的请求</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('api.actualRequestSent')}</span>
             </div>
             {/* 拖拽条 */}
             {sentRequestOpen && <VerticalResizableDivider onResize={handleSentRequestResize} />}
@@ -1229,7 +1231,7 @@ export default function ApiWorkspace() {
 
                   {/* Request Headers */}
                   <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
-                    <div className="text-gray-500 dark:text-gray-400 mb-1 select-none">Headers:</div>
+                    <div className="text-gray-500 dark:text-gray-400 mb-1 select-none">{t('api.headersLabel')}</div>
                     {Object.keys(sentRequest.headers).length > 0 ? (
                       Object.entries(sentRequest.headers).map(([key, value]) => (
                         <div key={key} className="flex gap-2 py-0.5 min-w-0">
@@ -1238,14 +1240,14 @@ export default function ApiWorkspace() {
                         </div>
                       ))
                     ) : (
-                      <div className="text-gray-500 dark:text-gray-400 select-none">无自定义请求头</div>
+                      <div className="text-gray-500 dark:text-gray-400 select-none">{t('api.noCustomHeaders')}</div>
                     )}
                   </div>
 
                   {/* Request Body */}
                   {sentRequest.body && (
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
-                      <div className="text-gray-500 dark:text-gray-400 mb-1 select-none">Body:</div>
+                      <div className="text-gray-500 dark:text-gray-400 mb-1 select-none">{t('api.bodyLabel')}</div>
                       <pre className="text-gray-800 dark:text-gray-300 whitespace-pre-wrap break-words overflow-auto max-h-32">
                         {sentRequest.body}
                       </pre>
@@ -1282,7 +1284,7 @@ export default function ApiWorkspace() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                {currentRequest?.id && findRequestById(currentRequest.id) ? '更新请求' : '保存请求'}
+                {currentRequest?.id && findRequestById(currentRequest.id) ? t('api.updateRequest') : t('api.saveRequest')}
               </h3>
               <button onClick={() => setShowSaveModal(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
                 <X className="w-4 h-4" />
@@ -1290,19 +1292,19 @@ export default function ApiWorkspace() {
             </div>
             <div className="p-4 space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">请求名称</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.requestName')}</label>
                 <input
                   type="text"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
-                  placeholder="输入请求名称"
+                  placeholder={t('api.enterRequestName')}
                   className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleSave()}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">保存位置</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.saveLocation')}</label>
                 <select
                   value={saveFolderId || ''}
                   onChange={(e) => setSaveFolderId(e.target.value || null)}
@@ -1321,13 +1323,13 @@ export default function ApiWorkspace() {
                 onClick={() => setShowSaveModal(false)}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSave}
                 className="px-3 py-1.5 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
               >
-                {currentRequest?.id && findRequestById(currentRequest.id) ? '更新' : '保存'}
+                {currentRequest?.id && findRequestById(currentRequest.id) ? t('common.update') : t('common.save')}
               </button>
             </div>
           </div>
@@ -1339,7 +1341,7 @@ export default function ApiWorkspace() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCodeModal(false)}>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">生成代码</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('api.generateCode')}</h3>
               <button onClick={() => setShowCodeModal(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
                 <X className="w-4 h-4" />
               </button>
@@ -1382,13 +1384,13 @@ export default function ApiWorkspace() {
                 className="px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
               >
                 {codeCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {codeCopied ? '已复制' : '复制代码'}
+                {codeCopied ? t('redis.copied') : t('api.copyCode')}
               </button>
               <button
                 onClick={() => setShowCodeModal(false)}
                 className="px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
               >
-                关闭
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -1426,7 +1428,7 @@ function VariableInput({
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // 解析文本中的变量位置
+  // 解析{t('api.text')}中的变量位置
   const parseVariables = (text: string) => {
     const regex = /\{\{(\w+)\}\}/g
     const parts: { text: string; isVar: boolean; varKey?: string }[] = []
@@ -1617,7 +1619,7 @@ function VariableInput({
           <div className="flex items-center gap-2">
             <span className="text-blue-300 font-mono">{`{{${hoveredVar.key}}}`}</span>
             <span className="text-gray-500">→</span>
-            <span className="text-green-300 font-mono truncate">{hoveredVar.value || '(空)'}</span>
+            <span className="text-green-300 font-mono truncate">{hoveredVar.value || t('api.empty')}</span>
           </div>
         </div>,
         document.body
@@ -1629,7 +1631,7 @@ function VariableInput({
           className="absolute z-20 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[160px] max-h-48 overflow-y-auto"
         >
           <div className="px-2 py-1 text-xs text-gray-400 border-b border-gray-100 dark:border-gray-700">
-            环境变量
+            {t('api.environmentVariables')}
           </div>
           {variables.map((v, index) => (
             <button
@@ -1691,7 +1693,7 @@ function KeyValueEditor({
     <div className="flex flex-col h-full">
       {/* Table Header */}
       <div className="flex-shrink-0 h-10 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 flex items-center px-3 select-none gap-0">
-        <div className="w-12 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">启用</div>
+        <div className="w-12 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">{t('api.enabled')}</div>
         <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
         <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{keyPlaceholder}</div>
         <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
@@ -1706,7 +1708,7 @@ function KeyValueEditor({
       <div className="flex-1 overflow-auto min-h-0">
         {data.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 py-8">
-            <div className="text-sm">暂无参数</div>
+            <div className="text-sm">{t('api.noParams')}</div>
           </div>
         ) : (
           data.map((item, index) => (
@@ -1769,7 +1771,7 @@ function KeyValueEditor({
                 <button
                   onClick={() => removeRow(index)}
                   className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                  title="删除"
+                  title={t('common.delete')}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -1786,7 +1788,7 @@ function KeyValueEditor({
           className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded transition-colors"
         >
           <Plus className="w-4 h-4" />
-          添加参数
+          {t('api.addParam')}
         </button>
       </div>
 
@@ -1816,7 +1818,7 @@ function TypeSelect({
         className="flex items-center gap-1 px-2 py-0.5 text-xs rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors min-w-[52px] justify-between"
       >
         <span className={type === 'file' ? 'text-orange-500' : 'text-gray-600 dark:text-gray-400'}>
-          {type === 'file' ? '文件' : '文本'}
+          {type === 'file' ? t('api.file') : t('api.text')}
         </span>
         <ChevronDown className="w-3 h-3 text-gray-400" />
       </button>
@@ -1828,13 +1830,13 @@ function TypeSelect({
               onClick={() => { onChange('text'); setOpen(false) }}
               className={`w-full px-3 py-1.5 text-xs text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'text' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
             >
-              文本
+              {t('api.text')}
             </button>
             <button
               onClick={() => { onChange('file'); setOpen(false) }}
               className={`w-full px-3 py-1.5 text-xs text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'file' ? 'text-orange-500 bg-orange-50 dark:bg-orange-900/20' : ''}`}
             >
-              文件
+              {t('api.file')}
             </button>
           </div>
         </>
@@ -1851,15 +1853,16 @@ function BodyEditor({
   body: RequestBody
   onChange: (body: RequestBody) => void
 }) {
+  const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const bodyTypes: { type: RequestBody['type']; label: string; icon: React.ReactNode }[] = [
-    { type: 'none', label: 'None', icon: <X className="w-4 h-4" /> },
+    { type: 'none', label: t('api.none'), icon: <X className="w-4 h-4" /> },
     { type: 'json', label: 'JSON', icon: <Braces className="w-4 h-4" /> },
-    { type: 'form-data', label: 'Multipart', icon: <Upload className="w-4 h-4" /> },
-    { type: 'x-www-form-urlencoded', label: 'Form', icon: <FormInput className="w-4 h-4" /> },
-    { type: 'raw', label: 'Raw', icon: <FileCode className="w-4 h-4" /> },
-    { type: 'binary', label: 'Binary', icon: <FileText className="w-4 h-4" /> },
+    { type: 'form-data', label: t('api.formData'), icon: <Upload className="w-4 h-4" /> },
+    { type: 'x-www-form-urlencoded', label: t('api.formUrlencoded'), icon: <FormInput className="w-4 h-4" /> },
+    { type: 'raw', label: t('api.raw'), icon: <FileCode className="w-4 h-4" /> },
+    { type: 'binary', label: t('api.binary'), icon: <FileText className="w-4 h-4" /> },
   ]
 
   const rawTypes: RequestBody['rawType'][] = ['text', 'xml', 'html', 'javascript']
@@ -1901,7 +1904,7 @@ function BodyEditor({
     onChange({ ...body, formData: newFormData })
   }
 
-  // 处理文件选择
+  // 处理{t('api.file')}选择
   const handleFileSelect = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -1921,7 +1924,7 @@ function BodyEditor({
     reader.readAsDataURL(file)
   }
 
-  // 处理binary文件选择
+  // 处理binary{t('api.file')}选择
   const handleBinaryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -1976,7 +1979,7 @@ function BodyEditor({
       {/* Raw Type Selector */}
       {body.type === 'raw' && (
         <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 select-none">
-          <span className="text-xs text-gray-500">格式:</span>
+          <span className="text-xs text-gray-500">{t('api.format')}:</span>
           <div className="flex items-center gap-1">
             {rawTypes.map((rt) => (
               <button
@@ -2001,7 +2004,7 @@ function BodyEditor({
           <textarea
             value={body.content}
             onChange={(e) => onChange({ ...body, content: e.target.value })}
-            placeholder={body.type === 'json' ? '{\n  "key": "value"\n}' : '请求体内容...'}
+            placeholder={body.type === 'json' ? '{\n  "key": "value"\n}' : t('api.bodyContent')}
             className="w-full h-full px-4 py-3 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-mono text-sm border-0 resize-none focus:outline-none"
             spellCheck={false}
           />
@@ -2013,17 +2016,17 @@ function BodyEditor({
         <>
           {/* Table Header */}
           <div className="flex-shrink-0 h-10 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 flex items-center px-3 select-none gap-0">
-            <div className="w-12 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">启用</div>
+            <div className="w-12 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">{t('api.enabled')}</div>
             <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-            <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">字段名</div>
+            <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{t('api.fieldName')}</div>
             {isMultipart && (
               <>
                 <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-                <div className="w-16 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">类型</div>
+                <div className="w-16 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">{t('common.type')}</div>
               </>
             )}
             <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-            <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">值</div>
+            <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{t('common.value')}</div>
             <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
             <div className="w-14 text-xs text-gray-500 text-center pl-2 whitespace-nowrap">
               {totalCount > 0 && <span>{enabledCount}/{totalCount}</span>}
@@ -2034,7 +2037,7 @@ function BodyEditor({
           <div className="flex-1 overflow-auto min-h-0">
             {totalCount === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 py-8">
-                <div className="text-sm">暂无表单字段</div>
+                <div className="text-sm">{t('api.noFormFields')}</div>
               </div>
             ) : (
               formData.map((field, index) => (
@@ -2067,7 +2070,7 @@ function BodyEditor({
                       value={field.key}
                       onChange={(e) => updateFormField(index, 'key', e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && field.key && addFormField()}
-                      placeholder="字段名"
+                      placeholder={t('api.fieldName')}
                       spellCheck={false}
                       className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
                       title={field.key}
@@ -2101,7 +2104,7 @@ function BodyEditor({
                         value={field.value || ''}
                         onChange={(e) => updateFormField(index, 'value', e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && addFormField()}
-                        placeholder="值"
+                        placeholder={t('common.value')}
                         spellCheck={false}
                         className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
                         title={field.value}
@@ -2125,7 +2128,7 @@ function BodyEditor({
                               <span className="truncate">{field.fileName}</span>
                             </span>
                           ) : (
-                            <span className="text-gray-500 dark:text-gray-400">选择文件</span>
+                            <span className="text-gray-500 dark:text-gray-400">{t('api.selectFile')}</span>
                           )}
                         </button>
                         {field.fileName && (
@@ -2167,7 +2170,7 @@ function BodyEditor({
               className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded transition-colors"
             >
               <Plus className="w-4 h-4" />
-              添加字段
+              {t('api.addField')}
             </button>
           </div>
         </>
@@ -2187,7 +2190,7 @@ function BodyEditor({
             className="px-6 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl flex items-center gap-3 text-lg font-medium transition-all shadow-lg hover:shadow-xl"
           >
             <Upload className="w-6 h-6" />
-            选择文件
+            选择{t('api.file')}
           </button>
           {body.binaryFile && (
             <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
@@ -2209,7 +2212,7 @@ function BodyEditor({
         <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
           <div className="text-center">
             <FileCode className="w-10 h-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">此请求没有 Body</p>
+            <p className="text-sm">{t('api.noBody')}</p>
           </div>
         </div>
       )}
@@ -2228,10 +2231,10 @@ function AuthEditor({
   variables?: { key: string; value: string }[]
 }) {
   const authTypes: { type: AuthConfig['type']; label: string; desc: string }[] = [
-    { type: 'none', label: 'No Auth', desc: '不使用认证' },
-    { type: 'bearer', label: 'Bearer Token', desc: 'OAuth 2.0 / JWT' },
-    { type: 'basic', label: 'Basic Auth', desc: '用户名密码认证' },
-    { type: 'api-key', label: 'API Key', desc: '自定义Header或Query参数' },
+    { type: 'none', label: t('api.noAuth'), desc: t('api.noAuthDesc') },
+    { type: 'bearer', label: t('api.bearerAuth'), desc: 'OAuth 2.0 / JWT' },
+    { type: 'basic', label: t('api.basicAuth'), desc: t('api.basicAuthDesc') },
+    { type: 'api-key', label: t('api.apiKeyAuth'), desc: t('api.apiKeyDesc') },
   ]
 
   return (
@@ -2260,11 +2263,11 @@ function AuthEditor({
       {auth.type === 'bearer' && (
         <div className="space-y-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Token</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.tokenLabel')}</label>
             <VariableInput
               value={auth.token || ''}
               onChange={(token) => onChange({ ...auth, token })}
-              placeholder="输入Bearer Token"
+              placeholder={t('api.enterBearerToken')}
               variables={variables}
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -2275,21 +2278,21 @@ function AuthEditor({
       {auth.type === 'basic' && (
         <div className="space-y-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">用户名</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('database.username')}</label>
             <VariableInput
               value={auth.username || ''}
               onChange={(username) => onChange({ ...auth, username })}
-              placeholder="用户名"
+              placeholder={t('database.username')}
               variables={variables}
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">密码</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('database.password')}</label>
             <VariableInput
               value={auth.password || ''}
               onChange={(password) => onChange({ ...auth, password })}
-              placeholder="密码"
+              placeholder={t('database.password')}
               variables={variables}
               type="password"
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -2301,7 +2304,7 @@ function AuthEditor({
       {auth.type === 'api-key' && (
         <div className="space-y-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Key</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.keyLabel')}</label>
             <input
               type="text"
               value={auth.apiKeyName || ''}
@@ -2311,17 +2314,17 @@ function AuthEditor({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Value</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.valueLabel')}</label>
             <VariableInput
               value={auth.apiKeyValue || ''}
               onChange={(apiKeyValue) => onChange({ ...auth, apiKeyValue })}
-              placeholder="API Key值"
+              placeholder={t('api.apiKeyPlaceholder')}
               variables={variables}
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">添加到</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.addTo')}</label>
             <div className="flex gap-1.5 select-none">
               {['header', 'query'].map((loc) => (
                 <button
@@ -2333,7 +2336,7 @@ function AuthEditor({
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
-                  {loc === 'header' ? 'Header' : 'Query参数'}
+                  {loc === 'header' ? t('api.headerLabel') : t('api.queryParam')}
                 </button>
               ))}
             </div>
@@ -2380,7 +2383,7 @@ function ResponsePanel({
       {/* Header */}
       <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Response</span>
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('api.responseLabel')}</span>
           {response && (
             <div className="flex items-center gap-3 text-xs">
               <span className={`font-bold ${getStatusColor(response.status)}`}>
@@ -2405,7 +2408,7 @@ function ResponsePanel({
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
               <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-gray-500 text-sm">发送请求中...</p>
+              <p className="text-gray-500 text-sm">{t('api.sendingRequest')}</p>
             </div>
           </div>
         ) : error ? (
@@ -2414,7 +2417,7 @@ function ResponsePanel({
               <div className="flex items-start gap-2">
                 <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-red-700 dark:text-red-400">请求失败</p>
+                  <p className="text-sm font-semibold text-red-700 dark:text-red-400">{t('api.requestFailed')}</p>
                   <p className="text-sm text-red-600 dark:text-red-300 mt-0.5">{error}</p>
                 </div>
               </div>
@@ -2433,7 +2436,7 @@ function ResponsePanel({
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                 >
-                  Body
+                  {t('api.bodyTab')}
                 </button>
                 <button
                   onClick={() => setActiveTab('headers')}
@@ -2443,13 +2446,13 @@ function ResponsePanel({
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                 >
-                  Headers
+                  {t('api.headersTab')}
                 </button>
                 {activeTab === 'body' && (
                   <button
                     onClick={onCopy}
                     className="ml-auto mr-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
-                    title="复制响应"
+                    title={t('api.copyResponse')}
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
@@ -2488,8 +2491,8 @@ function ResponsePanel({
           <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
             <div className="text-center">
               <Send className="w-8 h-8 mx-auto mb-2 opacity-20" />
-              <p className="text-sm">发送请求后查看响应</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Ctrl + Enter</p>
+              <p className="text-sm">{t('api.viewResponseAfterSend')}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('api.ctrlEnterHint')}</p>
             </div>
           </div>
         )}

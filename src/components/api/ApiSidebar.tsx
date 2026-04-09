@@ -5,6 +5,7 @@ import {
   Download, Upload, Edit2, X, Send, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, RotateCcw, Archive, Check
 } from 'lucide-react'
 import { useApiStore } from '@/store/apiStore'
+import { useTranslation } from '@/store/i18nStore'
 import { SavedRequest, HistoryItem, Environment, KeyValue, HttpMethod, RequestFolder, isFolder, isRequest, ApiProject, RecycleBinItem } from '@/store/types'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useToast } from '@/components/common/Toast'
@@ -31,6 +32,7 @@ const METHOD_BG: Record<HttpMethod, string> = {
 }
 
 export default function ApiSidebar() {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const {
     projects,
@@ -260,7 +262,7 @@ export default function ApiSidebar() {
 
     // 检查合并模式是否选择了目标项目
     if (importMode === 'merge' && !importTargetProjectId) {
-      showToast('请选择目标项目', 'error')
+      showToast(t('common.error'), 'error')
       return
     }
 
@@ -269,7 +271,7 @@ export default function ApiSidebar() {
     try {
       parsedData = JSON.parse(importText)
     } catch {
-      showToast('JSON格式无效', 'error')
+      showToast(t('common.error'), 'error')
       return
     }
 
@@ -281,11 +283,11 @@ export default function ApiSidebar() {
         // 确保环境变量基于文档真实创建，如果文档没有则使用默认值
         const environments = projectData.environments?.length > 0
           ? projectData.environments
-          : [{ id: 'env-default', name: '默认环境', variables: [] }]
+          : [{ id: 'env-default', name: t('api.defaultEnvironment'), variables: [] }]
 
         const newProject: ApiProject = {
           id: crypto.randomUUID(),
-          name: `${projectData.name} (导入)`,
+          name: `${projectData.name} (${t('redis.import')})`,
           description: projectData.description || '',
           requestFolders: projectData.requestFolders || [],
           rootRequests: projectData.rootRequests || [],
@@ -323,7 +325,7 @@ export default function ApiSidebar() {
           activeTabId: null,
           currentRequest: null
         }))
-        showToast('导入成功', 'success')
+        showToast(t('common.success'), 'success')
       } else if (importTargetProjectId) {
         // 合并到现有项目
         // 更新ID后合并
@@ -352,7 +354,7 @@ export default function ApiSidebar() {
               : p
           )
         }))
-        showToast('合并成功', 'success')
+        showToast(t('common.success'), 'success')
       }
       setShowImportExport(null)
       setImportText('')
@@ -364,14 +366,14 @@ export default function ApiSidebar() {
     // importMode === 'new' 时传入null表示创建新项目，'merge'时传入目标项目ID
     const targetId = importMode === 'merge' ? importTargetProjectId : null
     if (importOpenAPI(importText, targetId)) {
-      showToast('OpenAPI导入成功', 'success')
+      showToast(t('common.success'), 'success')
       setShowImportExport(null)
       setImportText('')
       setImportTargetProjectId(null)
       return
     }
 
-    showToast('导入失败，请检查格式', 'error')
+    showToast(t('common.error'), 'error')
   }
 
   // 检查同一层级是否存在同名文件夹
@@ -408,7 +410,7 @@ export default function ApiSidebar() {
     if (newFolderName.trim()) {
       // 检查同一层级是否存在同名文件夹
       if (checkDuplicateFolderName(newFolderName.trim(), parentId)) {
-        showToast('该名称已存在', 'error')
+        showToast(t('common.error'), 'error')
         return
       }
       addFolder(newFolderName.trim(), parentId)
@@ -437,7 +439,7 @@ export default function ApiSidebar() {
 
       // 检查同一层级是否存在同名文件夹（排除当前文件夹）
       if (checkDuplicateFolderName(editingFolderName.trim(), parentId, editingFolderId)) {
-        showToast('该名称已存在', 'error')
+        showToast(t('common.error'), 'error')
         return
       }
       updateFolder(editingFolderId, editingFolderName.trim())
@@ -458,7 +460,7 @@ export default function ApiSidebar() {
     if (movingRequestId) {
       const success = moveRequest(movingRequestId, targetFolderId)
       if (!success) {
-        showToast('目标位置已存在同名请求', 'error')
+        showToast(t('common.error'), 'error')
       }
       setMovingRequestId(null)
       setMoveMenuPosition(null)
@@ -579,7 +581,7 @@ export default function ApiSidebar() {
 
   const handleQuickAddRequest = (folderId: string | null) => {
     const newRequest: Omit<SavedRequest, 'id' | 'createdAt' | 'updatedAt'> = {
-      name: '新请求',
+      name: t('api.newRequest'),
       method: 'GET',
       url: '',
       headers: [],
@@ -619,7 +621,7 @@ export default function ApiSidebar() {
   }
 
   const getFolderOptions = (folders: RequestFolder[], depth = 0, includeRoot = true): { id: string | null; name: string; depth: number }[] => {
-    const result: { id: string | null; name: string; depth: number }[] = includeRoot ? [{ id: null, name: '根目录', depth: 0 }] : []
+    const result: { id: string | null; name: string; depth: number }[] = includeRoot ? [{ id: null, name: t('api.rootDirectory'), depth: 0 }] : []
     for (const f of folders) {
       result.push({ id: f.id, name: f.name, depth: depth + 1 })
       const childFolders = f.children.filter(isFolder) as RequestFolder[]
@@ -720,12 +722,12 @@ export default function ApiSidebar() {
       <div className="px-4 h-11 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex items-center justify-between bg-gray-100 dark:bg-gray-800/50">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-blue-500" />
-          <span className="text-sm font-semibold text-gray-800 dark:text-white">API Tester</span>
+          <span className="text-sm font-semibold text-gray-800 dark:text-white">{t('api.projects')}</span>
         </div>
         <button
-          onClick={() => addProject('新项目')}
+          onClick={() => addProject(t('api.newProject'))}
           className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-all"
-          title="新建项目"
+          title={t('api.newProject')}
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -739,7 +741,7 @@ export default function ApiSidebar() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索请求..."
+            placeholder={t('common.search')}
             className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
           {searchQuery && (
@@ -814,7 +816,7 @@ export default function ApiSidebar() {
                     setEditingProjectName(project.name)
                   }}
                   className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                  title="重命名"
+                  title={t('common.edit')}
                 >
                   <Edit2 className="w-3 h-3" />
                 </button>
@@ -825,7 +827,7 @@ export default function ApiSidebar() {
                       setConfirmDeleteProject(project.id)
                     }}
                     className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                    title="删除项目"
+                    title={t('api.deleteProject')}
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -849,13 +851,13 @@ export default function ApiSidebar() {
                         <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                       )}
                       <Settings className="w-3.5 h-3.5 text-purple-500" />
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">环境</span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t('api.environments')}</span>
                     </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         setIsNewEnv(true)
-                        setEditingEnv({ id: '', name: '新环境', variables: [] })
+                        setEditingEnv({ id: '', name: t('api.newEnvironment'), variables: [] })
                         setShowEnvModal(true)
                       }}
                       className="p-0.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
@@ -874,7 +876,7 @@ export default function ApiSidebar() {
                               ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700'
                               : 'hover:bg-gray-100 dark:hover:bg-gray-700/70'
                           }`}
-                          title={env.variables.length > 0 ? env.variables.filter(v => v.enabled && v.key).map(v => `${v.key}: ${v.value}`).join('\n') : '暂无变量'}
+                          title={env.variables.length > 0 ? env.variables.filter(v => v.enabled && v.key).map(v => `${v.key}: ${v.value}`).join('\n') : t('redis.noFieldsFound')}
                         >
                           <div className={`w-2 h-2 rounded-full ${project.activeEnvId === env.id ? 'bg-blue-500' : 'bg-gray-300'}`} />
                           <span className={`text-xs flex-1 truncate ${project.activeEnvId === env.id ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
@@ -914,7 +916,7 @@ export default function ApiSidebar() {
                         <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                       )}
                       <Folder className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">请求</span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t('api.requests')}</span>
                       <span className="text-xs text-gray-400">
                         {countRequests(activeProject.requestFolders, activeProject.rootRequests)}
                       </span>
@@ -927,7 +929,7 @@ export default function ApiSidebar() {
                           setShowNewFolderInput('root')
                         }}
                         className="p-1 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded"
-                        title="新建文件夹"
+                        title={t('api.newFolder')}
                       >
                         <FolderPlus className="w-3 h-3" />
                       </button>
@@ -938,7 +940,7 @@ export default function ApiSidebar() {
                           handleQuickAddRequest(null)
                         }}
                         className="p-1 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded"
-                        title="新建请求"
+                        title={t('api.newRequest')}
                       >
                         <FilePlus className="w-3 h-3" />
                       </button>
@@ -958,7 +960,7 @@ export default function ApiSidebar() {
                               if (e.key === 'Enter') handleAddFolder(null)
                               if (e.key === 'Escape') { setShowNewFolderInput(null); setNewFolderName('') }
                             }}
-                            placeholder="文件夹名称"
+                            placeholder={t('api.projectName')}
                             className="flex-1 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             autoFocus
                           />
@@ -1038,7 +1040,7 @@ export default function ApiSidebar() {
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               )}
               <Clock className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">历史</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('api.history')}</span>
               <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">{history.length}</span>
             </div>
             {history.length > 0 && (
@@ -1050,7 +1052,7 @@ export default function ApiSidebar() {
           {expandedSections.has('history') && (
             <div className="pb-1">
               {history.length === 0 ? (
-                <div className="px-8 py-4 text-xs text-gray-500 dark:text-gray-400 text-center">暂无历史记录</div>
+                <div className="px-8 py-4 text-xs text-gray-500 dark:text-gray-400 text-center">{t('redis.noFieldsFound')}</div>
               ) : (
                 <div className="px-2 space-y-0.5">
                   {history.slice(0, 20).map((item) => (
@@ -1083,7 +1085,7 @@ export default function ApiSidebar() {
                   <ChevronRight className="w-4 h-4 text-gray-400" />
                 )}
                 <Archive className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">回收站</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('api.recycleBin')}</span>
                 <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">{recycleBin.length}</span>
               </div>
               <button
@@ -1128,7 +1130,7 @@ export default function ApiSidebar() {
                               <span>{item.projectName}</span>
                               <span className="text-gray-300">•</span>
                               <span className={isExpired ? 'text-red-400' : ''}>
-                                {isExpired ? '已过期' : `${remainingHours}小时${remainingMinutes}分钟`}
+                                {isExpired ? t('redis.ttlExpired') : `${remainingHours}h ${remainingMinutes}m`}
                               </span>
                             </div>
                           </div>
@@ -1137,14 +1139,14 @@ export default function ApiSidebar() {
                           <button
                             onClick={() => setConfirmRestoreItem(item.id)}
                             className="p-1 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
-                            title="恢复"
+                            title={t('api.restore')}
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => setConfirmPermanentDeleteItem(item.id)}
                             className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                            title="永久删除"
+                            title={t('api.permanentDelete')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1168,7 +1170,7 @@ export default function ApiSidebar() {
           setShowImportExport('import')
         }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
           <Download className="w-4 h-4" />
-          <span>导入</span>
+          <span>{t('common.loading')}</span>
         </button>
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
         <button onClick={() => {
@@ -1176,7 +1178,7 @@ export default function ApiSidebar() {
           setShowImportExport('export')
         }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
           <Upload className="w-4 h-4" />
-          <span>导出</span>
+          <span>{t('redis.export')}</span>
         </button>
       </div>
 
@@ -1201,21 +1203,21 @@ export default function ApiSidebar() {
               className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <Edit2 className="w-4 h-4" />
-              重命名
+              {t('common.edit')}
             </button>
             <button
               onClick={() => {
                 const newRequest = duplicateRequest(requestContextMenu.id)
                 if (newRequest) {
                   openTab(newRequest.id)
-                  showToast('已复制', 'success')
+                  showToast(t('redis.copied'), 'success')
                 }
                 setRequestContextMenu(null)
               }}
               className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <Copy className="w-4 h-4" />
-              复制
+              {t('common.copy')}
             </button>
             <button
               onClick={() => {
@@ -1227,7 +1229,7 @@ export default function ApiSidebar() {
               className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <Move className="w-4 h-4" />
-              移动到
+              {t('api.move')}
             </button>
             <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
             <button
@@ -1238,7 +1240,7 @@ export default function ApiSidebar() {
               className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
             >
               <Trash2 className="w-4 h-4" />
-              删除
+              {t('common.delete')}
             </button>
           </div>
         </div>,
@@ -1265,7 +1267,7 @@ export default function ApiSidebar() {
               className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <Edit2 className="w-4 h-4" />
-              重命名
+              {t('common.edit')}
             </button>
             <button
               onClick={() => {
@@ -1276,7 +1278,7 @@ export default function ApiSidebar() {
               className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <FolderPlus className="w-4 h-4" />
-              新建子文件夹
+              {t('api.newFolder')}
             </button>
             <button
               onClick={() => {
@@ -1287,7 +1289,7 @@ export default function ApiSidebar() {
               className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             >
               <FilePlus className="w-4 h-4" />
-              新建请求
+              {t('api.newRequest')}
             </button>
             <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
             <button
@@ -1298,7 +1300,7 @@ export default function ApiSidebar() {
               className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
             >
               <Trash2 className="w-4 h-4" />
-              删除
+              {t('common.delete')}
             </button>
           </div>
         </div>,
@@ -1310,7 +1312,7 @@ export default function ApiSidebar() {
         <>
           <div className="fixed inset-0 z-[99]" onClick={() => { setMovingRequestId(null); setMoveMenuPosition(null) }} />
           <div className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[200px] z-[100] animate-in fade-in-0 zoom-in-95 duration-200" style={{ top: moveMenuPosition.top, left: moveMenuPosition.left }}>
-            <div className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50">选择目标文件夹</div>
+            <div className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50">{t('api.selectTargetFolder')}</div>
             <div className="max-h-56 overflow-y-auto py-1">
               {folderOptions.map((opt) => {
                 const isCurrentLocation = opt.id === null ? !isInFolder(activeProject?.requestFolders || [], movingRequestId) : isInSpecificFolder(activeProject?.requestFolders || [], movingRequestId, opt.id)
@@ -1324,13 +1326,13 @@ export default function ApiSidebar() {
                   >
                     <Folder className={`w-4 h-4 flex-shrink-0 ${isCurrentLocation ? 'text-gray-300' : 'text-purple-500'}`} />
                     <span className="truncate">{opt.name}</span>
-                    {isCurrentLocation && <span className="ml-auto text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">当前</span>}
+                    {isCurrentLocation && <span className="ml-auto text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">{t('api.current')}</span>}
                   </button>
                 )
               })}
             </div>
             <div className="border-t border-gray-200 dark:border-gray-700 p-2 bg-gray-100/80 dark:bg-gray-800/50">
-              <button onClick={() => { setMovingRequestId(null); setMoveMenuPosition(null) }} className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">取消</button>
+              <button onClick={() => { setMovingRequestId(null); setMoveMenuPosition(null) }} className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">{t('common.cancel')}</button>
             </div>
           </div>
         </>,
@@ -1343,45 +1345,45 @@ export default function ApiSidebar() {
       )}
 
       {/* Confirm Dialogs */}
-      <ConfirmDialog isOpen={!!confirmDeleteEnv} title="删除环境" message={`确定要删除环境"${activeProject?.environments.find(e => e.id === confirmDeleteEnv)?.name}"吗？`} confirmText="删除" cancelText="取消" variant="danger" onConfirm={() => { if (confirmDeleteEnv) deleteEnvironment(confirmDeleteEnv); setConfirmDeleteEnv(null) }} onCancel={() => setConfirmDeleteEnv(null)} />
+      <ConfirmDialog isOpen={!!confirmDeleteEnv} title={t('api.deleteEnvironment')} message={t('api.deleteEnvironmentConfirm', { name: activeProject?.environments.find(e => e.id === confirmDeleteEnv)?.name })} confirmText={t('common.delete')} cancelText={t('common.cancel')} variant="danger" onConfirm={() => { if (confirmDeleteEnv) deleteEnvironment(confirmDeleteEnv); setConfirmDeleteEnv(null) }} onCancel={() => setConfirmDeleteEnv(null)} />
       <ConfirmDialog
         isOpen={!!confirmDeleteFolder}
-        title="删除文件夹"
-        message={`确定要删除文件夹"${findFolderById(activeProject?.requestFolders || [], confirmDeleteFolder || '')?.name}"及其所有内容吗？删除的内容将进入回收站，3天内可恢复。`}
-        confirmText="删除"
-        cancelText="取消"
+        title={t('api.deleteFolder')}
+        message={t('api.deleteFolderConfirm', { name: findFolderById(activeProject?.requestFolders || [], confirmDeleteFolder || '')?.name })}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={() => { if (confirmDeleteFolder) deleteFolder(confirmDeleteFolder); setConfirmDeleteFolder(null) }}
         onCancel={() => setConfirmDeleteFolder(null)}
       />
       <ConfirmDialog
         isOpen={!!confirmDeleteRequest}
-        title="删除请求"
-        message={`确定要删除请求"${(activeProject?.rootRequests.find(r => r.id === confirmDeleteRequest) || findRequestInFolders(activeProject?.requestFolders || [], confirmDeleteRequest || ''))?.name || '未命名'}"吗？删除的内容将进入回收站，3天内可恢复。`}
-        confirmText="删除"
-        cancelText="取消"
+        title={t('api.deleteRequest')}
+        message={t('api.deleteRequestConfirm', { name: (activeProject?.rootRequests.find(r => r.id === confirmDeleteRequest) || findRequestInFolders(activeProject?.requestFolders || [], confirmDeleteRequest || ''))?.name || t('api.unnamed') })}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={() => { if (confirmDeleteRequest) deleteSavedRequest(confirmDeleteRequest); setConfirmDeleteRequest(null) }}
         onCancel={() => setConfirmDeleteRequest(null)}
       />
-      <ConfirmDialog isOpen={!!confirmDeleteProject} title="删除项目" message={`确定要删除项目"${projects.find(p => p.id === confirmDeleteProject)?.name}"吗？该项目下的所有请求和环境都将被删除。`} confirmText="删除" cancelText="取消" variant="danger" onConfirm={() => { if (confirmDeleteProject) { deleteProject(confirmDeleteProject); if (activeProjectId === confirmDeleteProject && projects.length > 1) { switchProject(projects.find(p => p.id !== confirmDeleteProject)?.id || '') } } setConfirmDeleteProject(null) }} onCancel={() => setConfirmDeleteProject(null)} />
-      <ConfirmDialog isOpen={confirmClearHistory} title="清空历史" message="确定要清空所有历史记录吗？" confirmText="清空" cancelText="取消" variant="danger" onConfirm={() => { clearHistory(); setConfirmClearHistory(false) }} onCancel={() => setConfirmClearHistory(false)} />
+      <ConfirmDialog isOpen={!!confirmDeleteProject} title={t('api.deleteProject')} message={t('api.deleteProjectConfirm', { name: projects.find(p => p.id === confirmDeleteProject)?.name })} confirmText={t('common.delete')} cancelText={t('common.cancel')} variant="danger" onConfirm={() => { if (confirmDeleteProject) { deleteProject(confirmDeleteProject); if (activeProjectId === confirmDeleteProject && projects.length > 1) { switchProject(projects.find(p => p.id !== confirmDeleteProject)?.id || '') } } setConfirmDeleteProject(null) }} onCancel={() => setConfirmDeleteProject(null)} />
+      <ConfirmDialog isOpen={confirmClearHistory} title={t('api.clearHistory')} message={t('api.clearHistoryConfirm')} confirmText={t('api.clear')} cancelText={t('common.cancel')} variant="danger" onConfirm={() => { clearHistory(); setConfirmClearHistory(false) }} onCancel={() => setConfirmClearHistory(false)} />
 
       {/* Recycle Bin Confirm Dialogs */}
       <ConfirmDialog
         isOpen={!!confirmRestoreItem}
-        title="恢复项目"
-        message={`确定要恢复"${recycleBin.find(i => i.id === confirmRestoreItem)?.name}"吗？将恢复到原位置。`}
-        confirmText="恢复"
-        cancelText="取消"
+        title={t('api.restoreItem')}
+        message={t('api.restoreItemConfirm', { name: recycleBin.find(i => i.id === confirmRestoreItem)?.name })}
+        confirmText={t('api.restore')}
+        cancelText={t('common.cancel')}
         variant="info"
         onConfirm={() => {
           if (confirmRestoreItem) {
             const success = restoreFromRecycleBin(confirmRestoreItem)
             if (success) {
-              showToast('已恢复', 'success')
+              showToast(t('api.restore'), 'success')
             } else {
-              showToast('原位置不存在，已恢复到根目录', 'info')
+              showToast(t('common.success'), 'info')
             }
           }
           setConfirmRestoreItem(null)
@@ -1390,15 +1392,15 @@ export default function ApiSidebar() {
       />
       <ConfirmDialog
         isOpen={!!confirmPermanentDeleteItem}
-        title="永久删除"
-        message={`确定要永久删除"${recycleBin.find(i => i.id === confirmPermanentDeleteItem)?.name}"吗？此操作不可恢复。`}
-        confirmText="删除"
-        cancelText="取消"
+        title={t('api.permanentDelete')}
+        message={t('api.permanentDeleteConfirm', { name: recycleBin.find(i => i.id === confirmPermanentDeleteItem)?.name })}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={() => {
           if (confirmPermanentDeleteItem) {
             permanentlyDelete(confirmPermanentDeleteItem)
-            showToast('已永久删除', 'success')
+            showToast(t('common.success'), 'success')
           }
           setConfirmPermanentDeleteItem(null)
         }}
@@ -1406,14 +1408,14 @@ export default function ApiSidebar() {
       />
       <ConfirmDialog
         isOpen={confirmClearRecycleBin}
-        title="清空回收站"
-        message="确定要清空回收站吗？所有内容将永久删除且不可恢复。"
-        confirmText="清空"
-        cancelText="取消"
+        title={t('api.emptyRecycleBin')}
+        message={t('api.emptyRecycleBinConfirm')}
+        confirmText={t('api.clear')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={() => {
           clearRecycleBin()
-          showToast('回收站已清空', 'success')
+          showToast(t('common.success'), 'success')
           setConfirmClearRecycleBin(false)
         }}
         onCancel={() => setConfirmClearRecycleBin(false)}
@@ -1424,13 +1426,13 @@ export default function ApiSidebar() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={() => setShowImportExport(null)}>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{showImportExport === 'export' ? '导出项目' : '导入'}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{showImportExport === 'export' ? t('redis.export') + ' ' + t('api.projects') : t('redis.import')}</h3>
               <button onClick={() => setShowImportExport(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
             </div>
             <div className="px-5 py-4">
               {showImportExport === 'export' ? (
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">选择要导出的项目</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('api.selectProject')}</p>
                   <div className="space-y-1.5 max-h-64 overflow-y-auto">
                     {projects.map(project => (
                       <label
@@ -1455,11 +1457,11 @@ export default function ApiSidebar() {
                 </div>
               ) : (
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">支持导入项目JSON或OpenAPI 3.0文档</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('api.importOpenAPISupport')}</p>
 
                   {/* 导入方式选择 */}
                   <div className="mb-3">
-                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">导入方式</label>
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">{t('api.importMode')}</label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setImportMode('new'); setImportTargetProjectId(null) }}
@@ -1469,7 +1471,7 @@ export default function ApiSidebar() {
                             : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                         }`}
                       >
-                        创建新项目
+                        {t('api.createNewProject')}
                       </button>
                       <button
                         onClick={() => setImportMode('merge')}
@@ -1479,7 +1481,7 @@ export default function ApiSidebar() {
                             : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                         }`}
                       >
-                        合并到现有项目
+                        {t('api.mergeExistingProject')}
                       </button>
                     </div>
                   </div>
@@ -1487,13 +1489,13 @@ export default function ApiSidebar() {
                   {/* 合并时选择目标项目 */}
                   {importMode === 'merge' && (
                     <div className="mb-3">
-                      <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">目标项目</label>
+                      <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">{t('api.targetProject')}</label>
                       <select
                         value={importTargetProjectId || ''}
                         onChange={(e) => setImportTargetProjectId(e.target.value || null)}
                         className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="">选择项目</option>
+                        <option value="">{t('api.selectProject')}</option>
                         {projects.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
@@ -1525,12 +1527,12 @@ export default function ApiSidebar() {
                       className="flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                     >
                       <Upload className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">选择文件</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{t('api.selectFile')}</span>
                     </label>
                   </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 right-0 top-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-xs text-gray-400 bg-white dark:bg-gray-800 px-2">或粘贴内容</span>
+                      <span className="text-xs text-gray-400 bg-white dark:bg-gray-800 px-2">{t('api.orPasteContent')}</span>
                     </div>
                     <textarea value={importText} onChange={(e) => setImportText(e.target.value)} placeholder=" " className="w-full h-32 px-3 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                   </div>
@@ -1538,11 +1540,11 @@ export default function ApiSidebar() {
               )}
             </div>
             <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-3">
-              <button onClick={() => setShowImportExport(null)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">取消</button>
+              <button onClick={() => setShowImportExport(null)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">{t('common.cancel')}</button>
               {showImportExport === 'export' ? (
-                <button onClick={() => selectedExportProjectId && handleExport(selectedExportProjectId)} disabled={!selectedExportProjectId} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">导出</button>
+                <button onClick={() => selectedExportProjectId && handleExport(selectedExportProjectId)} disabled={!selectedExportProjectId} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('redis.export')}</button>
               ) : (
-                <button onClick={handleImport} disabled={!importText.trim() || (importMode === 'merge' && !importTargetProjectId)} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">导入</button>
+                <button onClick={handleImport} disabled={!importText.trim() || (importMode === 'merge' && !importTargetProjectId)} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('redis.import')}</button>
               )}
             </div>
           </div>
@@ -1611,7 +1613,7 @@ function RequestTree({
             {expandedFolders.has(folder.id) ? <FolderOpen className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" /> : <Folder className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
             {editingFolderId === folder.id ? (
               <div className="flex-1 min-w-0 flex items-center gap-1 bg-white dark:bg-gray-700 rounded px-1.5 py-0.5 shadow-sm border border-blue-400 dark:border-blue-500">
-                <input type="text" value={editingFolderName} onChange={(e) => setEditingFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditFolder(); if (e.key === 'Escape') onCancelEditFolder() }} placeholder="输入名称..." className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
+                <input type="text" value={editingFolderName} onChange={(e) => setEditingFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditFolder(); if (e.key === 'Escape') onCancelEditFolder() }} placeholder={t('api.enterName')} className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
                 <button onClick={(e) => { e.stopPropagation(); onConfirmEditFolder() }} className="p-0.5 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 rounded flex-shrink-0"><Check className="w-3 h-3" /></button>
                 <button onClick={(e) => { e.stopPropagation(); onCancelEditFolder() }} className="p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded flex-shrink-0"><X className="w-3 h-3" /></button>
               </div>
@@ -1627,7 +1629,7 @@ function RequestTree({
               {showNewFolderInput === folder.id && (
                 <div className="flex items-center gap-1 py-1.5 mx-2 px-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg" style={{ marginLeft: `${(depth + 1) * 12 + 8}px` }}>
                   <Folder className="w-4 h-4 text-amber-500" />
-                  <input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmAddFolder(folder.id); if (e.key === 'Escape') onCancelAddFolder() }} placeholder="文件夹名称" className="flex-1 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autoFocus />
+                  <input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmAddFolder(folder.id); if (e.key === 'Escape') onCancelAddFolder() }} placeholder={t('api.projectName')} className="flex-1 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autoFocus />
                   <button onClick={() => onConfirmAddFolder(folder.id)} className="p-1 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"><Plus className="w-3.5 h-3.5" /></button>
                   <button onClick={onCancelAddFolder} className="p-1 text-gray-400 hover:text-gray-600 rounded"><X className="w-3.5 h-3.5" /></button>
                 </div>
@@ -1655,7 +1657,7 @@ function RequestTree({
           <span className={`w-[52px] text-center py-0.5 rounded text-xs font-bold ${METHOD_BG[request.method]} ${METHOD_COLORS[request.method]}`}>{request.method}</span>
           {editingRequestId === request.id ? (
             <div className="flex-1 min-w-0 flex items-center gap-1 bg-white dark:bg-gray-700 rounded px-1.5 py-0.5 shadow-sm border border-blue-400 dark:border-blue-500">
-              <input type="text" value={editingRequestName} onChange={(e) => setEditingRequestName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditRequest(); if (e.key === 'Escape') onCancelEditRequest() }} placeholder="输入名称..." className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
+              <input type="text" value={editingRequestName} onChange={(e) => setEditingRequestName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditRequest(); if (e.key === 'Escape') onCancelEditRequest() }} placeholder={t('api.enterName')} className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
               <button onClick={(e) => { e.stopPropagation(); onConfirmEditRequest() }} className="p-0.5 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 rounded flex-shrink-0"><Check className="w-3 h-3" /></button>
               <button onClick={(e) => { e.stopPropagation(); onCancelEditRequest() }} className="p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded flex-shrink-0"><X className="w-3 h-3" /></button>
             </div>
@@ -1665,7 +1667,7 @@ function RequestTree({
         </div>
       ))}
       {folders.length === 0 && rootRequests.length === 0 && depth === 0 && (
-        <div className="px-8 py-4 text-xs text-gray-500 dark:text-gray-400 text-center">暂无请求，点击上方按钮创建</div>
+        <div className="px-8 py-4 text-xs text-gray-500 dark:text-gray-400 text-center">{t('api.noRequestsHint')}</div>
       )}
     </div>
   )
@@ -1674,6 +1676,7 @@ function RequestTree({
 // Environment Modal Component
 function EnvironmentModal({ environment, isNew, onClose, onSave }: { environment: Environment; isNew: boolean; onClose: () => void; onSave: (env: Environment) => void }) {
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const [name, setName] = useState(environment.name)
   const [variables, setVariables] = useState<KeyValue[]>(environment.variables)
 
@@ -1681,28 +1684,28 @@ function EnvironmentModal({ environment, isNew, onClose, onSave }: { environment
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={onClose}>
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{isNew ? '新建环境' : '编辑环境'}</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{isNew ? t('api.newEnvironment') : t('api.editEnvironment')}</h3>
           <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
         </div>
         <div className="px-5 py-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">环境名称</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="例如：开发环境" className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" autoFocus />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('api.environmentName')}</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('api.environmentName')} className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" autoFocus />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">变量</label>
-              <button onClick={() => setVariables([...variables, { key: '', value: '', enabled: true }])} className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1 px-2 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"><Plus className="w-3 h-3" />添加</button>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('api.variables')}</label>
+              <button onClick={() => setVariables([...variables, { key: '', value: '', enabled: true }])} className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1 px-2 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"><Plus className="w-3 h-3" />{t('common.add')}</button>
             </div>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {variables.length === 0 ? (
-                <div className="py-4 text-center text-gray-400 text-sm border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">暂无变量</div>
+                <div className="py-4 text-center text-gray-400 text-sm border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">{t('api.variablesHint')}</div>
               ) : (
                 variables.map((v, i) => (
                   <div key={i} className="flex items-center gap-2 group">
                     <input type="checkbox" checked={v.enabled} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], enabled: e.target.checked }; setVariables(newVars) }} className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500" />
-                    <input type="text" value={v.key} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], key: e.target.value }; setVariables(newVars) }} placeholder="变量名" className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-                    <input type="text" value={v.value} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], value: e.target.value }; setVariables(newVars) }} placeholder="值" className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <input type="text" value={v.key} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], key: e.target.value }; setVariables(newVars) }} placeholder={t('api.variableName')} className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <input type="text" value={v.value} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], value: e.target.value }; setVariables(newVars) }} placeholder={t('api.variableValue')} className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                     <button onClick={() => setVariables(variables.filter((_, idx) => idx !== i))} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 ))
@@ -1711,8 +1714,8 @@ function EnvironmentModal({ environment, isNew, onClose, onSave }: { environment
           </div>
         </div>
         <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">取消</button>
-          <button onClick={() => { if (!name.trim()) { showToast('请输入名称', 'error'); return } onSave({ ...environment, name, variables }) }} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm">保存</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">{t('common.cancel')}</button>
+          <button onClick={() => { if (!name.trim()) { showToast(t('common.error'), 'error'); return } onSave({ ...environment, name, variables }) }} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm">{t('common.save')}</button>
         </div>
       </div>
     </div>

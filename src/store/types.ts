@@ -11,7 +11,7 @@ export interface ToolConfig {
 export const TOOL_CONFIGS: Record<ToolType, ToolConfig> = {
   redis: { id: 'redis', label: 'Redis', color: '#DC382D' },
   api: { id: 'api', label: 'API', color: '#3B82F6' },
-  mysql: { id: 'mysql', label: 'MySQL', color: '#F97316' },
+  mysql: { id: 'mysql', label: 'Database', color: '#F97316' },
   mongodb: { id: 'mongodb', label: 'MongoDB', color: '#22C55E' },
 }
 

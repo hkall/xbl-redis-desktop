@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { Plus, Trash2, Edit2, Search, X, Copy, Check } from 'lucide-react'
 import { formatDataForEdit } from '@/utils/formatter'
+import { useTranslation } from '@/store/i18nStore'
 import CodeEditor from '@/components/CodeEditor'
 import ConfirmDialog from '../ConfirmDialog'
 
@@ -25,6 +26,7 @@ interface EditModalProps {
 }
 
 function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, onSave }: EditModalProps) {
+  const { t } = useTranslation()
   const [member, setMember] = useState('')
   const [score, setScore] = useState(0)
   const [copied, setCopied] = useState(false)
@@ -83,12 +85,12 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-            {type === 'add' ? 'Add New ZSet Member' : 'Edit ZSet Member'}
+            {type === 'add' ? t('redis.addZSetMember') : t('redis.editZSetMember')}
           </h3>
           <button
             onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Close"
+            title={t('common.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -99,7 +101,7 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
           {/* Score Input */}
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-              分数
+              {t('redis.score')}
             </label>
             <input
               type="number"
@@ -114,7 +116,7 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                {type === 'add' ? '新成员值' : '成员值'}
+                {type === 'add' ? t('redis.newMemberValue2') : t('redis.memberValue')}
               </label>
               <button
                 onClick={handleCopy}
@@ -123,12 +125,12 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
                 {copied ? (
                   <>
                     <Check className="w-3 h-3 text-green-500" />
-                    <span>已复制</span>
+                    <span>{t('redis.copied')}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3 h-3" />
-                    <span>复制</span>
+                    <span>{t('redis.copy')}</span>
                   </>
                 )}
               </button>
@@ -141,7 +143,7 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
                 value={member}
                 onChange={setMember}
                 onKeyDown={handleKeyDown}
-                placeholder="输入成员值..."
+                placeholder={t('redis.enterMemberValue')}
               />
             </div>
           </div>
@@ -150,14 +152,14 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            {member.length} 字符 · Tab 缩进 · Ctrl+Enter 保存
+            {member.length} {t('redis.characters')} · {t('redis.tabIndent')} · {t('redis.ctrlEnterSave')}
           </p>
           <div className="flex gap-2.5">
             <button
               onClick={onClose}
               className="px-4 py-2 text-xs font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
             >
-              取消
+              {t('redis.cancel')}
             </button>
             <button
               onClick={() => {
@@ -168,7 +170,7 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
               disabled={!member.trim()}
               className="px-4 py-2 text-xs font-medium bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {type === 'add' ? '添加成员' : '更新成员'}
+              {type === 'add' ? t('redis.addZSetMember2') : t('redis.updateZSetMember')}
             </button>
           </div>
         </div>
@@ -180,6 +182,7 @@ function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, o
 const ITEMS_PER_PAGE = 20
 
 export default function ZSetViewer({ connectionId, keyName }: ZSetViewerProps) {
+  const { t } = useTranslation()
   const [members, setMembers] = useState<ZSetMember[]>([])
   const [loading, setLoading] = useState(false)
   const [editModal, setEditModal] = useState<{
@@ -334,7 +337,7 @@ export default function ZSetViewer({ connectionId, keyName }: ZSetViewerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">{t('redis.loadingText')}</div>
       </div>
     )
   }
@@ -369,7 +372,7 @@ export default function ZSetViewer({ connectionId, keyName }: ZSetViewerProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search members or scores..."
+              placeholder={t('toolbar.searchMembersScores')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400 dark:placeholder-gray-500"
@@ -396,10 +399,10 @@ export default function ZSetViewer({ connectionId, keyName }: ZSetViewerProps) {
                 </colgroup>
                 <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
                   <tr>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Rank</th>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Member</th>
-                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Score</th>
-                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Actions</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">{t('redis.rankHeader')}</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">{t('redis.memberHeader')}</th>
+                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">{t('redis.scoreHeader')}</th>
+                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">{t('redis.actionsHeader')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -437,14 +440,14 @@ export default function ZSetViewer({ connectionId, keyName }: ZSetViewerProps) {
                               initialScore: m.score,
                             })}
                             className="p-1.5 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                            title="Edit"
+                            title={t('toolbar.editBtn')}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteMember(m.member)}
                             className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                            title="Delete"
+                            title={t('toolbar.deleteBtn')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -543,8 +546,8 @@ export default function ZSetViewer({ connectionId, keyName }: ZSetViewerProps) {
         isOpen={deleteConfirm.isOpen}
         title={deleteConfirm.title}
         message={deleteConfirm.message}
-        confirmText="Delete"
-        cancelText="Cancel"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={() => {
           deleteConfirm.callback()

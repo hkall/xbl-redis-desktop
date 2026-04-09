@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { RefreshCw, Database, Zap, Circle, CheckCircle, AlertTriangle, Activity, Clock, Shield, Code, Server, TrendingUp, Hash, Command, Timer, Ban, HardDrive, Save, FileBox } from 'lucide-react'
 import { useRedisStore } from '@/store/redisStore'
+import { useTranslation } from '@/store/i18nStore'
 
 interface ServerInfoProps {
   connectionId: string | null
@@ -13,7 +14,7 @@ interface ServerData {
 }
 
 interface MetricConfig {
-  name: string
+  nameKey: string
   icon: React.ComponentType<{ className?: string }>
   category: string
   format?: string
@@ -23,30 +24,30 @@ interface MetricConfig {
 // Friendly field names - 精简到最核心的指标
 const CORE_METRICS: Record<string, MetricConfig> = {
   // Performance
-  instantaneous_ops_per_sec: { name: '每秒操作数', icon: Zap, category: 'performance', format: 'ops' },
-  keyspace_hits: { name: '缓存命中', icon: CheckCircle, category: 'performance' },
-  keyspace_misses: { name: '缓存未命中', icon: AlertTriangle, category: 'performance' },
-  hit_rate: { name: '命中率', icon: TrendingUp, category: 'performance', format: 'percent', computed: true },
+  instantaneous_ops_per_sec: { nameKey: 'opsPerSec', icon: Zap, category: 'performance', format: 'ops' },
+  keyspace_hits: { nameKey: 'cacheHits', icon: CheckCircle, category: 'performance' },
+  keyspace_misses: { nameKey: 'cacheMisses', icon: AlertTriangle, category: 'performance' },
+  hit_rate: { nameKey: 'hitRate', icon: TrendingUp, category: 'performance', format: 'percent', computed: true },
 
   // Memory
-  used_memory: { name: '已用内存', icon: Database, category: 'memory', format: 'bytes' },
-  used_memory_peak: { name: '峰值内存', icon: Database, category: 'memory', format: 'bytes' },
-  maxmemory: { name: '内存限制', icon: Database, category: 'memory', format: 'bytes' },
-  maxmemory_policy: { name: '淘汰策略', icon: Shield, category: 'memory' },
-  mem_fragmentation_ratio: { name: '碎片率', icon: AlertTriangle, category: 'memory', format: 'ratio' },
-  evicted_keys: { name: '已淘汰键', icon: AlertTriangle, category: 'memory', format: 'count' },
+  used_memory: { nameKey: 'usedMemory', icon: Database, category: 'memory', format: 'bytes' },
+  used_memory_peak: { nameKey: 'peakMemory', icon: Database, category: 'memory', format: 'bytes' },
+  maxmemory: { nameKey: 'memoryLimit', icon: Database, category: 'memory', format: 'bytes' },
+  maxmemory_policy: { nameKey: 'evictionPolicy', icon: Shield, category: 'memory' },
+  mem_fragmentation_ratio: { nameKey: 'fragmentationRatio', icon: AlertTriangle, category: 'memory', format: 'ratio' },
+  evicted_keys: { nameKey: 'evictedKeys', icon: AlertTriangle, category: 'memory', format: 'count' },
 
   // Server
-  redis_version: { name: 'Redis 版本', icon: Code, category: 'server' },
-  uptime_in_seconds: { name: '运行时间', icon: Clock, category: 'server', format: 'uptime' },
-  connected_clients: { name: '客户端连接', icon: Activity, category: 'server' },
+  redis_version: { nameKey: 'redisVersion', icon: Code, category: 'server' },
+  uptime_in_seconds: { nameKey: 'uptime', icon: Clock, category: 'server', format: 'uptime' },
+  connected_clients: { nameKey: 'connectedClients', icon: Activity, category: 'server' },
 
   // Keys & Stats
-  db_keys: { name: '总键数', icon: Hash, category: 'stats', format: 'count', computed: true },
-  total_commands_processed: { name: '总命令数', icon: Command, category: 'stats', format: 'count' },
-  expired_keys: { name: '过期键数', icon: Timer, category: 'stats', format: 'count' },
-  rejected_connections: { name: '拒绝连接', icon: Ban, category: 'stats', format: 'count' },
-  rdb_last_save_time: { name: '最后保存', icon: Save, category: 'stats', format: 'timeago' },
+  db_keys: { nameKey: 'totalKeys', icon: Hash, category: 'stats', format: 'count', computed: true },
+  total_commands_processed: { nameKey: 'totalCommands', icon: Command, category: 'stats', format: 'count' },
+  expired_keys: { nameKey: 'expiredKeys', icon: Timer, category: 'stats', format: 'count' },
+  rejected_connections: { nameKey: 'rejectedConnections', icon: Ban, category: 'stats', format: 'count' },
+  rdb_last_save_time: { nameKey: 'lastSave', icon: Save, category: 'stats', format: 'timeago' },
 }
 
 const CATEGORY_COLORS = {
@@ -77,6 +78,7 @@ const CATEGORY_COLORS = {
 }
 
 export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) {
+  const { t } = useTranslation()
   const { connections } = useRedisStore()
   const [loading, setLoading] = useState(false)
   const [serverInfo, setServerInfo] = useState<Record<string, string>>({})
@@ -259,9 +261,9 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
     const aofBaseSize = serverInfo['aof_base_size']
 
     // Determine persistence mode
-    let persistenceMode = '无持久化'
+    let persistenceMode = t('redis.noPersistence')
     if (rdbEnabled && aofEnabled) {
-      persistenceMode = '混合模式 (RDB + AOF)'
+      persistenceMode = t('redis.mixedMode')
     } else if (aofEnabled) {
       persistenceMode = 'AOF'
     } else if (rdbEnabled) {
@@ -288,7 +290,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
   if (!connectionId) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <p className="text-gray-400 dark:text-gray-500 text-sm">Please connect to a Redis server first</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm">{t('redis.pleaseConnect')}</p>
       </div>
     )
   }
@@ -298,9 +300,9 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
       {/* Control Bar */}
       <div className="flex-shrink-0 px-4 py-3 border-b border-black/10 dark:border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold">实时监控</span>
+          <span className="text-sm font-semibold">{t('redis.realtimeMonitor')}</span>
           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${autoRefresh ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
-            {autoRefresh ? '自动刷新' : '手动'}
+            {autoRefresh ? t('redis.autoRefresh') : t('redis.manual')}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -312,13 +314,13 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
             }`}
           >
-            {autoRefresh ? '暂停' : '自动'}
+            {autoRefresh ? t('redis.pause') : t('redis.auto')}
           </button>
           <button
             onClick={() => loadServerInfo()}
             disabled={loading}
             className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 transition-colors"
-            title="刷新"
+            title={t('redis.refresh2')}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -337,7 +339,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">性能指标</h3>
+                <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">{t('redis.performanceMetrics')}</h3>
               </div>
               <div className="grid grid-cols-4 gap-3">
                 {Object.entries(CORE_METRICS)
@@ -352,7 +354,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                       <div key={key} className={`${status.bg} rounded-lg p-3`}>
                         <div className="flex items-center gap-1.5 mb-1">
                           <Icon className="w-3.5 h-3.5 text-green-700 dark:text-green-400" />
-                          <span className="text-xs text-green-700/80 dark:text-green-400/80">{config.name}</span>
+                          <span className="text-xs text-green-700/80 dark:text-green-400/80">{t(`redis.${config.nameKey}`)}</span>
                         </div>
                         <div className="text-lg font-bold text-green-900 dark:text-green-100">
                           {formatted}
@@ -367,7 +369,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Database className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">内存使用</h3>
+                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">{t('redis.memoryUsage')}</h3>
               </div>
               <div className="grid grid-cols-4 gap-3">
                 {Object.entries(CORE_METRICS)
@@ -382,7 +384,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                       <div key={key} className={`${status.bg} rounded-lg p-3`}>
                         <div className="flex items-center gap-1.5 mb-1">
                           <Icon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                          <span className="text-xs text-blue-700/80 dark:text-blue-400/80">{config.name}</span>
+                          <span className="text-xs text-blue-700/80 dark:text-blue-400/80">{t(`redis.${config.nameKey}`)}</span>
                         </div>
                         <div className={`text-base font-bold ${
                           status.status === 'critical' ? 'text-red-600 dark:text-red-400' :
@@ -401,7 +403,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
             <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100">服务器信息</h3>
+                <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100">{t('redis.serverInformation')}</h3>
               </div>
               <div className="grid grid-cols-4 gap-3">
                 {Object.entries(CORE_METRICS)
@@ -415,7 +417,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                       <div key={key} className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
                         <div className="flex items-center gap-1.5 mb-1">
                           <Icon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                          <span className="text-xs text-purple-700/80 dark:text-purple-400/80">{config.name}</span>
+                          <span className="text-xs text-purple-700/80 dark:text-purple-400/80">{t(`redis.${config.nameKey}`)}</span>
                         </div>
                         <div className="text-base font-bold text-purple-900 dark:text-purple-100">
                           {formatted}
@@ -430,7 +432,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
             <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <HardDrive className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-100">数据统计</h3>
+                <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-100">{t('redis.dataStatistics')}</h3>
               </div>
               <div className="grid grid-cols-5 gap-3">
                 {Object.entries(CORE_METRICS)
@@ -444,7 +446,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                       <div key={key} className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
                         <div className="flex items-center gap-1.5 mb-1">
                           <Icon className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                          <span className="text-xs text-amber-700/80 dark:text-amber-400/80">{config.name}</span>
+                          <span className="text-xs text-amber-700/80 dark:text-amber-400/80">{t(`redis.${config.nameKey}`)}</span>
                         </div>
                         <div className="text-base font-bold text-amber-900 dark:text-amber-100">
                           {formatted}
@@ -460,10 +462,10 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <FileBox className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                  <h3 className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">持久化备份</h3>
+                  <h3 className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">{t('redis.persistenceBackup')}</h3>
                 </div>
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                  persistenceInfo.persistenceMode === '无持久化'
+                  persistenceInfo.persistenceMode === t('redis.noPersistence')
                     ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                     : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
                 }`}>
@@ -476,7 +478,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                 <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Database className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">RDB 快照</span>
+                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">{t('redis.rdbSnapshot')}</span>
                     {persistenceInfo.rdbEnabled ? (
                       <CheckCircle className="w-3.5 h-3.5 text-green-500" />
                     ) : (
@@ -485,19 +487,19 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                   </div>
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-cyan-700/70 dark:text-cyan-400/70">最后保存</span>
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">{t('redis.lastSaveTime')}</span>
                       <span className="text-cyan-900 dark:text-cyan-100 font-medium">
                         {formatValue('rdb_last_save_time', persistenceInfo.rdbLastSave || '0', 'timeago')}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-cyan-700/70 dark:text-cyan-400/70">变更次数</span>
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">{t('redis.changeCount')}</span>
                       <span className="text-cyan-900 dark:text-cyan-100 font-medium">{persistenceInfo.rdbChanges}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-cyan-700/70 dark:text-cyan-400/70">保存状态</span>
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">{t('redis.saveStatus')}</span>
                       <span className={`font-medium ${persistenceInfo.rdbStatus === 'ok' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {persistenceInfo.rdbStatus === 'ok' ? '正常' : '异常'}
+                        {persistenceInfo.rdbStatus === 'ok' ? t('redis.normal') : t('redis.abnormal')}
                       </span>
                     </div>
                   </div>
@@ -507,7 +509,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                 <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Save className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">AOF 日志</span>
+                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">{t('redis.aofLog')}</span>
                     {persistenceInfo.aofEnabled ? (
                       <CheckCircle className="w-3.5 h-3.5 text-green-500" />
                     ) : (
@@ -516,21 +518,21 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                   </div>
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-cyan-700/70 dark:text-cyan-400/70">启用状态</span>
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">{t('redis.enabled')}</span>
                       <span className={`font-medium ${persistenceInfo.aofEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
-                        {persistenceInfo.aofEnabled ? '已启用' : '未启用'}
+                        {persistenceInfo.aofEnabled ? t('redis.enabled') : t('redis.notEnabled')}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-cyan-700/70 dark:text-cyan-400/70">重写状态</span>
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">{t('redis.rewriteStatus')}</span>
                       <span className="text-cyan-900 dark:text-cyan-100 font-medium">
-                        {persistenceInfo.aofRewriteInProgress ? '进行中...' : '空闲'}
+                        {persistenceInfo.aofRewriteInProgress ? t('redis.inProgress') : t('redis.idle')}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-cyan-700/70 dark:text-cyan-400/70">重写状态</span>
+                      <span className="text-cyan-700/70 dark:text-cyan-400/70">{t('redis.saveStatus')}</span>
                       <span className={`font-medium ${persistenceInfo.aofStatus === 'ok' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {persistenceInfo.aofStatus === 'ok' ? '正常' : '异常'}
+                        {persistenceInfo.aofStatus === 'ok' ? t('redis.normal') : t('redis.abnormal')}
                       </span>
                     </div>
                   </div>
@@ -540,8 +542,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
               {/* Info */}
               <div className="mt-3 p-2 bg-cyan-100/50 dark:bg-cyan-900/20 rounded-lg">
                 <p className="text-xs text-cyan-700 dark:text-cyan-300">
-                  💡 提示：RDB 文件通常位于 Redis 服务器的 dump.rdb，AOF 文件为 appendonly.aof。
-                  请通过服务器端进行备份和恢复操作。
+                  {t('redis.persistenceTip')}
                 </p>
               </div>
             </div>
@@ -551,8 +552,8 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
 
       {/* Footer */}
       <div className="flex-shrink-0 h-[52px] px-4 border-t border-black/10 dark:border-white/10 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
-        <span>{Object.keys(serverInfo).length} 项指标</span>
-        <span>数据每5秒更新</span>
+        <span>{Object.keys(serverInfo).length} {t('redis.metricsCount')}</span>
+        <span>{t('redis.dataRefreshInterval')}</span>
       </div>
     </div>
   )

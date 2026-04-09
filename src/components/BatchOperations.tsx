@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Trash2, Clock, RefreshCw, X, Database, CheckCircle2, CheckSquare, Square, ToggleLeft, ToggleRight, AlertCircle, Layers } from 'lucide-react'
 import { useRedisStore } from '@/store/redisStore'
+import { useTranslation } from '@/store/i18nStore'
 
 interface BatchOperationsProps {
   connectionId: string | null
@@ -15,6 +16,7 @@ interface KeyOption {
 }
 
 export default function BatchOperations({ connectionId }: BatchOperationsProps) {
+  const { t } = useTranslation()
   const { connections } = useRedisStore()
   const [keys, setKeys] = useState<KeyOption[]>([])
   const [visibleKeys, setVisibleKeys] = useState<KeyOption[]>([])
@@ -217,10 +219,32 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
     await loadKeys(true)
 
     // Show toast notification
-    if (results.failed === 0) {
-      showToast(`Successfully deleted ${selectedKeys.length} key(s)`, 'success')
+    const finalResults = { success: 0, failed: 0, errors: [] }
+    // Re-count results from state
+    setResults(prev => {
+      finalResults.success = prev.success + 1
+      finalResults.failed = prev.failed
+      finalResults.errors = prev.errors
+      return prev
+    })
+
+    // Get actual results from the loop
+    let actualSuccess = 0
+    let actualFailed = 0
+    for (let i = 0; i < selectedKeys.length; i++) {
+      try {
+        const result = await window.electronAPI?.redisDelete?.(connectionId!, selectedKeys[i].name)
+        if (result?.success) actualSuccess++
+        else actualFailed++
+      } catch {
+        actualFailed++
+      }
+    }
+
+    if (actualFailed === 0) {
+      showToast(t('redis.successfullyDeleted', { count: actualSuccess }), 'success')
     } else {
-      showToast(`Deleted ${results.success}, failed ${results.failed}`, 'error')
+      showToast(t('redis.deletedFailed', { success: actualSuccess, failed: actualFailed }), 'error')
     }
   }
 
@@ -264,11 +288,23 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
     setProcessing(false)
     await loadKeys(true)
 
-    // Show toast notification
-    if (results.failed === 0) {
-      showToast(`Successfully set TTL for ${selectedKeys.length} key(s)`, 'success')
+    // Get actual results from the loop
+    let actualSuccess = 0
+    let actualFailed = 0
+    for (let i = 0; i < selectedKeys.length; i++) {
+      try {
+        const result = await window.electronAPI?.redisSetTTL?.(connectionId!, selectedKeys[i].name, ttlNum)
+        if (result?.success) actualSuccess++
+        else actualFailed++
+      } catch {
+        actualFailed++
+      }
+    }
+
+    if (actualFailed === 0) {
+      showToast(t('redis.successfullySetTTL', { count: actualSuccess }), 'success')
     } else {
-      showToast(`Set TTL ${results.success}, failed ${results.failed}`, 'error')
+      showToast(t('redis.setTTLFailed', { success: actualSuccess, failed: actualFailed }), 'error')
     }
   }
 
@@ -279,7 +315,7 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
   if (!connectionId) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-800">
-        <p className="text-gray-400 dark:text-gray-500 text-sm">Please connect to server for batch operations</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm">{t('redis.pleaseConnectBatch')}</p>
       </div>
     )
   }
@@ -289,7 +325,7 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
       {/* Pattern Input */}
       <div className="flex-shrink-0 px-3 py-2 border-b border-black/10 dark:border-white/10">
         <div className="flex items-center gap-3">
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Pattern:</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('redis.pattern')}:</label>
           <div className="w-48 flex items-center bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">
             <input
               type="text"
@@ -302,7 +338,7 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
               onClick={() => loadKeys(true)}
               disabled={loading}
               className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
-              title="Refresh keys"
+              title={t('toolbar.refreshKeys')}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -321,15 +357,15 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
           ) : (
             <Square className="w-4 h-4 shrink-0" />
           )}
-          {selectAll ? 'Deselect All' : 'Select All'}
+          {selectAll ? t('redis.deselectAll') : t('redis.selectAll')}
         </button>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-            {getSelectedCount()} selected
+            {getSelectedCount()} {t('redis.selected')}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">/</span>
           <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-            {keysFoundCount} keys
+            {keysFoundCount} {t('redis.keys')}
             {!allScanned && <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(more...)</span>}
           </span>
 
@@ -361,7 +397,7 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
               type="number"
               value={ttlValue}
               onChange={(e) => setTtlValue(e.target.value)}
-              placeholder="TTL"
+              placeholder={t('redis.ttlSeconds')}
               className="w-16 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-500 shrink-0"
               disabled={processing}
             />
@@ -390,11 +426,11 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
         {loading ? (
           <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400 text-sm min-h-[200px]">
             <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-            Loading...
+            {t('common.loading')}
           </div>
         ) : visibleKeys.length === 0 ? (
           <div className="flex items-center justify-center py-20 text-gray-500 dark:text-gray-400 text-sm min-h-[200px]">
-            No keys found matching pattern "{searchPattern}"
+            {t('redis.noKeysFound')}
           </div>
         ) : (
           <div className="flex flex-col border border-transparent rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 201.5px)' }}>
@@ -411,10 +447,10 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
                 <thead>
                   <tr>
                     <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400"></th>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">Key</th>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">Type</th>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">Size</th>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">TTL</th>
+                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">{t('redis.keyName')}</th>
+                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">{t('common.type')}</th>
+                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">{t('redis.ttl')}</th>
+                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">{t('redis.ttl')}</th>
                   </tr>
                 </thead>
               </table>
@@ -500,7 +536,7 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
                 disabled={!hasMoreKeys || loadingMoreRef.current || allScanned}
                 className="w-full h-6 text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-transparent dark:hover:bg-transparent disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
-                {loadingMoreRef.current ? 'Loading...' : allScanned ? 'All Loaded' : `Load More (${visibleKeys.length}/${keys.length})`}
+                {loadingMoreRef.current ? t('redis.loadingMore') : allScanned ? t('redis.allLoaded') : `${t('redis.loadMore')} (${visibleKeys.length}/${keys.length})`}
               </button>
             </div>
           </div>
@@ -512,13 +548,13 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
         {processing && (
           <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
             <RefreshCw className="w-4 h-4 animate-spin" />
-            <span>Processing... {progress.current} / {progress.total}</span>
+            <span>{t('redis.processing')} {progress.current} / {progress.total}</span>
           </div>
         )}
         {!processing && (
           <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-            <span>{keysFoundCount} total keys</span>
-            {allScanned && <span className="flex items-center gap-1">✓ All scanned</span>}
+            <span>{keysFoundCount} {t('redis.keys')}</span>
+            {allScanned && <span className="flex items-center gap-1">✓ {t('redis.keysScanned')}</span>}
           </div>
         )}
       </div>

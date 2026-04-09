@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Clock, Trash2, Save, X, RefreshCw } from 'lucide-react'
 import { useRedisStore } from '@/store/redisStore'
+import { useTranslation } from '@/store/i18nStore'
 import StringViewer from './viewers/StringViewer'
 import HashViewer from './viewers/HashViewer'
 import ListViewer from './viewers/ListViewer'
@@ -27,11 +28,12 @@ function TTLDisplay({
   onCancel: () => void
   saving?: boolean
 }) {
+  const { t } = useTranslation()
   const formatTTL = (ttl: number) => {
     // Treat large values (close to max int) as persistent (-1)
     if (ttl < 0) return '-1'
     if (ttl >= 2147483600) return '-1' // Values close to max int treated as -1
-    if (ttl === 0) return 'Expired'
+    if (ttl === 0) return t('redis.ttlExpired')
     if (ttl < 60) return `${ttl}s`
     if (ttl < 3600) return `${Math.floor(ttl / 60)}m ${ttl % 60}s`
     return `${Math.floor(ttl / 3600)}h ${Math.floor((ttl % 3600) / 60)}m`
@@ -73,7 +75,7 @@ function TTLDisplay({
             ? 'border border-red-500 dark:border-red-500 rounded'
             : 'border-b border-transparent'
         }`}
-        title={!editing ? "TTL (click to edit)" : ""}
+        title={!editing ? `${t('redis.ttl')} (${t('common.edit')})` : ""}
       />
       <div className={`w-5 ${editing ? '' : 'opacity-0'}`}>
         {editing && (
@@ -88,7 +90,7 @@ function TTLDisplay({
             }}
             disabled={saving}
             className="p-0.5 bg-red-500 hover:bg-red-600 text-white rounded transition-colors disabled:opacity-50"
-            title="Save TTL"
+            title={t('toolbar.saveTTL')}
           >
             <Save className="w-3 h-3" />
           </button>
@@ -99,6 +101,7 @@ function TTLDisplay({
 }
 
 export default function DataPanel() {
+  const { t } = useTranslation()
   const {
     activeConnectionId,
     connections,
@@ -277,8 +280,8 @@ export default function DataPanel() {
         } catch (error) {
         }
       },
-      title: 'Delete Key',
-      message: `Are you sure you want to delete key "${selectedKey}"?`,
+      title: t('redis.deleteKey'),
+      message: t('redis.deleteKeyConfirm'),
     })
   }
 
@@ -294,25 +297,18 @@ export default function DataPanel() {
   }
 
   const getTypeDisplayName = (type: string) => {
-    const names: Record<string, string> = {
-      string: 'String',
-      hash: 'Hash',
-      list: 'List',
-      set: 'Set',
-      zset: 'ZSet'
-    }
-    return names[type] || type.charAt(0).toUpperCase() + type.slice(1)
+    return t(`redis.${type}`)
   }
 
   if (!selectedKey) {
     return (
       <div className="w-full h-full flex flex-col bg-white dark:bg-gray-800">
         <div className="px-3 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center">
-          <h2 className="text-sm font-medium text-gray-900 dark:text-white">Data</h2>
+          <h2 className="text-sm font-medium text-gray-900 dark:text-white">{t('redis.data')}</h2>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <p className="text-gray-400 dark:text-gray-500 text-sm">
-            Select a key to view and edit its data
+            {t('redis.selectKey')}
           </p>
         </div>
       </div>
@@ -326,7 +322,7 @@ export default function DataPanel() {
         <div className="flex items-center justify-between gap-3">
           {/* Left: Key info */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h2 className="text-sm font-medium text-gray-900 dark:text-white flex-shrink-0">Data</h2>
+            <h2 className="text-sm font-medium text-gray-900 dark:text-white flex-shrink-0">{t('redis.data')}</h2>
             {keyInfo && (
               <span className={`px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${getTypeColor(keyInfo.type)}`}>
                 {getTypeDisplayName(keyInfo.type)}
@@ -366,7 +362,7 @@ export default function DataPanel() {
                 onClick={handleRefresh}
                 disabled={refreshingData}
                 className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-                title="Refresh data"
+                title={t('toolbar.refreshData')}
               >
                 <RefreshCw className={`w-4 h-4 ${refreshingData ? 'animate-spin' : ''}`} />
               </button>
@@ -374,14 +370,14 @@ export default function DataPanel() {
             <button
               onClick={handleDeleteKey}
               className="p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-              title="Delete key"
+              title={t('toolbar.deleteKey')}
             >
               <Trash2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => setSelectedKey(null)}
               className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-              title="Close"
+              title={t('toolbar.closeBtn')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -393,7 +389,7 @@ export default function DataPanel() {
       <div className="flex-1 overflow-hidden min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
+            <div className="text-gray-500 dark:text-gray-400 text-sm">{t('common.loading')}</div>
           </div>
         ) : keyInfo ? (
           <div className="h-full min-h-0">
@@ -415,7 +411,7 @@ export default function DataPanel() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Failed to load key</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t('common.error')}</p>
           </div>
         )}
       </div>
@@ -424,11 +420,11 @@ export default function DataPanel() {
       <div className="flex-shrink-0 h-[52px] px-2 border-t border-black/10 dark:border-white/10 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
         {keyInfo ? (
           <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-            <span>Type: {keyInfo.type}</span>
-            <span>TTL: {keyInfo.ttl < 0 ? '∞' : `${keyInfo.ttl}s`}</span>
+            <span>{t('common.type')}: {keyInfo.type}</span>
+            <span>{t('redis.ttl')}: {keyInfo.ttl < 0 ? '∞' : `${keyInfo.ttl}s`}</span>
           </div>
         ) : (
-          <div className="text-xs text-gray-400 dark:text-gray-500">No key selected</div>
+          <div className="text-xs text-gray-400 dark:text-gray-500">{t('redis.selectKey')}</div>
         )}
       </div>
 
@@ -436,8 +432,8 @@ export default function DataPanel() {
         isOpen={deleteConfirm.isOpen}
         title={deleteConfirm.title}
         message={deleteConfirm.message}
-        confirmText="Delete"
-        cancelText="Cancel"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={() => {
           deleteConfirm.callback()

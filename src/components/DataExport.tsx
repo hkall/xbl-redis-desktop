@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Download, FileJson, FileText, Database, RefreshCw, CheckCircle2, X, FileSpreadsheet, CheckSquare, Square, Archive, DownloadCloud } from 'lucide-react'
 import { customStringify } from '@/utils/formatter'
 import { useRedisStore } from '@/store/redisStore'
+import { useTranslation } from '@/store/i18nStore'
 
 interface DataExportProps {
   connectionId: string | null
@@ -25,6 +26,7 @@ type ExportMode = 'single' | 'archive'
 type ExportFormat = 'json' | 'csv' | 'txt'
 
 export default function DataExport({ connectionId }: DataExportProps) {
+  const { t } = useTranslation()
   const { connections } = useRedisStore()
   const [keys, setKeys] = useState<KeyInfo[]>([])
   const [loading, setLoading] = useState(false)
@@ -620,7 +622,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
   if (!connectionId) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-800">
-        <p className="text-gray-400 dark:text-gray-500 text-sm">Please connect to server to export data</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm">{t('redis.pleaseConnectExport')}</p>
       </div>
     )
   }
@@ -630,7 +632,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
       {/* Pattern Input */}
       <div className="flex-shrink-0 px-3 py-2 border-b border-black/10 dark:border-white/10">
         <div className="flex items-center gap-3">
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Pattern:</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('redis.pattern')}:</label>
           <div className="w-48 flex items-center bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">
             <input
               type="text"
@@ -643,7 +645,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
               onClick={loadKeys}
               disabled={loading}
               className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
-              title="Refresh keys"
+              title={t('toolbar.refreshKeys')}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -773,8 +775,8 @@ export default function DataExport({ connectionId }: DataExportProps) {
                 <thead>
                   <tr>
                     <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400"></th>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">Key</th>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">Type</th>
+                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">{t('redis.keyHeader')}</th>
+                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">{t('common.type')}</th>
                   </tr>
                 </thead>
               </table>
@@ -864,7 +866,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
         {exporting && (
           <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
             <RefreshCw className="w-4 h-4 animate-spin" />
-            <span>Exporting... {exportResults?.exported || 0} / {getSelectedCount()}</span>
+            <span>{t('redis.exportingProgress', { current: exportResults?.exported || 0, total: getSelectedCount() })}</span>
           </div>
         )}
         {!exporting && exportResults && (
@@ -873,12 +875,12 @@ export default function DataExport({ connectionId }: DataExportProps) {
               <>
                 <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                 <span className="text-green-600 dark:text-green-400">
-                  Exported {exportResults.exported} key{exportResults.exported !== 1 ? 's' : ''}
+                  {t('redis.exportedCount', { count: exportResults.exported })}
                 </span>
               </>
             ) : (
               <span className="text-red-600 dark:text-red-400">
-                {exportResults.error || 'Export failed'}
+                {exportResults.error || t('redis.exportFailed')}
               </span>
             )}
             <button

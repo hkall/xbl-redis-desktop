@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { Plus, Trash2, Edit2, Search, X, Copy, Check } from 'lucide-react'
 import { formatDataForEdit } from '@/utils/formatter'
+import { useTranslation } from '@/store/i18nStore'
 import CodeEditor from '@/components/CodeEditor'
 import ConfirmDialog from '../ConfirmDialog'
 
@@ -19,6 +20,7 @@ interface EditModalProps {
 }
 
 function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditModalProps) {
+  const { t } = useTranslation()
   const [value, setValue] = useState('')
   const [direction, setDirection] = useState<'left' | 'right'>('right')
   const [copied, setCopied] = useState(false)
@@ -83,12 +85,12 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-            {type === 'add' ? 'Add New List Item' : `Edit Item at Index ${index}`}
+            {type === 'add' ? t('redis.addListItem') : t('redis.editListItem', { index })}
           </h3>
           <button
             onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Close"
+            title={t('common.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -100,7 +102,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
           {type === 'add' && (
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Insert Direction
+                {t('redis.insertDirection')}
               </label>
               <div className="flex gap-2">
                 <button
@@ -111,7 +113,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
                       : 'bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
-                  Left (LPUSH)
+                  {t('redis.leftPush')}
                 </button>
                 <button
                   onClick={() => setDirection('right')}
@@ -121,7 +123,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
                       : 'bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
-                  Right (RPUSH)
+                  {t('redis.rightPush')}
                 </button>
               </div>
             </div>
@@ -131,7 +133,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                Value
+                {t('redis.value')}
               </label>
               <button
                 onClick={handleCopy}
@@ -140,12 +142,12 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
                 {copied ? (
                   <>
                     <Check className="w-3 h-3 text-green-500" />
-                    <span>已复制</span>
+                    <span>{t('redis.copied')}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3 h-3" />
-                    <span>复制</span>
+                    <span>{t('redis.copy')}</span>
                   </>
                 )}
               </button>
@@ -158,7 +160,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
                 value={value}
                 onChange={setValue}
                 onKeyDown={handleKeyDown}
-                placeholder="输入值..."
+                placeholder={t('redis.enterValue')}
               />
             </div>
           </div>
@@ -167,14 +169,14 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            {value.length} 字符 · Tab 缩进 · Ctrl+Enter 保存
+            {value.length} {t('redis.characters')} · {t('redis.tabIndent')} · {t('redis.ctrlEnterSave')}
           </p>
           <div className="flex gap-2.5">
             <button
               onClick={onClose}
               className="px-4 py-2 text-xs font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
             >
-              取消
+              {t('redis.cancel')}
             </button>
             <button
               onClick={() => {
@@ -189,7 +191,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
               disabled={!value}
               className="px-4 py-2 text-xs font-medium bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {type === 'add' ? '添加项目' : '更新项目'}
+              {type === 'add' ? t('redis.addItem') : t('redis.updateItem')}
             </button>
           </div>
         </div>
@@ -201,6 +203,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
 const ITEMS_PER_PAGE = 20
 
 export default function ListViewer({ connectionId, keyName }: ListViewerProps) {
+  const { t } = useTranslation()
   const [items, setItems] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [editModal, setEditModal] = useState<{
@@ -345,7 +348,7 @@ export default function ListViewer({ connectionId, keyName }: ListViewerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">{t('redis.loadingText')}</div>
       </div>
     )
   }
@@ -380,7 +383,7 @@ export default function ListViewer({ connectionId, keyName }: ListViewerProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search items..."
+              placeholder={t('toolbar.searchItems')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400 dark:placeholder-gray-500"
@@ -406,9 +409,9 @@ export default function ListViewer({ connectionId, keyName }: ListViewerProps) {
                 </colgroup>
                 <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
                   <tr>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Index</th>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Value</th>
-                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Actions</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">{t('redis.indexHeader')}</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">{t('redis.valueHeader')}</th>
+                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">{t('redis.actionsHeader')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -443,14 +446,14 @@ export default function ListViewer({ connectionId, keyName }: ListViewerProps) {
                                 initialValue: item,
                               })}
                               className="p-1.5 text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                              title="Edit"
+                              title={t('toolbar.editBtn')}
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteItem(actualIndex, item)}
                               className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                              title="Delete"
+                              title={t('toolbar.deleteBtn')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -549,8 +552,8 @@ export default function ListViewer({ connectionId, keyName }: ListViewerProps) {
         isOpen={deleteConfirm.isOpen}
         title={deleteConfirm.title}
         message={deleteConfirm.message}
-        confirmText="Delete"
-        cancelText="Cancel"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={() => {
           deleteConfirm.callback()

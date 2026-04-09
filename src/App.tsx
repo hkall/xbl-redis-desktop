@@ -9,9 +9,12 @@ import DataExport from './components/DataExport'
 import Toolbar from './components/common/Toolbar'
 import ApiSidebar from './components/api/ApiSidebar'
 import ApiWorkspace from './components/api/ApiWorkspace'
+import DbSidebar from './components/database/DbSidebar'
+import DbWorkspace from './components/database/DbWorkspace'
 import { ToastProvider } from './components/common/Toast'
 import { useRedisStore } from './store/redisStore'
 import { useApiStore } from './store/apiStore'
+import { useDbStore } from './store/dbStore'
 import { ToolType } from './store/types'
 import { Terminal, Server, List, Download, X, Sun, Moon } from 'lucide-react'
 
@@ -89,6 +92,7 @@ function ResizableDivider({
 export default function App() {
   const { activeConnectionId, connections, selectedKey, setSelectedKey, loadConfig } = useRedisStore()
   const { loadFromStorage: loadApiData } = useApiStore()
+  const { loadFromStorage: loadDbData } = useDbStore()
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme')
     return saved ? saved === 'dark' : true // 默认深色模式
@@ -130,6 +134,7 @@ export default function App() {
       try {
         await loadConfig()
         await loadApiData()
+        await loadDbData()
       } catch (error) {
       }
     }
@@ -253,6 +258,21 @@ export default function App() {
     </>
   )
 
+  // Render Database tool layout
+  const renderDatabaseLayout = () => (
+    <>
+      {/* Left Panel - Database Sidebar */}
+      <div className="w-[280px] min-w-0 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700">
+        <DbSidebar />
+      </div>
+
+      {/* Main Workspace */}
+      <div className="flex-1 min-w-0 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700">
+        <DbWorkspace />
+      </div>
+    </>
+  )
+
   return (
     <ToastProvider>
       <div className="w-screen h-screen bg-gray-100 dark:bg-gray-800 flex flex-col overflow-hidden">
@@ -263,7 +283,7 @@ export default function App() {
         <div className="flex-1 flex gap-3 p-3 pt-2 min-h-0">
           {activeTool === 'redis' && renderRedisLayout()}
           {activeTool === 'api' && renderApiLayout()}
-          {/* MySQL and MongoDB will be added here later */}
+          {activeTool === 'mysql' && renderDatabaseLayout()}
         </div>
       </div>
     </ToastProvider>
