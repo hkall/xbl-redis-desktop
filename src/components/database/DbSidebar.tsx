@@ -22,6 +22,8 @@ import {
   Play,
   Star,
   FolderOpen,
+  Bolt,
+  Info,
 } from 'lucide-react'
 import { useDbStore, createDefaultConnection } from '@/store/dbStore'
 import { useTranslation } from '@/store/i18nStore'
@@ -228,6 +230,28 @@ function ConnectionDialog({
             />
           </div>
 
+          {/* 字符集 */}
+          {form.type !== 'sqlite' && (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Charset
+              </label>
+              <select
+                value={form.charset || 'utf8mb4'}
+                onChange={(e) => setForm({ ...form, charset: e.target.value })}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="utf8mb4">utf8mb4 (推荐)</option>
+                <option value="utf8">utf8</option>
+                <option value="gbk">gbk</option>
+                <option value="gb2312">gb2312</option>
+                <option value="gb18030">gb18030</option>
+                <option value="big5">big5</option>
+                <option value="latin1">latin1</option>
+              </select>
+            </div>
+          )}
+
           {/* 测试结果 */}
           {testResult && (
             <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
@@ -290,6 +314,8 @@ function ConnectionItem({
   onDelete,
   onDuplicate,
   onSelect,
+  expanded,
+  onToggle,
 }: {
   connection: DbConnection
   isActive: boolean
@@ -299,6 +325,8 @@ function ConnectionItem({
   onDelete: () => void
   onDuplicate: () => void
   onSelect: () => void
+  expanded?: boolean
+  onToggle?: () => void
 }) {
   const { t } = useTranslation()
   const [showMenu, setShowMenu] = useState(false)
@@ -320,6 +348,23 @@ function ConnectionItem({
       }`}
       onClick={onSelect}
     >
+      {/* 展开/折叠按钮（仅已连接时显示） */}
+      {connection.connected && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggle?.()
+          }}
+          className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          {expanded ? (
+            <ChevronDown className="w-3 h-3" />
+          ) : (
+            <ChevronRight className="w-3 h-3" />
+          )}
+        </button>
+      )}
+
       {/* 状态指示器 */}
       <div className={`w-2 h-2 rounded-full ${statusColor} flex-shrink-0`} />
 
@@ -455,7 +500,7 @@ function TreeNode({
   rightElement?: React.ReactNode
   level?: number
 }) {
-  const hasChildren = children && React.Children.count(children) > 0
+  const hasChildren = Boolean(children)
 
   return (
     <div>
@@ -511,7 +556,6 @@ export default function DbSidebar() {
     connections,
     activeConnectionId,
     activeDatabase,
-    selectedTable,
     savedQueries,
     expandedNodes,
     addConnection,
@@ -520,7 +564,9 @@ export default function DbSidebar() {
     duplicateConnection,
     setActiveConnection,
     setActiveDatabase,
-    setSelectedTable,
+    openTableTab,
+    openProcedureTab,
+    openTriggerTab,
     connect,
     disconnect,
     getCachedDatabases,
@@ -540,13 +586,31 @@ export default function DbSidebar() {
   })
   const [loadingDatabases, setLoadingDatabases] = useState<string | null>(null)
   const [loadingTables, setLoadingTables] = useState<string | null>(null)
+  const [proceduresCache, setProceduresCache] = useState<Record<string, Record<string, any[]>>>({})
+  const [triggersCache, setTriggersCache] = useState<Record<string, Record<string, any[]>>>({})
+  const [loadedDatabases, setLoadedDatabases] = useState<Set<string>>(new Set())
+  const [tableSearchText, setTableSearchText] = useState<Record<string, string>>({}) // 每个数据库的表搜索文本
 
   const activeConnection = connections.find((c) => c.id === activeConnectionId)
 
+  // 分类展开状态 - 使用 expandedNodes 存储
+  const isCategoryExpanded = (categoryKey: string) => expandedNodes.has(categoryKey)
+  const toggleCategory = (categoryKey: string) => toggleNodeExpand(categoryKey)
+
+  // 默认展开所有分类
+  useEffect(() => {
+    if (activeConnectionId && activeConnection?.connected) {
+      const nodeKey = `conn:${activeConnectionId}`
+      if (!expandedNodes.has(nodeKey)) {
+        toggleNodeExpand(nodeKey)
+        loadDatabases(activeConnectionId)
+      }
+    }
+  }, [activeConnectionId, activeConnection?.connected])
+
   // 加载数据库列表
   const loadDatabases = async (connectionId: string) => {
-    if (getCachedDatabases(connectionId)) return
-
+    // 总是重新加载，不使用缓存
     setLoadingDatabases(connectionId)
     try {
       if (window.electronAPI?.dbGetDatabases) {
@@ -560,21 +624,62 @@ export default function DbSidebar() {
     }
   }
 
-  // 加载表列表
+  // 加载表列表（包括存储过程和触发器）
   const loadTables = async (connectionId: string, database: string) => {
-    if (getCachedTables(connectionId, database)) return
-
-    setLoadingTables(`${connectionId}:${database}`)
+    const cacheKey = `${connectionId}:${database}`
+    setLoadingTables(cacheKey)
     try {
+      // 加载表和视图
       if (window.electronAPI?.dbGetTables) {
         const result = await window.electronAPI.dbGetTables(connectionId, database)
         if (result.success && result.tables) {
           cacheTables(connectionId, database, result.tables)
+          // 默认展开"表"分类
+          const tablesKey = `tables:${connectionId}:${database}`
+          if (!expandedNodes.has(tablesKey)) {
+            toggleNodeExpand(tablesKey)
+          }
         }
       }
+
+      // 加载存储过程
+      if (window.electronAPI?.dbGetProcedures) {
+        const procResult = await window.electronAPI.dbGetProcedures(connectionId, database)
+        if (procResult.success && procResult.procedures) {
+          setProceduresCache(prev => ({
+            ...prev,
+            [connectionId]: {
+              ...(prev[connectionId] || {}),
+              [database]: procResult.procedures
+            }
+          }))
+        }
+      }
+
+      // 加载触发器
+      if (window.electronAPI?.dbGetTriggers) {
+        const triggerResult = await window.electronAPI.dbGetTriggers(connectionId, database)
+        if (triggerResult.success && triggerResult.triggers) {
+          setTriggersCache(prev => ({
+            ...prev,
+            [connectionId]: {
+              ...(prev[connectionId] || {}),
+              [database]: triggerResult.triggers
+            }
+          }))
+        }
+      }
+
+      // 标记已加载
+      setLoadedDatabases(prev => new Set(prev).add(cacheKey))
     } finally {
       setLoadingTables(null)
     }
+  }
+
+  // 检查是否已加载某个数据库的详情
+  const isDatabaseLoaded = (connectionId: string, database: string) => {
+    return loadedDatabases.has(`${connectionId}:${database}`)
   }
 
   // 处理连接节点展开
@@ -584,12 +689,6 @@ export default function DbSidebar() {
     if (connection?.connected) {
       loadDatabases(connectionId)
     }
-  }
-
-  // 处理数据库节点展开
-  const handleDatabaseExpand = (connectionId: string, database: string) => {
-    toggleNodeExpand(`db:${connectionId}:${database}`)
-    loadTables(connectionId, database)
   }
 
   // 处理保存连接
@@ -655,73 +754,299 @@ export default function DbSidebar() {
           </div>
         ) : (
           <div className="space-y-1">
-            {connections.map((connection) => (
-              <div key={connection.id}>
-                {/* 连接项 */}
-                <ConnectionItem
-                  connection={connection}
-                  isActive={activeConnectionId === connection.id}
-                  onConnect={() => connect(connection.id)}
-                  onDisconnect={() => disconnect(connection.id)}
-                  onEdit={() => {
-                    setEditingConnection(connection)
-                    setShowConnectionDialog(true)
-                  }}
-                  onDelete={() => setDeleteConfirm({ isOpen: true, id: connection.id, name: connection.name })}
-                  onDuplicate={() => duplicateConnection(connection.id)}
-                  onSelect={() => setActiveConnection(connection.id)}
-                />
+            {connections.map((connection) => {
+              const isConnectionExpanded = expandedNodes.has(`conn:${connection.id}`)
+              const databases = getCachedDatabases(connection.id) || []
+              const isLoadingDatabases = loadingDatabases === connection.id
 
-                {/* 已连接时显示数据库树 */}
-                {connection.connected && activeConnectionId === connection.id && (
-                  <div className="ml-4 mt-1">
-                    {/* 数据库列表 */}
-                    {(loadingDatabases === connection.id ? [] : (getCachedDatabases(connection.id) || [])).map((db) => (
-                      <TreeNode
-                        key={db.name}
-                        name={db.name}
-                        icon={FolderOpen}
-                        nodeId={`db:${connection.id}:${db.name}`}
-                        expanded={expandedNodes.has(`db:${connection.id}:${db.name}`)}
-                        loading={loadingTables === `${connection.id}:${db.name}`}
-                        onToggle={() => handleDatabaseExpand(connection.id, db.name)}
-                        onClick={() => setActiveDatabase(db.name)}
-                        rightElement={
-                          <span className="text-xs text-gray-400">{db.tableCount}</span>
-                        }
-                        level={1}
-                      >
-                        {/* 表 */}
-                        {expandedNodes.has(`db:${connection.id}:${db.name}`) && (
-                          <>
-                            {(getCachedTables(connection.id, db.name) || [])
-                              .filter((t) => t.type === 'TABLE')
-                              .map((table) => (
-                                <TreeNode
-                                  key={table.name}
-                                  name={table.name}
-                                  icon={Table}
-                                  nodeId={`table:${connection.id}:${db.name}:${table.name}`}
-                                  onClick={() => {
-                                    setActiveDatabase(db.name)
-                                    setSelectedTable(table.name, 'TABLE')
-                                  }}
-                                  level={2}
-                                />
-                              ))}
-                          </>
-                        )}
-                      </TreeNode>
-                    ))}
-                    {loadingDatabases === connection.id && (
-                      <div className="flex items-center justify-center py-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+              return (
+                <div key={connection.id}>
+                  {/* 连接项 */}
+                  <ConnectionItem
+                    connection={connection}
+                    isActive={activeConnectionId === connection.id}
+                    expanded={isConnectionExpanded}
+                    onConnect={() => connect(connection.id)}
+                    onDisconnect={() => disconnect(connection.id)}
+                    onEdit={() => {
+                      setEditingConnection(connection)
+                      setShowConnectionDialog(true)
+                    }}
+                    onDelete={() => setDeleteConfirm({ isOpen: true, id: connection.id, name: connection.name })}
+                    onDuplicate={() => duplicateConnection(connection.id)}
+                    onSelect={() => setActiveConnection(connection.id)}
+                    onToggle={() => {
+                      toggleNodeExpand(`conn:${connection.id}`)
+                      if (connection.connected && !databases.length) {
+                        loadDatabases(connection.id)
+                      }
+                    }}
+                  />
+
+                  {/* 已连接且展开时显示数据库树 */}
+                  {connection.connected && isConnectionExpanded && (
+                    <div className="ml-4 mt-1 border-l border-gray-200 dark:border-gray-700 pl-2">
+                      {/* 加载中 */}
+                      {isLoadingDatabases && (
+                        <div className="flex items-center gap-2 py-2 px-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                          <span className="text-xs text-gray-500">{t('common.loading')}</span>
+                        </div>
+                      )}
+
+                      {/* 数据库列表 */}
+                      {!isLoadingDatabases && databases.length > 0 && databases.map((db) => {
+                        const isDbExpanded = expandedNodes.has(`db:${connection.id}:${db.name}`)
+                        const dbLoaded = isDatabaseLoaded(connection.id, db.name)
+                        const tables = dbLoaded ? (getCachedTables(connection.id, db.name) || []) : []
+                        const procedures = dbLoaded ? (proceduresCache[connection.id]?.[db.name] || []) : []
+                        const triggers = dbLoaded ? (triggersCache[connection.id]?.[db.name] || []) : []
+                        const isLoadingThisDb = loadingTables === `${connection.id}:${db.name}`
+
+                        const dbTables = tables.filter((t) => t.type === 'TABLE')
+                        const dbViews = tables.filter((t) => t.type === 'VIEW')
+
+                        return (
+                          <div key={db.name} className="mt-1">
+                            {/* 数据库节点 */}
+                            <div
+                              className="flex items-center gap-1 px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group"
+                              onClick={() => {
+                                const willExpand = !isDbExpanded
+                                toggleNodeExpand(`db:${connection.id}:${db.name}`)
+                                if (willExpand && !dbLoaded && !isLoadingThisDb) {
+                                  loadTables(connection.id, db.name)
+                                }
+                              }}
+                            >
+                              {isLoadingThisDb ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400 flex-shrink-0" />
+                              ) : isDbExpanded ? (
+                                <ChevronDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                              ) : (
+                                <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                              )}
+                              <FolderOpen className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                              <span className="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{db.name}</span>
+                              {db.tableCount > 0 && (
+                                <span className="text-xs text-gray-400 flex-shrink-0 ml-auto">{db.tableCount}</span>
+                              )}
+                            </div>
+
+                            {/* 数据库内容 - 展开时显示 */}
+                            {isDbExpanded && (
+                              <div className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">
+                                {/* 加载中 */}
+                                {isLoadingThisDb && !dbLoaded && (
+                                  <div className="flex items-center gap-2 py-2 px-2">
+                                    <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
+                                    <span className="text-xs text-gray-500">{t('common.loading')}</span>
+                                  </div>
+                                )}
+
+                                {/* 表 - 始终显示分类，支持折叠 */}
+                                <div
+                                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                  onClick={() => toggleCategory(`tables:${connection.id}:${db.name}`)}
+                                >
+                                  {isCategoryExpanded(`tables:${connection.id}:${db.name}`) ? (
+                                    <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                                  ) : (
+                                    <ChevronRight className="w-3 h-3 flex-shrink-0" />
+                                  )}
+                                  <Table className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">{t('database.tables')}</span>
+                                  <span className="text-gray-400 flex-shrink-0">({dbTables.length})</span>
+                                </div>
+                                {isCategoryExpanded(`tables:${connection.id}:${db.name}`) && (
+                                  <div className="ml-3 pl-2 border-l border-gray-100 dark:border-gray-700">
+                                {/* 搜索框 */}
+                                {dbTables.length > 10 && (
+                                  <div className="px-1 py-1">
+                                    <input
+                                      type="text"
+                                      placeholder={t('common.search')}
+                                      value={tableSearchText[`${connection.id}:${db.name}`] || ''}
+                                      onChange={(e) => setTableSearchText(prev => ({
+                                        ...prev,
+                                        [`${connection.id}:${db.name}`]: e.target.value
+                                      }))}
+                                      className="w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                )}
+                                {isLoadingThisDb && !dbLoaded ? (
+                                  <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
+                                ) : dbTables.length > 0 ? (
+                                  (() => {
+                                    const searchText = (tableSearchText[`${connection.id}:${db.name}`] || '').toLowerCase()
+                                    const filteredTables = searchText
+                                      ? dbTables.filter(t => t.name.toLowerCase().includes(searchText))
+                                      : dbTables
+                                    return filteredTables.length > 0 ? filteredTables.map((table) => (
+                                      <div
+                                        key={table.name}
+                                        className={`flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer ${
+                                          activeDatabase === db.name
+                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                          : ''
+                                      }`}
+                                      onClick={() => {
+                                        setActiveDatabase(db.name)
+                                        openTableTab(connection.id, db.name, table.name, 'TABLE')
+                                      }}
+                                    >
+                                      <Table className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{table.name}</span>
+                                      {table.rowCount !== undefined && table.rowCount > 0 && (
+                                        <span className="text-xs text-gray-400 flex-shrink-0 ml-auto">{table.rowCount.toLocaleString()}</span>
+                                      )}
+                                    </div>
+                                    )) : <div className="px-2 py-1 text-xs text-gray-400 dark:text-gray-500">{t('database.noMatchingResults')}</div>
+                                  })()
+                                ) : (
+                                  !isLoadingThisDb && <div className="px-2 py-1 text-xs text-gray-400">{t('common.none')}</div>
+                                )}
+                                  </div>
+                                )}
+
+                                {/* 视图 - 支持折叠 */}
+                                <div
+                                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                  onClick={() => toggleCategory(`views:${connection.id}:${db.name}`)}
+                                >
+                                  {isCategoryExpanded(`views:${connection.id}:${db.name}`) ? (
+                                    <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                                  ) : (
+                                    <ChevronRight className="w-3 h-3 flex-shrink-0" />
+                                  )}
+                                  <Eye className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">{t('database.views')}</span>
+                                  <span className="text-gray-400 flex-shrink-0">({dbViews.length})</span>
+                                </div>
+                                {isCategoryExpanded(`views:${connection.id}:${db.name}`) && (
+                                  <div className="ml-3 pl-2 border-l border-gray-100 dark:border-gray-700">
+                                {isLoadingThisDb && !dbLoaded ? (
+                                  <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
+                                ) : dbViews.length > 0 ? (
+                                  dbViews.map((view) => (
+                                    <div
+                                      key={view.name}
+                                      className={`flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer ${
+                                        activeDatabase === db.name
+                                          ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'
+                                          : ''
+                                      }`}
+                                      onClick={() => {
+                                        setActiveDatabase(db.name)
+                                        openTableTab(connection.id, db.name, view.name, 'VIEW')
+                                      }}
+                                    >
+                                      <Eye className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
+                                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{view.name}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  !isLoadingThisDb && <div className="px-2 py-1 text-xs text-gray-400">{t('common.none')}</div>
+                                )}
+                                  </div>
+                                )}
+
+                                {/* 存储过程 - 支持折叠 */}
+                                <div
+                                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium mt-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                  onClick={() => toggleCategory(`procedures:${connection.id}:${db.name}`)}
+                                >
+                                  {isCategoryExpanded(`procedures:${connection.id}:${db.name}`) ? (
+                                    <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                                  ) : (
+                                    <ChevronRight className="w-3 h-3 flex-shrink-0" />
+                                  )}
+                                  <FileCode className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">{t('database.procedures')}</span>
+                                  <span className="text-gray-400 flex-shrink-0">({procedures.length})</span>
+                                </div>
+                                {isCategoryExpanded(`procedures:${connection.id}:${db.name}`) && (
+                                  <div className="ml-3 pl-2 border-l border-gray-100 dark:border-gray-700">
+                                {isLoadingThisDb && !dbLoaded ? (
+                                  <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
+                                ) : procedures.length > 0 ? (
+                                  procedures.map((proc) => (
+                                    <div
+                                      key={proc.name}
+                                      className={`flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer ${
+                                        activeDatabase === db.name
+                                          ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                                          : ''
+                                      }`}
+                                      onClick={() => {
+                                        setActiveDatabase(db.name)
+                                        openProcedureTab(connection.id, db.name, proc.name)
+                                      }}
+                                    >
+                                      <FileCode className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{proc.name}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  !isLoadingThisDb && <div className="px-4 py-1 text-xs text-gray-400">{t('common.none')}</div>
+                                )}
+                                  </div>
+                                )}
+
+                                {/* 触发器 - 支持折叠 */}
+                                <div
+                                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                  onClick={() => toggleCategory(`triggers:${connection.id}:${db.name}`)}
+                                >
+                                  {isCategoryExpanded(`triggers:${connection.id}:${db.name}`) ? (
+                                    <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                                  ) : (
+                                    <ChevronRight className="w-3 h-3 flex-shrink-0" />
+                                  )}
+                                  <Bolt className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">{t('database.triggers')}</span>
+                                  <span className="text-gray-400 flex-shrink-0">({triggers.length})</span>
+                                </div>
+                                {isCategoryExpanded(`triggers:${connection.id}:${db.name}`) && (
+                                  <div className="ml-3 pl-2 border-l border-gray-100 dark:border-gray-700">
+                                {isLoadingThisDb && !dbLoaded ? (
+                                  <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
+                                ) : triggers.length > 0 ? (
+                                  triggers.map((trigger) => (
+                                    <div
+                                      key={trigger.name}
+                                      className={`flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer ${
+                                        activeDatabase === db.name
+                                          ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
+                                          : ''
+                                      }`}
+                                      onClick={() => {
+                                        setActiveDatabase(db.name)
+                                        openTriggerTab(connection.id, db.name, trigger.name)
+                                      }}
+                                    >
+                                      <Bolt className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
+                                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{trigger.name}</span>
+                                      <span className="text-xs text-gray-400 flex-shrink-0 ml-auto">{trigger.timing} {trigger.event}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  !isLoadingThisDb && <div className="px-2 py-1 text-xs text-gray-400">{t('common.none')}</div>
+                                )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
 

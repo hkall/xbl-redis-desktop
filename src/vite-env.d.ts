@@ -54,20 +54,21 @@ declare global {
       httpCancel: (requestId: string) => Promise<{ success: boolean; error?: string }>
 
       // Database Module
-      dbCreateConnection?: (config: any) => Promise<{ success: boolean; connectionId?: string; error?: string }>
+      dbCreateConnection?: (connectionId: string, config: any) => Promise<{ success: boolean; connectionId?: string; error?: string }>
       dbCloseConnection?: (connectionId: string) => Promise<void>
       dbTestConnection?: (config: any) => Promise<{ success: boolean; error?: string; serverVersion?: string; serverType?: string }>
       dbExecuteQuery?: (connectionId: string, sql: string, database?: string) => Promise<any>
-      dbExecuteBatch?: (connectionId: string, sqls: string[], database?: string) => Promise<any>
       dbGetDatabases?: (connectionId: string) => Promise<{ success: boolean; databases?: any[]; error?: string }>
       dbGetTables?: (connectionId: string, database: string) => Promise<{ success: boolean; tables?: any[]; error?: string }>
       dbGetColumns?: (connectionId: string, database: string, table: string) => Promise<{ success: boolean; columns?: any[]; error?: string }>
-      dbGetIndexes?: (connectionId: string, database: string, table: string) => Promise<{ success: boolean; indexes?: any[]; error?: string }>
-      dbGetForeignKeys?: (connectionId: string, database: string, table: string) => Promise<{ success: boolean; foreignKeys?: any[]; error?: string }>
-      dbGetTableStructure?: (connectionId: string, database: string, table: string) => Promise<{ success: boolean; structure?: any; error?: string }>
-      dbGetTableData?: (connectionId: string, database: string, table: string, options: any) => Promise<{ success: boolean; data?: any[][]; columns?: string[]; totalRows?: number; error?: string }>
-      dbExportData?: (connectionId: string, database: string, table: string, config: any) => Promise<{ success: boolean; data?: string; error?: string }>
-      dbImportData?: (connectionId: string, database: string, table: string, config: any) => Promise<{ success: boolean; importedRows?: number; error?: string }>
+      dbGetProcedures?: (connectionId: string, database: string) => Promise<{ success: boolean; procedures?: any[]; error?: string }>
+      dbGetTriggers?: (connectionId: string, database: string) => Promise<{ success: boolean; triggers?: any[]; error?: string }>
+      dbGetDatabaseInfo?: (connectionId: string, database: string) => Promise<{ success: boolean; info?: any; error?: string }>
+      dbGetTableData?: (connectionId: string, database: string, table: string, options?: { page?: number; pageSize?: number; orderBy?: string; orderDir?: 'ASC' | 'DESC' }) => Promise<{ success: boolean; data?: any[][]; columns?: string[]; total?: number; page?: number; pageSize?: number; error?: string }>
+      dbGetTableStructure?: (connectionId: string, database: string, table: string) => Promise<{ success: boolean; columns?: any[]; indexes?: any[]; createStatement?: string; error?: string }>
+      dbInsertRow?: (connectionId: string, database: string, table: string, rowData: Record<string, any>) => Promise<{ success: boolean; error?: string }>
+      dbUpdateRow?: (connectionId: string, database: string, table: string, primaryKey: Record<string, any>, rowData: Record<string, any>) => Promise<{ success: boolean; error?: string }>
+      dbDeleteRows?: (connectionId: string, database: string, table: string, primaryKeys: Record<string, any>[]) => Promise<{ success: boolean; deletedCount?: number; error?: string }>
     }
   }
 }

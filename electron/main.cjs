@@ -1237,3 +1237,843 @@ ipcMain.handle('http:cancel', async (_event, requestId) => {
   }
   return { success: false, error: 'Request not found' }
 })
+
+// ==================== Database Operations (MySQL) ====================
+
+const mysql = require('mysql2/promise')
+
+// Store active database connections
+const dbConnections = new Map()
+
+// 字符集映射（mysql2 使用的名称 -> Node.js Buffer 编码名称）
+const CHARSET_MAP = {
+  'utf8mb4': 'utf8',
+  'utf8': 'utf8',
+  'utf8mb3': 'utf8',
+  'gbk': 'gbk',
+  'gb2312': 'gb2312',
+  'gb18030': 'gb18030',
+  'big5': 'big5',
+  'latin1': 'latin1',
+  'ascii': 'ascii',
+  'binary': 'binary',
+}
+
+// Helper function to convert Buffer values to strings/numbers
+function convertValue(val, charset = 'utf8mb4') {
+  if (val === null || val === undefined) return val
+  if (Buffer.isBuffer(val)) {
+    const encoding = CHARSET_MAP[charset] || 'utf8'
+    return val.toString(encoding)
+  }
+  return val
+}
+
+// Database IPC Handlers
+ipcMain.handle('db:testConnection', async (_event, config) => {
+  try {
+    const connection = await mysql.createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.username,
+      password: config.password,
+      database: config.database || undefined,
+      connectTimeout: config.connectTimeout || 10000,
+    })
+
+    // Get server version - 使用 query() 而不是 execute()
+    const [rows] = await connection.query('SELECT VERSION() as version')
+    const serverVersion = convertValue(rows[0]?.version) || 'unknown'
+
+    await connection.end()
+
+    return {
+      success: true,
+      serverVersion
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Connection failed'
+    }
+  }
+})
+
+ipcMain.handle('db:createConnection', async (_event, connectionId, config) => {
+  try {
+    // 确定字符集，默认使用 utf8mb4
+    const charset = config.charset || 'utf8mb4'
+
+    // 使用前端传来的 connectionId，保持一致性
+    const connection = await mysql.createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.username,
+      password: config.password,
+      database: config.database || undefined,
+      charset: charset,
+      connectTimeout: config.connectTimeout || 30000,
+      multipleStatements: true,
+      // 禁用 prepared statements，避免某些命令不支持的问题
+      typeCast: false,
+    })
+
+    // Store connection with the provided ID
+    dbConnections.set(connectionId, {
+      connection,
+      config,
+      charset // 保存字符集用于 Buffer 转换
+    })
+
+    return {
+      success: true,
+      connectionId
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Connection failed'
+    }
+  }
+})
+
+ipcMain.handle('db:closeConnection', async (_event, connectionId) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (connInfo) {
+      await connInfo.connection.end()
+      dbConnections.delete(connectionId)
+    }
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to close connection'
+    }
+  }
+})
+
+ipcMain.handle('db:executeQuery', async (_event, connectionId, sql, database) => {
+  const startTime = Date.now()
+
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection, config, charset = 'utf8mb4' } = connInfo
+    // 获取字符集对应的编码
+    const encoding = CHARSET_MAP[charset] || 'utf8'
+
+    // Switch database if specified and different from current
+    if (database && database !== config.database) {
+      await connection.query(`USE \`${database}\``)
+      connInfo.config.database = database
+    }
+
+    // 判断是否需要使用 query() 而不是 execute()
+    // 某些命令不支持 prepared statements
+    const upperSql = sql.trim().toUpperCase()
+    const useQuery = upperSql.startsWith('SHOW ') ||
+                     upperSql.startsWith('DESCRIBE ') ||
+                     upperSql.startsWith('DESC ') ||
+                     upperSql.startsWith('EXPLAIN ') ||
+                     upperSql.startsWith('SET ')
+
+    // Execute query - 统一使用 query() 以确保返回格式一致
+    const [results, fields] = await connection.query(sql)
+
+    const endTime = Date.now()
+    const executionTime = endTime - startTime
+
+    // Determine result type
+    if (Array.isArray(results)) {
+      // SELECT query - returns rows
+      const columns = fields?.map(f => f.name) || []
+      const columnTypes = fields?.map(f => f.type) || []
+
+      // 将对象数组转换为二维数组，符合前端 QueryResult.data 的格式
+      const data = results.map(row => {
+        // 检查 row 是否是数组（某些情况下 mysql2 返回数组）
+        if (Array.isArray(row)) {
+          return row.map(value => {
+            if (Buffer.isBuffer(value)) return value.toString(encoding)
+            if (typeof value === 'bigint') return value.toString()
+            if (value instanceof Date) return value.toISOString()
+            return value
+          })
+        }
+
+        if (typeof row === 'object' && row !== null) {
+          // 按列顺序提取值，转换为数组
+          return columns.map(colName => {
+            const value = row[colName]
+            // 处理 Buffer 类型 - 使用连接的字符集
+            if (Buffer.isBuffer(value)) {
+              return value.toString(encoding)
+            } else if (typeof value === 'bigint') {
+              return value.toString()
+            } else if (value instanceof Date) {
+              return value.toISOString()
+            } else if (value && typeof value === 'object') {
+              // 处理 MySQL2 特殊的日期时间对象
+              if (typeof value.getTime === 'function') {
+                try {
+                  return new Date(value.getTime()).toISOString()
+                } catch (e) {
+                  // 如果无法转换，尝试其他方法
+                }
+              }
+              if (typeof value.toSqlString === 'function') {
+                return value.toSqlString()
+              }
+              if (value.type === 'Buffer' && Array.isArray(value.data)) {
+                return Buffer.from(value.data).toString(encoding)
+              }
+            }
+            return value
+          })
+        }
+        return row
+      })
+
+      return {
+        success: true,
+        data,
+        columns,
+        columnTypes,
+        rowCount: results.length,
+        executionTime
+      }
+    } else if (results && typeof results === 'object') {
+      // INSERT/UPDATE/DELETE - returns affected rows info
+      return {
+        success: true,
+        affectedRows: results.affectedRows || 0,
+        insertId: results.insertId || null,
+        changedRows: results.changedRows || 0,
+        rowCount: results.affectedRows || 0,
+        executionTime
+      }
+    }
+
+    return {
+      success: true,
+      executionTime
+    }
+  } catch (error) {
+    const endTime = Date.now()
+    return {
+      success: false,
+      error: error.message || 'Query execution failed',
+      executionTime: endTime - startTime
+    }
+  }
+})
+
+ipcMain.handle('db:getDatabases', async (_event, connectionId) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection } = connInfo
+
+    // Get list of databases - 使用 query() 而不是 execute()
+    const [rows] = await connection.query('SHOW DATABASES')
+
+    // Get table count for each database
+    const databases = []
+    for (const row of rows) {
+      const dbName = convertValue(row.Database)
+
+      try {
+        const [tableRows] = await connection.query(
+          `SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '${dbName}'`
+        )
+        const tableCount = convertValue(tableRows[0]?.count) || 0
+
+        databases.push({
+          name: dbName,
+          charset: 'utf8mb4',
+          tableCount: typeof tableCount === 'string' ? parseInt(tableCount, 10) : tableCount
+        })
+      } catch (e) {
+        databases.push({
+          name: dbName,
+          charset: 'utf8mb4',
+          tableCount: 0
+        })
+      }
+    }
+
+    return {
+      success: true,
+      databases
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to get databases'
+    }
+  }
+})
+
+ipcMain.handle('db:getTables', async (_event, connectionId, database) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection, config } = connInfo
+
+    // Switch database if needed
+    if (database && database !== config.database) {
+      await connection.query(`USE \`${database}\``)
+      connInfo.config.database = database
+    }
+
+    // 单个查询获取所有表信息 - 使用 INFORMATION_SCHEMA 一次性获取，避免 N+1 查询
+    const [tables] = await connection.query(`
+      SELECT
+        TABLE_NAME as name,
+        TABLE_TYPE as type,
+        TABLE_ROWS as rowCount,
+        DATA_LENGTH as dataSize,
+        INDEX_LENGTH as indexSize,
+        TABLE_COMMENT as comment
+      FROM INFORMATION_SCHEMA.TABLES
+      WHERE TABLE_SCHEMA = '${database}'
+      ORDER BY TABLE_TYPE, TABLE_NAME
+    `)
+
+    // 不再执行 COUNT(*) 查询，使用 TABLE_ROWS 作为参考值
+    const tableInfos = tables.map(t => {
+      const tableType = convertValue(t.type)
+      const rowCount = convertValue(t.rowCount)
+      const dataSize = convertValue(t.dataSize)
+      const indexSize = convertValue(t.indexSize)
+
+      return {
+        name: convertValue(t.name),
+        type: tableType === 'VIEW' ? 'VIEW' : 'TABLE',
+        rowCount: rowCount ? (typeof rowCount === 'string' ? parseInt(rowCount, 10) : rowCount) : 0,
+        dataSize: dataSize ? (typeof dataSize === 'string' ? parseInt(dataSize, 10) : dataSize) : 0,
+        indexSize: indexSize ? (typeof indexSize === 'string' ? parseInt(indexSize, 10) : indexSize) : 0,
+        comment: convertValue(t.comment) || ''
+      }
+    })
+
+    return {
+      success: true,
+      tables: tableInfos
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to get tables'
+    }
+  }
+})
+
+// Get table data with pagination
+ipcMain.handle('db:getTableData', async (_event, connectionId, database, table, options = {}) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection, config, charset = 'utf8mb4' } = connInfo
+    const encoding = CHARSET_MAP[charset] || 'utf8'
+
+    // Switch database if needed
+    if (database && database !== config.database) {
+      await connection.query(`USE \`${database}\``)
+      connInfo.config.database = database
+    }
+
+    const { page = 1, pageSize = 100, orderBy, orderDir = 'ASC' } = options
+    const offset = (page - 1) * pageSize
+
+    // Get total count
+    const [countRows] = await connection.query(`SELECT COUNT(*) as total FROM \`${table}\``)
+    const total = convertValue(countRows[0]?.total, charset) || 0
+
+    // Get data with pagination
+    let sql = `SELECT * FROM \`${table}\``
+    if (orderBy) {
+      sql += ` ORDER BY \`${orderBy}\` ${orderDir === 'DESC' ? 'DESC' : 'ASC'}`
+    }
+    sql += ` LIMIT ${pageSize} OFFSET ${offset}`
+
+    const [rows] = await connection.query(sql)
+
+    // Get column names from the first row or execute a separate query
+    const [columnDefs] = await connection.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = '${database}' AND TABLE_NAME = '${table}'
+      ORDER BY ORDINAL_POSITION
+    `)
+    const columns = columnDefs.map(c => convertValue(c.COLUMN_NAME, charset))
+
+    // Convert rows to 2D array format
+    const data = rows.map(row => {
+      if (typeof row === 'object' && row !== null) {
+        return columns.map(col => {
+          const value = row[col]
+          if (Buffer.isBuffer(value)) return value.toString(encoding)
+          if (typeof value === 'bigint') return value.toString()
+          if (value instanceof Date) return value.toISOString()
+          return value
+        })
+      }
+      return row
+    })
+
+    return {
+      success: true,
+      data,
+      columns,
+      total: typeof total === 'string' ? parseInt(total, 10) : total,
+      page,
+      pageSize
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to get table data'
+    }
+  }
+})
+
+// Get table structure (columns, indexes, etc.)
+ipcMain.handle('db:getTableStructure', async (_event, connectionId, database, table) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection } = connInfo
+
+    // Get columns
+    const [columns] = await connection.query(`
+      SELECT
+        COLUMN_NAME as name,
+        COLUMN_TYPE as type,
+        IS_NULLABLE as nullable,
+        COLUMN_KEY as keyType,
+        COLUMN_DEFAULT as defaultValue,
+        EXTRA as extra,
+        COLUMN_COMMENT as comment,
+        CHARACTER_MAXIMUM_LENGTH as maxLength,
+        NUMERIC_PRECISION as numericPrecision,
+        NUMERIC_SCALE as numericScale
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = '${database}' AND TABLE_NAME = '${table}'
+      ORDER BY ORDINAL_POSITION
+    `)
+
+    // Get indexes
+    const [indexes] = await connection.query(`
+      SELECT
+        INDEX_NAME as name,
+        COLUMN_NAME as columnName,
+        NON_UNIQUE as nonUnique,
+        INDEX_TYPE as type,
+        SEQ_IN_INDEX as seq
+      FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = '${database}' AND TABLE_NAME = '${table}'
+      ORDER BY INDEX_NAME, SEQ_IN_INDEX
+    `)
+
+    // Get create table statement
+    const [createTableRows] = await connection.query(`SHOW CREATE TABLE \`${table}\``)
+    const createStatement = createTableRows[0]?.['Create Table'] || ''
+
+    // Format columns
+    const columnInfos = columns.map(col => ({
+      name: convertValue(col.name),
+      type: convertValue(col.type),
+      nullable: convertValue(col.nullable) === 'YES',
+      keyType: convertValue(col.keyType) || '',
+      defaultValue: convertValue(col.defaultValue),
+      extra: convertValue(col.extra) || '',
+      comment: convertValue(col.comment) || '',
+      maxLength: convertValue(col.maxLength),
+      numericPrecision: convertValue(col.numericPrecision),
+      numericScale: convertValue(col.numericScale)
+    }))
+
+    // Format indexes - group by index name
+    const indexMap = new Map()
+    for (const idx of indexes) {
+      const idxName = convertValue(idx.name)
+      if (!indexMap.has(idxName)) {
+        indexMap.set(idxName, {
+          name: idxName,
+          columns: [],
+          unique: !convertValue(idx.nonUnique),
+          type: convertValue(idx.type)
+        })
+      }
+      indexMap.get(idxName).columns.push(convertValue(idx.columnName))
+    }
+
+    return {
+      success: true,
+      columns: columnInfos,
+      indexes: Array.from(indexMap.values()),
+      createStatement: convertValue(createStatement)
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to get table structure'
+    }
+  }
+})
+
+ipcMain.handle('db:getColumns', async (_event, connectionId, database, table) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection, config } = connInfo
+
+    // Switch database if needed - 使用 query() 而不是 execute()
+    if (database && database !== config.database) {
+      await connection.query(`USE \`${database}\``)
+      connInfo.config.database = database
+    }
+
+    // Get columns - 使用 query() 并直接拼接参数
+    const [columns] = await connection.query(
+      `SELECT
+        COLUMN_NAME as name,
+        COLUMN_TYPE as type,
+        IS_NULLABLE as nullable,
+        COLUMN_KEY as keyType,
+        COLUMN_DEFAULT as defaultValue,
+        EXTRA as extra,
+        COLUMN_COMMENT as comment
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = '${database}' AND TABLE_NAME = '${table}'
+      ORDER BY ORDINAL_POSITION`
+    )
+
+    const columnInfos = columns.map(col => ({
+      name: convertValue(col.name),
+      type: convertValue(col.type),
+      nullable: convertValue(col.nullable) === 'YES',
+      keyType: convertValue(col.keyType) || '',
+      defaultValue: convertValue(col.defaultValue),
+      extra: convertValue(col.extra) || '',
+      comment: convertValue(col.comment) || ''
+    }))
+
+    return {
+      success: true,
+      columns: columnInfos
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to get columns'
+    }
+  }
+})
+
+// Get stored procedures
+ipcMain.handle('db:getProcedures', async (_event, connectionId, database) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection } = connInfo
+
+    // Get stored procedures - 使用 query() 而不是 execute()
+    const [procedures] = await connection.query(
+      `SELECT
+        ROUTINE_NAME as name,
+        ROUTINE_TYPE as type,
+        DTD_IDENTIFIER as returnType,
+        ROUTINE_COMMENT as comment,
+        CREATED as createTime,
+        LAST_ALTERED as updateTime
+      FROM INFORMATION_SCHEMA.ROUTINES
+      WHERE ROUTINE_SCHEMA = '${database}' AND ROUTINE_TYPE = 'PROCEDURE'
+      ORDER BY ROUTINE_NAME`
+    )
+
+    return {
+      success: true,
+      procedures: procedures.map(p => ({
+        name: convertValue(p.name),
+        type: convertValue(p.type),
+        returnType: convertValue(p.returnType),
+        comment: convertValue(p.comment) || '',
+        createTime: p.createTime,
+        updateTime: p.updateTime
+      }))
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to get procedures'
+    }
+  }
+})
+
+// Get triggers
+ipcMain.handle('db:getTriggers', async (_event, connectionId, database) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection } = connInfo
+
+    // Get triggers - 使用 query() 而不是 execute()
+    const [triggers] = await connection.query(
+      `SELECT
+        TRIGGER_NAME as name,
+        EVENT_MANIPULATION as event,
+        EVENT_OBJECT_TABLE as table_name,
+        ACTION_TIMING as timing,
+        ACTION_STATEMENT as statement,
+        CREATED as createTime
+      FROM INFORMATION_SCHEMA.TRIGGERS
+      WHERE TRIGGER_SCHEMA = '${database}'
+      ORDER BY TRIGGER_NAME`
+    )
+
+    return {
+      success: true,
+      triggers: triggers.map(t => ({
+        name: convertValue(t.name),
+        event: convertValue(t.event),
+        table: convertValue(t.table_name),
+        timing: convertValue(t.timing),
+        statement: convertValue(t.statement),
+        createTime: t.createTime
+      }))
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to get triggers'
+    }
+  }
+})
+
+// Get database details (size, charset, collation, etc.)
+ipcMain.handle('db:getDatabaseInfo', async (_event, connectionId, database) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection } = connInfo
+
+    // Get database size and info - 使用 query() 而不是 execute()
+    const [dbInfo] = await connection.query(
+      `SELECT
+        SCHEMA_NAME as name,
+        DEFAULT_CHARACTER_SET_NAME as charset,
+        DEFAULT_COLLATION_NAME as collation
+      FROM INFORMATION_SCHEMA.SCHEMATA
+      WHERE SCHEMA_NAME = '${database}'`
+    )
+
+    // Get table counts and sizes
+    const [tableStats] = await connection.query(
+      `SELECT
+        COUNT(*) as tableCount,
+        COALESCE(SUM(DATA_LENGTH + INDEX_LENGTH), 0) as totalSize,
+        COALESCE(SUM(DATA_LENGTH), 0) as dataSize,
+        COALESCE(SUM(INDEX_LENGTH), 0) as indexSize,
+        COALESCE(SUM(TABLE_ROWS), 0) as totalRows
+      FROM INFORMATION_SCHEMA.TABLES
+      WHERE TABLE_SCHEMA = '${database}' AND TABLE_TYPE = 'BASE TABLE'`
+    )
+
+    // Get view count
+    const [viewStats] = await connection.query(
+      `SELECT COUNT(*) as viewCount
+      FROM INFORMATION_SCHEMA.VIEWS
+      WHERE TABLE_SCHEMA = '${database}'`
+    )
+
+    // Get procedure count
+    const [procStats] = await connection.query(
+      `SELECT COUNT(*) as procCount
+      FROM INFORMATION_SCHEMA.ROUTINES
+      WHERE ROUTINE_SCHEMA = '${database}' AND ROUTINE_TYPE = 'PROCEDURE'`
+    )
+
+    // Get trigger count
+    const [triggerStats] = await connection.query(
+      `SELECT COUNT(*) as triggerCount
+      FROM INFORMATION_SCHEMA.TRIGGERS
+      WHERE TRIGGER_SCHEMA = '${database}'`
+    )
+
+    return {
+      success: true,
+      info: {
+        name: convertValue(dbInfo[0]?.name) || database,
+        charset: convertValue(dbInfo[0]?.charset) || 'utf8mb4',
+        collation: convertValue(dbInfo[0]?.collation) || 'utf8mb4_general_ci',
+        tableCount: convertValue(tableStats[0]?.tableCount) || 0,
+        viewCount: convertValue(viewStats[0]?.viewCount) || 0,
+        procedureCount: convertValue(procStats[0]?.procCount) || 0,
+        triggerCount: convertValue(triggerStats[0]?.triggerCount) || 0,
+        totalSize: convertValue(tableStats[0]?.totalSize) || 0,
+        dataSize: convertValue(tableStats[0]?.dataSize) || 0,
+        indexSize: convertValue(tableStats[0]?.indexSize) || 0,
+        totalRows: convertValue(tableStats[0]?.totalRows) || 0
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to get database info'
+    }
+  }
+})
+
+// Insert a new row
+ipcMain.handle('db:insertRow', async (_event, connectionId, database, table, rowData) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection, config } = connInfo
+
+    // Switch database if needed
+    if (database && database !== config.database) {
+      await connection.query(`USE \`${database}\``)
+      connInfo.config.database = database
+    }
+
+    // Build INSERT statement
+    const columns = Object.keys(rowData).filter(k => rowData[k] !== undefined && rowData[k] !== null)
+    if (columns.length === 0) {
+      // Insert empty row with default values
+      await connection.query(`INSERT INTO \`${table}\` () VALUES ()`)
+    } else {
+      const columnNames = columns.map(c => `\`${c}\``).join(', ')
+      const placeholders = columns.map(() => '?').join(', ')
+      const values = columns.map(c => {
+        const v = rowData[c]
+        if (typeof v === 'string' && v === '') return null
+        return v
+      })
+      const sql = `INSERT INTO \`${table}\` (${columnNames}) VALUES (${placeholders})`
+      await connection.query(sql, values)
+    }
+
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to insert row'
+    }
+  }
+})
+
+// Update a row
+ipcMain.handle('db:updateRow', async (_event, connectionId, database, table, primaryKey, rowData) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection, config } = connInfo
+
+    // Switch database if needed
+    if (database && database !== config.database) {
+      await connection.query(`USE \`${database}\``)
+      connInfo.config.database = database
+    }
+
+    // Build UPDATE statement
+    const columns = Object.keys(rowData).filter(k => rowData[k] !== undefined)
+    if (columns.length === 0) {
+      return { success: true } // Nothing to update
+    }
+
+    const sets = columns.map(c => `\`${c}\` = ?`).join(', ')
+    const pkColumns = Object.keys(primaryKey)
+    const where = pkColumns.map(k => `\`${k}\` = ?`).join(' AND ')
+    const sql = `UPDATE \`${table}\` SET ${sets} WHERE ${where}`
+
+    const values = [
+      ...columns.map(c => {
+        const v = rowData[c]
+        if (typeof v === 'string' && v === '') return null
+        return v
+      }),
+      ...pkColumns.map(k => primaryKey[k])
+    ]
+
+    await connection.query(sql, values)
+
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to update row'
+    }
+  }
+})
+
+// Delete multiple rows
+ipcMain.handle('db:deleteRows', async (_event, connectionId, database, table, primaryKeys) => {
+  try {
+    const connInfo = dbConnections.get(connectionId)
+    if (!connInfo) {
+      throw new Error('Connection not found')
+    }
+
+    const { connection, config } = connInfo
+
+    // Switch database if needed
+    if (database && database !== config.database) {
+      await connection.query(`USE \`${database}\``)
+      connInfo.config.database = database
+    }
+
+    // Delete rows one by one (safe approach)
+    let deletedCount = 0
+    for (const pk of primaryKeys) {
+      const pkColumns = Object.keys(pk)
+      const where = pkColumns.map(k => `\`${k}\` = ?`).join(' AND ')
+      const sql = `DELETE FROM \`${table}\` WHERE ${where}`
+      await connection.query(sql, pkColumns.map(k => pk[k]))
+      deletedCount++
+    }
+
+    return { success: true, deletedCount }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || 'Failed to delete rows'
+    }
+  }
+})

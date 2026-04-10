@@ -59,6 +59,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
   httpRequest: (config) => ipcRenderer.invoke('http:request', config),
   httpCancel: (requestId) => ipcRenderer.invoke('http:cancel', requestId),
 
+  // Database operations (MySQL, etc.)
+  dbTestConnection: (config) => ipcRenderer.invoke('db:testConnection', config),
+  dbCreateConnection: (connectionId, config) => ipcRenderer.invoke('db:createConnection', connectionId, config),
+  dbCloseConnection: (id) => ipcRenderer.invoke('db:closeConnection', id),
+  dbExecuteQuery: (id, sql, database) => ipcRenderer.invoke('db:executeQuery', id, sql, database),
+  dbGetDatabases: (id) => ipcRenderer.invoke('db:getDatabases', id),
+  dbGetTables: (id, database) => ipcRenderer.invoke('db:getTables', id, database),
+  dbGetColumns: (id, database, table) => ipcRenderer.invoke('db:getColumns', id, database, table),
+  dbGetProcedures: (id, database) => ipcRenderer.invoke('db:getProcedures', id, database),
+  dbGetTriggers: (id, database) => ipcRenderer.invoke('db:getTriggers', id, database),
+  dbGetDatabaseInfo: (id, database) => ipcRenderer.invoke('db:getDatabaseInfo', id, database),
+  dbGetTableData: (id, database, table, options) => ipcRenderer.invoke('db:getTableData', id, database, table, options),
+  dbGetTableStructure: (id, database, table) => ipcRenderer.invoke('db:getTableStructure', id, database, table),
+
+  dbInsertRow: (id, database, table, rowData) => ipcRenderer.invoke('db:insertRow', id, database, table, rowData),
+  dbUpdateRow: (id, database, table, primaryKey, rowData) => ipcRenderer.invoke('db:updateRow', id, database, table, primaryKey, rowData),
+  dbDeleteRows: (id, database, table, primaryKeys) => ipcRenderer.invoke('db:deleteRows', id, database, table, primaryKeys),
+
   // 用于渲染进程生成唯一ID
   generateRequestId: () => crypto.randomUUID(),
 })

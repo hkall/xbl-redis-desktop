@@ -544,6 +544,75 @@ export default {
     savedQueries: 'Saved Queries',
     saveQuery: 'Save Query',
     queryName: 'Query Name',
+
+    // 表详情
+    dataTab: 'Data',
+    structureTab: 'Structure',
+    infoTab: 'Info',
+    columnsTab: 'Columns',
+    indexesTab: 'Indexes',
+    ddlTab: 'DDL',
+
+    // 数据 CRUD
+    addRow: 'Add Row',
+    deleteSelectedRows: 'Delete Selected Rows',
+    doubleClickToEdit: 'Double-click to edit',
+    noPrimaryKeyWarning: 'This table has no primary key, editing and deleting are not available',
+    selectedRowsCount: 'Selected {count} rows',
+    firstPage: 'First',
+    prevPage: 'Previous',
+    nextPage: 'Next',
+    lastPage: 'Last',
+    jumpTo: 'Jump',
+    newRowLabel: 'New',
+    confirmDeleteTitle: 'Confirm Delete',
+    confirmDeleteRowsMsg: 'Are you sure you want to delete {count} selected rows? This action cannot be undone.',
+    primaryKeyCannotEdit: 'Primary key column cannot be edited',
+    primaryKeyCannotDelete: 'Primary key column cannot be deleted',
+
+    // 表结构 CRUD
+    addColumn: 'Add Column',
+    columnNamePlaceholder: 'Column name',
+    columnTypePlaceholder: 'VARCHAR(255)',
+    columnDefaultPlaceholder: 'NULL',
+    columnCommentPlaceholder: 'Comment',
+    columnExtraPlaceholder: 'auto_increment',
+    confirmDeleteColumnTitle: 'Confirm Delete Column?',
+    confirmDeleteColumnMsg: 'Column {name} will be deleted. This action cannot be undone.',
+    confirmDeleteIndexTitle: 'Confirm Delete Index?',
+    confirmDeleteIndexMsg: 'Index {name} will be deleted. This action cannot be undone.',
+    primaryKeyCannotDeleteIndex: 'Primary key cannot be deleted directly',
+    deleting: 'Deleting...',
+    saving: 'Saving...',
+    customType: 'Custom...',
+
+    // 表信息
+    columnsCount: 'Columns',
+    indexesCount: 'Indexes',
+    createTable: 'CREATE TABLE',
+
+    // 表搜索
+    searchTables: 'Search tables...',
+
+    // 存储过程和触发器
+    definer: 'Definer',
+    securityType: 'Security Type',
+    parameters: 'Parameters:',
+    createStatement: 'Create Statement',
+    copyCreateStatement: 'Copy create statement',
+    triggerTiming: 'Timing:',
+    relatedTable: 'Related Table:',
+
+    // 工作区
+    noMatchingResults: 'No matching results',
+    selectTab: 'Select a tab',
+    autocompleteEnabled: 'Autocomplete enabled',
+    viewResult: 'View Result',
+    queryResult: 'Query Result',
+    hideResult: 'Hide Result',
+    keyword: 'Keyword',
+    function: 'Function',
+    table: 'Table',
   },
 
   // 更新

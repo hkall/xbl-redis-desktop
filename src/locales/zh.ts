@@ -544,6 +544,75 @@ export default {
     savedQueries: '收藏查询',
     saveQuery: '保存查询',
     queryName: '查询名称',
+
+    // 表详情
+    dataTab: '数据',
+    structureTab: '结构',
+    infoTab: '信息',
+    columnsTab: '列',
+    indexesTab: '索引',
+    ddlTab: 'DDL',
+
+    // 数据 CRUD
+    addRow: '新增行',
+    deleteSelectedRows: '删除选中行',
+    doubleClickToEdit: '双击编辑',
+    noPrimaryKeyWarning: '该表没有主键，无法进行编辑和删除操作',
+    selectedRowsCount: '已选择 {count} 行',
+    firstPage: '首页',
+    prevPage: '上一页',
+    nextPage: '下一页',
+    lastPage: '末页',
+    jumpTo: '跳转',
+    newRowLabel: '新',
+    confirmDeleteTitle: '确认删除',
+    confirmDeleteRowsMsg: '您确定要删除选中的 {count} 行吗？此操作不可撤销。',
+    primaryKeyCannotEdit: '主键列不能编辑',
+    primaryKeyCannotDelete: '主键列不能删除',
+
+    // 表结构 CRUD
+    addColumn: '添加列',
+    columnNamePlaceholder: '列名',
+    columnTypePlaceholder: 'VARCHAR(255)',
+    columnDefaultPlaceholder: 'NULL',
+    columnCommentPlaceholder: '注释',
+    columnExtraPlaceholder: 'auto_increment',
+    confirmDeleteColumnTitle: '确认删除列？',
+    confirmDeleteColumnMsg: '即将删除列 {name}，此操作不可撤销。',
+    confirmDeleteIndexTitle: '确认删除索引？',
+    confirmDeleteIndexMsg: '即将删除索引 {name}，此操作不可撤销。',
+    primaryKeyCannotDeleteIndex: '主键不能直接删除',
+    deleting: '删除中...',
+    saving: '保存中...',
+    customType: '自定义...',
+
+    // 表信息
+    columnsCount: '列数',
+    indexesCount: '索引数',
+    createTable: '建表语句',
+
+    // 表搜索
+    searchTables: '搜索表...',
+
+    // 存储过程和触发器
+    definer: '定义者',
+    securityType: '安全类型',
+    parameters: '参数:',
+    createStatement: '创建语句',
+    copyCreateStatement: '复制创建语句',
+    triggerTiming: '触发时机:',
+    relatedTable: '关联表:',
+
+    // 工作区
+    noMatchingResults: '无匹配结果',
+    selectTab: '选择一个标签页',
+    autocompleteEnabled: '自动补全已启用',
+    viewResult: '查看结果',
+    queryResult: '查询结果',
+    hideResult: '隐藏结果',
+    keyword: '关键字',
+    function: '函数',
+    table: '表',
   },
 
   // 更新

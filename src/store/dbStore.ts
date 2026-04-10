@@ -11,8 +11,8 @@ import {
   ColumnInfo,
   IndexInfo,
   TableStructure,
-  QueryTab,
   DATABASE_CONFIGS,
+  UnifiedTab,
 } from '@/types/database'
 
 // 数据库状态
@@ -26,14 +26,20 @@ interface DbState {
   selectedTable: string | null
   selectedTableType: 'TABLE' | 'VIEW' | null
 
+  // 当前选中的存储过程/触发器
+  selectedProcedure: string | null
+  selectedTrigger: string | null
+
   // 元数据缓存
   databasesCache: Record<string, DatabaseInfo[]>  // connectionId -> databases
   tablesCache: Record<string, Record<string, TableInfo[]>>  // connectionId -> { database -> tables }
   columnsCache: Record<string, Record<string, Record<string, ColumnInfo[]>>>  // connectionId -> { database -> { table -> columns } }
 
-  // 查询相关
-  queryTabs: QueryTab[]
+  // 统一标签页
+  tabs: UnifiedTab[]
   activeTabId: string | null
+
+  // 查询相关
   queryHistory: QueryHistory[]
   savedQueries: SavedQuery[]
 
@@ -59,26 +65,16 @@ interface DbActions {
   disconnect: (id: string) => Promise<void>
   testConnection: (config: Partial<DbConnection>) => Promise<{ success: boolean; error?: string; serverVersion?: string }>
 
-  // 表选择
-  setSelectedTable: (table: string | null, type: 'TABLE' | 'VIEW' | null) => void
-
-  // 元数据缓存
-  cacheDatabases: (connectionId: string, databases: DatabaseInfo[]) => void
-  cacheTables: (connectionId: string, database: string, tables: TableInfo[]) => void
-  cacheColumns: (connectionId: string, database: string, table: string, columns: ColumnInfo[]) => void
-  clearCache: (connectionId?: string) => void
-  getCachedDatabases: (connectionId: string) => DatabaseInfo[] | undefined
-  getCachedTables: (connectionId: string, database: string) => TableInfo[] | undefined
-  getCachedColumns: (connectionId: string, database: string, table: string) => ColumnInfo[] | undefined
-
-  // 查询标签页
+  // 标签页管理
   createQueryTab: (name?: string, sql?: string) => string
-  closeQueryTab: (id: string) => void
+  openTableTab: (connectionId: string, database: string, tableName: string, tableType: 'TABLE' | 'VIEW') => string
+  openProcedureTab: (connectionId: string, database: string, procedureName: string) => string
+  openTriggerTab: (connectionId: string, database: string, triggerName: string) => string
+  closeTab: (id: string) => void
   setActiveTab: (id: string | null) => void
+  getActiveTab: () => UnifiedTab | null
   updateTabSql: (id: string, sql: string) => void
-  updateTabName: (id: string, name: string) => void
   updateTabResult: (id: string, result: QueryResult) => void
-  getActiveTab: () => QueryTab | null
 
   // 查询执行
   executeQuery: (sql: string, database?: string) => Promise<QueryResult>
@@ -127,12 +123,10 @@ export const useDbStore = create<DbState & DbActions>()(
       connections: [],
       activeConnectionId: null,
       activeDatabase: null,
-      selectedTable: null,
-      selectedTableType: null,
       databasesCache: {},
       tablesCache: {},
       columnsCache: {},
-      queryTabs: [],
+      tabs: [],
       activeTabId: null,
       queryHistory: [],
       savedQueries: [],
@@ -212,17 +206,26 @@ export const useDbStore = create<DbState & DbActions>()(
         set({
           activeConnectionId: id,
           activeDatabase: null,
-          selectedTable: null,
-          selectedTableType: null,
         })
       },
 
       setActiveDatabase: (database) => {
         set({
           activeDatabase: database,
-          selectedTable: null,
-          selectedTableType: null,
         })
+
+        // 切换数据库时预加载表数据用于自动补全
+        const connectionId = get().activeConnectionId
+        if (connectionId && database) {
+          const cached = get().tablesCache[connectionId]?.[database]
+          if (!cached) {
+            window.electronAPI?.dbGetTables?.(connectionId, database).then(result => {
+              if (result?.success && result.tables) {
+                get().cacheTables(connectionId, database, result.tables)
+              }
+            }).catch(() => {})
+          }
+        }
       },
 
       connect: async (id) => {
@@ -240,7 +243,8 @@ export const useDbStore = create<DbState & DbActions>()(
             throw new Error('Database API not available')
           }
 
-          const result = await window.electronAPI.dbCreateConnection({
+          // 传入前端的 connectionId，保持与主进程一致
+          const result = await window.electronAPI.dbCreateConnection(id, {
             name: connection.name,
             type: connection.type,
             host: connection.host,
@@ -260,6 +264,30 @@ export const useDbStore = create<DbState & DbActions>()(
               ),
               activeConnectionId: id,
             }))
+
+            // 预加载数据库和表数据用于自动补全
+            try {
+              const dbResult = await window.electronAPI?.dbGetDatabases?.(id)
+              if (dbResult?.success && dbResult.databases) {
+                get().cacheDatabases(id, dbResult.databases)
+
+                // 预加载每个数据库的表（只加载前几个数据库避免太慢）
+                const dbsToLoad = dbResult.databases.slice(0, 5)
+                for (const db of dbsToLoad) {
+                  try {
+                    const tableResult = await window.electronAPI?.dbGetTables?.(id, db.name)
+                    if (tableResult?.success && tableResult.tables) {
+                      get().cacheTables(id, db.name, tableResult.tables)
+                    }
+                  } catch (e) {
+                    // 忽略单个数据库加载失败
+                  }
+                }
+              }
+            } catch (e) {
+              // 忽略预加载失败
+            }
+
             return true
           } else {
             set((state) => ({
@@ -299,8 +327,11 @@ export const useDbStore = create<DbState & DbActions>()(
           ),
           activeConnectionId: state.activeConnectionId === id ? null : state.activeConnectionId,
           activeDatabase: state.activeConnectionId === id ? null : state.activeDatabase,
-          selectedTable: state.activeConnectionId === id ? null : state.selectedTable,
-          selectedTableType: state.activeConnectionId === id ? null : state.selectedTableType,
+          // 关闭该连接相关的所有标签页
+          tabs: state.tabs.filter(t => t.connectionId !== id),
+          activeTabId: state.tabs.find(t => t.id === state.activeTabId && t.connectionId === id)
+            ? (state.tabs.find(t => t.connectionId !== id)?.id || null)
+            : state.activeTabId,
         }))
       },
 
@@ -320,12 +351,146 @@ export const useDbStore = create<DbState & DbActions>()(
         }
       },
 
-      // ============ 表选择 ============
-      setSelectedTable: (table, type) => {
-        set({
-          selectedTable: table,
-          selectedTableType: type,
+      // ============ 标签页管理 ============
+      createQueryTab: (name, sql) => {
+        const id = generateId()
+        const tab: UnifiedTab = {
+          id,
+          type: 'query',
+          name: name || `Query ${get().tabs.filter(t => t.type === 'query').length + 1}`,
+          sql: sql || '',
+          isModified: false,
+          createdAt: Date.now(),
+          connectionId: get().activeConnectionId || undefined,
+          database: get().activeDatabase || undefined,
+        }
+        set((state) => ({
+          tabs: [...state.tabs, tab],
+          activeTabId: id,
+        }))
+        return id
+      },
+
+      openTableTab: (connectionId, database, tableName, tableType) => {
+        // 检查是否已经打开
+        const existingTab = get().tabs.find(
+          t => t.type === 'table' && t.itemName === tableName && t.database === database && t.connectionId === connectionId
+        )
+        if (existingTab) {
+          set({ activeTabId: existingTab.id })
+          return existingTab.id
+        }
+
+        const id = generateId()
+        const tab: UnifiedTab = {
+          id,
+          type: 'table',
+          name: tableName,
+          itemType: tableType,
+          itemName: tableName,
+          database,
+          connectionId,
+          createdAt: Date.now(),
+        }
+        set((state) => ({
+          tabs: [...state.tabs, tab],
+          activeTabId: id,
+        }))
+        return id
+      },
+
+      openProcedureTab: (connectionId, database, procedureName) => {
+        // 检查是否已经打开
+        const existingTab = get().tabs.find(
+          t => t.type === 'procedure' && t.itemName === procedureName && t.database === database && t.connectionId === connectionId
+        )
+        if (existingTab) {
+          set({ activeTabId: existingTab.id })
+          return existingTab.id
+        }
+
+        const id = generateId()
+        const tab: UnifiedTab = {
+          id,
+          type: 'procedure',
+          name: procedureName,
+          itemName: procedureName,
+          database,
+          connectionId,
+          createdAt: Date.now(),
+        }
+        set((state) => ({
+          tabs: [...state.tabs, tab],
+          activeTabId: id,
+        }))
+        return id
+      },
+
+      openTriggerTab: (connectionId, database, triggerName) => {
+        // 检查是否已经打开
+        const existingTab = get().tabs.find(
+          t => t.type === 'trigger' && t.itemName === triggerName && t.database === database && t.connectionId === connectionId
+        )
+        if (existingTab) {
+          set({ activeTabId: existingTab.id })
+          return existingTab.id
+        }
+
+        const id = generateId()
+        const tab: UnifiedTab = {
+          id,
+          type: 'trigger',
+          name: triggerName,
+          itemName: triggerName,
+          database,
+          connectionId,
+          createdAt: Date.now(),
+        }
+        set((state) => ({
+          tabs: [...state.tabs, tab],
+          activeTabId: id,
+        }))
+        return id
+      },
+
+      closeTab: (id) => {
+        set((state) => {
+          const newTabs = state.tabs.filter((t) => t.id !== id)
+          let newActiveTabId = state.activeTabId
+          if (state.activeTabId === id) {
+            newActiveTabId = newTabs.length > 0 ? newTabs[newTabs.length - 1].id : null
+          }
+          return {
+            tabs: newTabs,
+            activeTabId: newActiveTabId,
+          }
         })
+      },
+
+      setActiveTab: (id) => {
+        set({ activeTabId: id })
+      },
+
+      getActiveTab: () => {
+        const state = get()
+        return state.tabs.find((t) => t.id === state.activeTabId) || null
+      },
+
+      updateTabSql: (id, sql) => {
+        set((state) => ({
+          tabs: state.tabs.map((t) =>
+            t.id === id ? { ...t, sql, isModified: true } : t
+          ),
+        }))
+      },
+
+      updateTabResult: (id, result) => {
+        set((state) => ({
+          tabs: state.tabs.map((t) =>
+            t.id === id ? { ...t, result, isModified: false } : t
+          ),
+          currentResult: result,
+        }))
       },
 
       // ============ 元数据缓存 ============
@@ -398,71 +563,6 @@ export const useDbStore = create<DbState & DbActions>()(
 
       getCachedColumns: (connectionId, database, table) => {
         return get().columnsCache[connectionId]?.[database]?.[table]
-      },
-
-      // ============ 查询标签页 ============
-      createQueryTab: (name, sql) => {
-        const id = generateId()
-        const tab: QueryTab = {
-          id,
-          name: name || `Query ${get().queryTabs.length + 1}`,
-          sql: sql || '',
-          isModified: false,
-          createdAt: Date.now(),
-        }
-        set((state) => ({
-          queryTabs: [...state.queryTabs, tab],
-          activeTabId: id,
-        }))
-        return id
-      },
-
-      closeQueryTab: (id) => {
-        set((state) => {
-          const newTabs = state.queryTabs.filter((t) => t.id !== id)
-          let newActiveTabId = state.activeTabId
-          if (state.activeTabId === id) {
-            newActiveTabId = newTabs.length > 0 ? newTabs[newTabs.length - 1].id : null
-          }
-          return {
-            queryTabs: newTabs,
-            activeTabId: newActiveTabId,
-          }
-        })
-      },
-
-      setActiveTab: (id) => {
-        set({ activeTabId: id })
-      },
-
-      updateTabSql: (id, sql) => {
-        set((state) => ({
-          queryTabs: state.queryTabs.map((t) =>
-            t.id === id ? { ...t, sql, isModified: true } : t
-          ),
-        }))
-      },
-
-      updateTabName: (id, name) => {
-        set((state) => ({
-          queryTabs: state.queryTabs.map((t) =>
-            t.id === id ? { ...t, name } : t
-          ),
-        }))
-      },
-
-      updateTabResult: (id, result) => {
-        set((state) => ({
-          queryTabs: state.queryTabs.map((t) =>
-            t.id === id ? { ...t, result, isModified: false } : t
-          ),
-          currentResult: result,
-        }))
-      },
-
-      getActiveTab: () => {
-        const state = get()
-        return state.queryTabs.find((t) => t.id === state.activeTabId) || null
       },
 
       // ============ 查询执行 ============

@@ -177,6 +177,35 @@ export interface QueryTab {
   createdAt: number
 }
 
+// 表详情标签页
+export interface TableTab {
+  id: string
+  type: 'TABLE' | 'VIEW'
+  name: string  // 表名
+  database: string
+  connectionId: string
+  createdAt: number
+}
+
+// 统一标签页类型
+export type TabType = 'query' | 'table' | 'procedure' | 'trigger'
+
+export interface UnifiedTab {
+  id: string
+  type: TabType
+  name: string
+  createdAt: number
+  // SQL 查询相关
+  sql?: string
+  result?: QueryResult
+  isModified?: boolean
+  // 表/视图/存储过程/触发器相关
+  itemType?: 'TABLE' | 'VIEW'
+  itemName?: string
+  database?: string
+  connectionId?: string
+}
+
 // 数据编辑模式
 export type DataEditMode = 'view' | 'edit' | 'insert'
 

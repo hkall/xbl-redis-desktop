@@ -259,19 +259,34 @@ export default function App() {
   )
 
   // Render Database tool layout
-  const renderDatabaseLayout = () => (
-    <>
-      {/* Left Panel - Database Sidebar */}
-      <div className="w-[280px] min-w-0 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700">
-        <DbSidebar />
-      </div>
+  const renderDatabaseLayout = () => {
+    const sidebarWidth = useDbStore.getState().sidebarWidth
 
-      {/* Main Workspace */}
-      <div className="flex-1 min-w-0 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700">
-        <DbWorkspace />
-      </div>
-    </>
-  )
+    const handleSidebarResize = (delta: number) => {
+      const newWidth = Math.max(200, Math.min(500, useDbStore.getState().sidebarWidth + delta))
+      useDbStore.getState().setSidebarWidth(newWidth)
+    }
+
+    return (
+      <>
+        {/* Left Panel - Database Sidebar */}
+        <div
+          className="min-w-0 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700"
+          style={{ width: `${sidebarWidth}px` }}
+        >
+          <DbSidebar />
+        </div>
+
+        {/* Resizable Divider */}
+        <ResizableDivider onResize={handleSidebarResize} />
+
+        {/* Main Workspace */}
+        <div className="flex-1 min-w-0 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700">
+          <DbWorkspace />
+        </div>
+      </>
+    )
+  }
 
   return (
     <ToastProvider>

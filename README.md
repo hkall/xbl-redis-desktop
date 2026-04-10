@@ -27,6 +27,7 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
   - [Data Editing](#data-editing)
   - [Search & Filter](#search--filter)
   - [Key Management](#key-management)
+  - [API Testing](#api-testing)
 - [Data Type Support](#data-type-support)
 - [Tech Stack](#tech-stack)
 - [Development Guide](#development-guide)
@@ -51,6 +52,15 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
 - 🌳 **Smart Grouping** - Auto-group keys by colon, tree view display, clear hierarchy
 - 🔑 **Quick Actions** - Supports keyboard shortcuts for efficient operation
 - 💾 **Config Persistence** - Auto-save connection config, restore on next startup
+- 🌐 **Internationalization** - Full Chinese/English language support with one-click switching
+
+### Modules
+
+| Module | Description |
+|--------|-------------|
+| **Redis** | Full Redis management with data viewing, editing, CLI, batch operations, and export |
+| **API Testing** | Complete API testing tool with request management, environments, and code generation |
+| **Database** | MySQL database connection and query execution (more databases coming soon) |
 
 ---
 
@@ -78,6 +88,10 @@ A powerful and intuitive Redis desktop management tool to help you easily visual
 - **Enhanced Server Monitoring** - Added 6 new metrics: hit rate, total keys, total commands, expired keys, rejected connections, last save time
 - **Connection Copy** - Quickly duplicate connection configurations with one click
 - **Connection Card Click** - Click anywhere on connection card to switch active connection
+- **API Testing Module** - Complete API testing tool with project management, environment variables, code generation, and request history
+- **Internationalization** - Full Chinese/English language support
+- **Key Rename** - Rename keys directly from context menu
+- **Folder-level Refresh** - Refresh specific folders in key browser
 
 #### 🐛 Bug Fixes
 
@@ -226,6 +240,7 @@ The key browser supports tree structure display:
 2. Click folder icon to expand/collapse groups
 3. Key count is displayed after the folder name
 4. Keys are sorted alphabetically for English, then by Pinyin for Chinese
+5. Right-click folder to refresh keys in that folder only
 
 ---
 
@@ -264,7 +279,8 @@ Hash type is displayed in table format, supports:
 - **Add Field**: Click "Add Field" button, enter field name and value
 - **Edit Field**: Double-click cell to edit directly
 - **Delete Field**: Click delete button at row end
-- **Batch Operation**: Hold `Ctrl` to select multiple rows for deletion
+- **Search Fields**: Search by field name or value
+- **Lazy Loading**: Large hashes load fields in batches of 100
 
 ```json
 // Example Hash Data
@@ -377,6 +393,36 @@ Right-click on the key in key browser, select "Rename", enter new name.
 
 ---
 
+### API Testing
+
+XBL DevTools includes a complete API testing module for testing REST APIs.
+
+#### Features
+
+- **Project Management** - Organize requests into projects and folders
+- **Multiple HTTP Methods** - GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+- **Request Configuration**
+  - Query parameters
+  - Headers
+  - Request body (JSON, form-data, x-www-form-urlencoded, raw, binary)
+  - Authentication (Bearer Token, Basic Auth, API Key)
+- **Environment Variables** - Define variables with `{{var}}` syntax
+- **Code Generation** - Generate code for cURL, fetch, axios, XMLHttpRequest
+- **Request History** - View and replay previous requests
+- **Import/Export** - Import/export projects, OpenAPI 3.0 support
+- **Recycle Bin** - Deleted items go to recycle bin with 3-day recovery period
+
+#### Using Variables
+
+Use `{{variableName}}` syntax in URL, headers, and body. Variables are replaced with values from the selected environment.
+
+#### Keyboard Shortcuts
+
+- `Ctrl + Enter` - Send request
+- `Ctrl + S` - Save request
+
+---
+
 ## Data Type Support
 
 ### String (Strings)
@@ -482,6 +528,7 @@ Similar to Set, but each member has an associated score, sorted by score.
 | Redis Client | ioredis 5.4.1 |
 | Icon Library | Lucide React 0.400.0 |
 | Java Deserialization | java-object-serialization 0.1.2 |
+| Internationalization | i18next-style with Zustand persist |
 
 ---
 
@@ -522,28 +569,39 @@ xbl-redis-desktop/
 │   └── main.cjs           # Main process entry file
 ├── src/
 │   ├── components/        # React components
-│   │   ├── viewers/      # Data type viewers
+│   │   ├── viewers/       # Data type viewers
 │   │   │   ├── StringViewer.tsx
 │   │   │   ├── HashViewer.tsx
 │   │   │   ├── ListViewer.tsx
 │   │   │   ├── SetViewer.tsx
 │   │   │   ├── ZSetViewer.tsx
 │   │   │   └── JavaObjectViewer.tsx
+│   │   ├── api/           # API testing module
+│   │   │   ├── ApiSidebar.tsx
+│   │   │   └── ApiWorkspace.tsx
+│   │   ├── database/      # Database module
+│   │   │   └── DbWorkspace.tsx
+│   │   ├── common/        # Common components
+│   │   │   └── Toolbar.tsx
 │   │   ├── ConnectionPanel.tsx      # Connection management panel
 │   │   ├── KeyBrowser.tsx           # Key browser
 │   │   ├── DataPanel.tsx            # Data edit panel
 │   │   ├── CodeEditor.tsx           # Code editor
-│   │   ├── EditableJsonTree.tsx     # Editable JSON tree
-│   │   ├── JsonTree.tsx             # JSON tree viewer
 │   │   ├── ConfirmDialog.tsx        # Confirm dialog
-│   │   ├── CommandLine.tsx          # CLI command line (v1.1.0)
-│   │   ├── BatchOperations.tsx      # Batch operations (v1.1.0)
-│   │   ├── DataExport.tsx           # Data export (v1.1.0)
-│   │   └── ServerInfo.tsx           # Server monitoring (v1.1.0)
+│   │   ├── CommandLine.tsx          # CLI command line
+│   │   ├── BatchOperations.tsx      # Batch operations
+│   │   ├── DataExport.tsx           # Data export
+│   │   └── ServerInfo.tsx           # Server monitoring
+│   ├── locales/           # Internationalization
+│   │   ├── en.ts          # English translations
+│   │   └── zh.ts          # Chinese translations
 │   ├── services/          # Service layer
 │   │   └── redis.ts       # Redis operations wrapper
 │   ├── store/             # State management
-│   │   └── redisStore.ts  # Zustand store
+│   │   ├── redisStore.ts  # Redis state store
+│   │   ├── apiStore.ts    # API testing state store
+│   │   ├── dbStore.ts     # Database state store
+│   │   └── i18nStore.ts   # Internationalization store
 │   ├── utils/             # Utility functions
 │   │   ├── formatter.ts   # Data formatting
 │   │   └── deserializer.ts # Data deserialization
@@ -626,6 +684,12 @@ dist/
 
 ---
 
+### Q: How to switch language?
+
+**Answer**: Click the language icon (地球图标) in the top right toolbar to switch between Chinese and English.
+
+---
+
 ## Contributing
 
 We welcome any form of contribution!
@@ -645,6 +709,7 @@ We welcome any form of contribution!
 - Use functional components + Hooks
 - Use Tailwind CSS for styling
 - Use Conventional Commits spec for commit messages
+- Ensure all UI text supports internationalization (i18n)
 
 ### Bug Feedback
 
@@ -705,17 +770,21 @@ Thanks to the following open source projects. This tool wouldn't be possible wit
 - [x] Data export functionality (v1.1.0)
 - [x] Command-line execution interface (v1.1.0)
 - [x] Batch data operations (v1.1.0)
+- [x] API testing module (v1.1.0)
+- [x] Internationalization (Chinese/English) (v1.1.0)
+- [x] Key rename functionality (v1.1.0)
+- [x] Folder-level refresh (v1.1.0)
 
 ### In Progress 🚧
 
 - [ ] Redis Cluster support
 - [ ] Redis Sentinel support
 - [ ] Data import functionality
+- [ ] More database support (PostgreSQL, MongoDB, etc.)
 
 ### Planned 📋
 
-- [ ] Key rename functionality
-- [ ] Key move (Rename/Move)
+- [ ] Key move (MOVE command)
 - [ ] Pub/Sub message subscription
 - [ ] Slow query analysis
 - [ ] Memory usage statistics
