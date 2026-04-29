@@ -12,166 +12,14 @@ import {
   AlertCircle,
   Key,
   Hash,
-  Type,
-  Calendar,
   X,
-  Edit2,
   Plus,
   Trash2,
-  Save,
   Check,
   Square,
   CheckSquare,
-  ChevronDown,
 } from 'lucide-react'
 import { useTranslation } from '@/store/i18nStore'
-import { useDbStore } from '@/store/dbStore'
-
-// 不同数据库支持的数据类型（基础类型，用户可修改参数）
-const DATABASE_DATA_TYPES: Record<string, string[]> = {
-  mysql: [
-    'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'MEDIUMINT',
-    'DECIMAL(10,2)', 'FLOAT', 'DOUBLE',
-    'VARCHAR(255)', 'CHAR(255)', 'TEXT', 'TINYTEXT', 'MEDIUMTEXT', 'LONGTEXT',
-    'DATE', 'DATETIME', 'TIMESTAMP', 'TIME', 'YEAR',
-    'BOOLEAN',
-    'BLOB', 'TINYBLOB', 'MEDIUMBLOB', 'LONGBLOB',
-    'JSON',
-  ],
-  mariadb: [
-    'INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'MEDIUMINT',
-    'DECIMAL(10,2)', 'FLOAT', 'DOUBLE',
-    'VARCHAR(255)', 'CHAR(255)', 'TEXT', 'TINYTEXT', 'MEDIUMTEXT', 'LONGTEXT',
-    'DATE', 'DATETIME', 'TIMESTAMP', 'TIME', 'YEAR',
-    'BOOLEAN',
-    'BLOB', 'TINYBLOB', 'MEDIUMBLOB', 'LONGBLOB',
-    'JSON',
-  ],
-  postgresql: [
-    'INTEGER', 'BIGINT', 'SMALLINT', 'SERIAL', 'BIGSERIAL',
-    'DECIMAL(10,2)', 'NUMERIC(10,2)', 'REAL', 'DOUBLE PRECISION',
-    'VARCHAR(255)', 'CHAR(255)', 'TEXT',
-    'DATE', 'TIMESTAMP', 'TIMESTAMPTZ', 'TIME', 'TIMETZ',
-    'BOOLEAN',
-    'BYTEA',
-    'JSON', 'JSONB',
-    'UUID',
-  ],
-  sqlite: [
-    'INTEGER', 'REAL', 'TEXT', 'BLOB', 'NUMERIC',
-  ],
-}
-
-// 获取数据类型列表
-function getDataTypes(dbType: string): string[] {
-  return DATABASE_DATA_TYPES[dbType] || DATABASE_DATA_TYPES.mysql
-}
-
-// 可编辑的下拉选择组件
-function EditableSelect({
-  value,
-  options,
-  onChange,
-  className = '',
-  placeholder = '',
-  disabled = false,
-  onKeyDown,
-}: {
-  value: string
-  options: string[]
-  onChange: (value: string) => void
-  className?: string
-  placeholder?: string
-  disabled?: boolean
-  onKeyDown?: (e: React.KeyboardEvent) => void
-}) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [inputValue, setInputValue] = useState(value)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    setInputValue(value)
-  }, [value])
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value
-    setInputValue(newValue)
-    onChange(newValue)
-  }
-
-  const handleSelect = (option: string) => {
-    setInputValue(option)
-    onChange(option)
-    setIsOpen(false)
-    inputRef.current?.focus()
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setIsOpen(false)
-    }
-    if (onKeyDown) {
-      onKeyDown(e)
-    }
-  }
-
-  const borderColor = disabled
-    ? 'border-gray-300 dark:border-gray-600'
-    : 'border-blue-400 dark:border-blue-500 focus-within:border-blue-500'
-
-  return (
-    <div ref={containerRef} className={`relative ${className}`}>
-      <div
-        className={`flex items-center bg-white dark:bg-gray-800 border ${borderColor} rounded transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-      >
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onFocus={() => !disabled && setIsOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={disabled}
-          className="flex-1 min-w-0 px-2 py-1 text-xs font-mono text-gray-900 dark:text-gray-100 bg-transparent focus:outline-none disabled:cursor-not-allowed"
-        />
-        {!disabled && (
-          <button
-            type="button"
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex-shrink-0 px-1.5 py-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-      {isOpen && !disabled && (
-        <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
-          {options.map((option) => (
-            <div
-              key={option}
-              onClick={() => handleSelect(option)}
-              className="px-2 py-1.5 text-xs font-mono text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer truncate transition-colors"
-            >
-              {option}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 interface TableDetailProps {
   connectionId: string
@@ -321,9 +169,8 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
 
   // 开始编辑单元格
   const startEditCell = (rowIndex: number, colIndex: number) => {
-    if (primaryKeyColumns.length === 0) return // 无主键不可编辑
-    const col = columns[colIndex]
-    if (primaryKeyColumns.includes(col)) return // 主键列不可编辑
+    if (primaryKeyColumns.length === 0) return // 无主键不可编辑（无法定位行）
+    // 移除主键列不可编辑的限制，允许编辑所有列
     const rowArray = Array.isArray(data[rowIndex]) ? data[rowIndex] : []
     const value = rowArray[colIndex]
     setEditValue(value === null ? '' : String(value))
@@ -718,7 +565,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                           key={colIndex}
                           className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 font-mono whitespace-nowrap max-w-[200px] min-w-[100px] cursor-pointer"
                           onDoubleClick={() => handleCellDoubleClick(rowIndex, colIndex)}
-                          title={!isPk && primaryKeyColumns.length > 0 ? t('database.doubleClickToEdit') : undefined}
+                          title={primaryKeyColumns.length > 0 ? t('database.doubleClickToEdit') : undefined}
                         >
                           {isEditing ? (
                             <input
@@ -879,12 +726,6 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
 // 结构视图组件 - Navicat 风格（更流畅的交互）
 function TableStructureView({ connectionId, database, table }: { connectionId: string; database: string; table: string }) {
   const { t } = useTranslation()
-  const connections = useDbStore((state) => state.connections)
-
-  // 获取当前连接类型
-  const connection = connections.find((c) => c.id === connectionId)
-  const dbType = connection?.type || 'mysql'
-  const dataTypes = getDataTypes(dbType)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -893,20 +734,20 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
   const [createStatement, setCreateStatement] = useState('')
   const [activeView, setActiveView] = useState<'columns' | 'indexes' | 'ddl'>('columns')
 
-  // 编辑状态
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
-  const [editData, setEditData] = useState<any>({})
+  // 编辑状态 - 单元格级别编辑（类似表数据）
+  const [editingCell, setEditingCell] = useState<{ rowIndex: number; field: string } | null>(null)
+  const [editValue, setEditValue] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ type: 'column' | 'index'; index: number | string } | null>(null)
 
-  // refs for tab navigation
-  const inputRefs = useRef<(HTMLInputElement | HTMLDivElement | null)[]>([])
+  // refs
+  const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const loadStructure = async () => {
     setLoading(true)
     setError(null)
-    setEditingIndex(null)
+    setEditingCell(null)
     try {
       if (window.electronAPI?.dbGetTableStructure) {
         const result = await window.electronAPI.dbGetTableStructure(connectionId, database, table)
@@ -929,105 +770,93 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
     loadStructure()
   }, [connectionId, database, table])
 
-  // 单击开始编辑
-  const handleCellClick = (index: number, field: string) => {
-    const col = columns[index]
-    if (col.keyType === 'PRI' && field !== 'comment') return // 主键不可编辑（comment除外）
-    if (editingIndex !== null && editingIndex !== index) {
-      // 先保存之前的编辑
-      handleSave(false)
-    }
-    setEditingIndex(index)
-    setEditData({
-      name: col.name,
-      type: col.type,
+  // 双击单元格进入编辑
+  const startEditCell = (rowIndex: number, field: string) => {
+    const col = columns[rowIndex]
+    if (!col) return
+
+    // 获取当前值
+    let value = ''
+    if (field === 'name') value = col.name || ''
+    else if (field === 'type') value = col.type || ''
+    else if (field === 'defaultValue') value = col.defaultValue !== null ? String(col.defaultValue) : ''
+    else if (field === 'comment') value = col.comment || ''
+
+    setEditValue(value)
+    setEditingCell({ rowIndex, field })
+  }
+
+  // 保存单元格编辑
+  const saveCellEdit = async () => {
+    if (!editingCell) return
+    const { rowIndex, field } = editingCell
+    const col = columns[rowIndex]
+    if (!col) return
+
+    // 构建新的列数据
+    const newData = {
+      name: field === 'name' ? editValue : col.name,
+      type: field === 'type' ? editValue : col.type,
       nullable: col.nullable,
-      defaultValue: col.defaultValue || '',
+      defaultValue: field === 'defaultValue' ? editValue : col.defaultValue,
       extra: col.extra || '',
-      comment: col.comment || '',
-      isNew: col.isNew
-    })
-    // 聚焦到点击的字段
-    setTimeout(() => {
-      const fieldIndex = ['name', 'type', 'nullable', 'defaultValue', 'extra', 'comment'].indexOf(field)
-      if (fieldIndex >= 0 && inputRefs.current[fieldIndex]) {
-        const el = inputRefs.current[fieldIndex]
-        if (el instanceof HTMLInputElement) {
-          el.focus()
-        } else if (el instanceof HTMLDivElement) {
-          // for editable select
-          const input = el.querySelector('input')
-          input?.focus()
-        }
-      }
-    }, 50)
-  }
-
-  // Tab键切换字段
-  const handleTab = (currentField: string, direction: 'next' | 'prev' = 'next') => {
-    const fields = ['name', 'type', 'defaultValue', 'extra', 'comment']
-    const currentIndex = fields.indexOf(currentField)
-    let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1
-    if (nextIndex < 0) nextIndex = fields.length - 1
-    if (nextIndex >= fields.length) nextIndex = 0
-
-    const nextField = fields[nextIndex]
-    const el = inputRefs.current[nextIndex]
-    if (el instanceof HTMLInputElement) {
-      el.focus()
-    } else if (el instanceof HTMLDivElement) {
-      const input = el.querySelector('input')
-      input?.focus()
+      comment: field === 'comment' ? editValue : col.comment,
     }
-  }
 
-  // 保存编辑
-  const handleSave = async (closeEdit: boolean = true) => {
-    if (editingIndex === null) return
-    const originalCol = columns[editingIndex]
-    if (!originalCol) return
+    // 检查是否有变化
+    const hasChange =
+      (field === 'name' && newData.name !== col.name) ||
+      (field === 'type' && newData.type !== col.type) ||
+      (field === 'defaultValue' && newData.defaultValue !== col.defaultValue) ||
+      (field === 'comment' && newData.comment !== col.comment)
+
+    if (!hasChange) {
+      setEditingCell(null)
+      setEditValue('')
+      return
+    }
+
+    // 新列必须有名称
+    if (col.isNew && !newData.name?.trim()) {
+      setEditingCell(null)
+      setEditValue('')
+      return
+    }
 
     setSaving(true)
     try {
-      const isNew = editData.isNew
       let sql: string
 
-      if (isNew) {
-        if (!editData.name?.trim()) {
-          setSaving(false)
-          return
-        }
-        sql = `ALTER TABLE \`${table}\` ADD COLUMN \`${editData.name}\` ${editData.type}`
-        if (!editData.nullable) sql += ' NOT NULL'
-        if (editData.defaultValue) {
-          if (editData.defaultValue.toUpperCase() === 'NULL') {
+      if (col.isNew) {
+        sql = `ALTER TABLE \`${table}\` ADD COLUMN \`${newData.name}\` ${newData.type}`
+        if (!newData.nullable) sql += ' NOT NULL'
+        if (newData.defaultValue) {
+          if (newData.defaultValue.toUpperCase() === 'NULL') {
             sql += ' DEFAULT NULL'
           } else {
-            sql += ` DEFAULT '${editData.defaultValue}'`
+            sql += ` DEFAULT '${newData.defaultValue}'`
           }
         }
-        if (editData.comment) sql += ` COMMENT '${editData.comment}'`
+        if (newData.comment) sql += ` COMMENT '${newData.comment}'`
       } else {
-        sql = `ALTER TABLE \`${table}\` MODIFY COLUMN \`${editData.name}\` ${editData.type}`
-        if (!editData.nullable) sql += ' NOT NULL'
-        if (editData.defaultValue) {
-          if (editData.defaultValue.toUpperCase() === 'NULL') {
+        sql = `ALTER TABLE \`${table}\` MODIFY COLUMN \`${newData.name}\` ${newData.type}`
+        if (!newData.nullable) sql += ' NOT NULL'
+        if (newData.defaultValue) {
+          if (newData.defaultValue.toUpperCase() === 'NULL') {
             sql += ' DEFAULT NULL'
           } else {
-            sql += ` DEFAULT '${editData.defaultValue}'`
+            sql += ` DEFAULT '${newData.defaultValue}'`
           }
         }
-        if (editData.extra) sql += ` ${editData.extra}`
-        if (editData.comment) sql += ` COMMENT '${editData.comment}'`
+        if (newData.extra) sql += ` ${newData.extra}`
+        if (newData.comment) sql += ` COMMENT '${newData.comment}'`
       }
 
       if (window.electronAPI?.dbExecuteQuery) {
         const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
         if (result.success) {
-          if (closeEdit) {
-            setEditingIndex(null)
-            setEditData({})
-          }
+          setEditingCell(null)
+          setEditValue('')
           loadStructure()
         } else {
           alert(result.error || t('common.error'))
@@ -1040,14 +869,80 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
     }
   }
 
-  // 取消编辑
-  const handleCancel = () => {
-    if (editData.isNew) {
-      // 移除新添加的行
-      setColumns(columns.filter(c => !c.isNew))
+  // 取消编辑（不删除新列）
+  const cancelCellEdit = () => {
+    setEditingCell(null)
+    setEditValue('')
+  }
+
+  // 切换Nullable
+  const toggleNullable = async (rowIndex: number) => {
+    const col = columns[rowIndex]
+    if (!col) return
+
+    // 构建新的列数据
+    const newData = {
+      name: col.name,
+      type: col.type,
+      nullable: !col.nullable,
+      defaultValue: col.defaultValue,
+      extra: col.extra || '',
+      comment: col.comment,
     }
-    setEditingIndex(null)
-    setEditData({})
+
+    setSaving(true)
+    try {
+      let sql: string
+
+      if (col.isNew) {
+        sql = `ALTER TABLE \`${table}\` ADD COLUMN \`${newData.name}\` ${newData.type}`
+        if (!newData.nullable) sql += ' NOT NULL'
+        if (newData.defaultValue) {
+          if (String(newData.defaultValue).toUpperCase() === 'NULL') {
+            sql += ' DEFAULT NULL'
+          } else {
+            sql += ` DEFAULT '${newData.defaultValue}'`
+          }
+        }
+        if (newData.comment) sql += ` COMMENT '${newData.comment}'`
+      } else {
+        sql = `ALTER TABLE \`${table}\` MODIFY COLUMN \`${newData.name}\` ${newData.type}`
+        if (!newData.nullable) sql += ' NOT NULL'
+        if (newData.defaultValue) {
+          if (String(newData.defaultValue).toUpperCase() === 'NULL') {
+            sql += ' DEFAULT NULL'
+          } else {
+            sql += ` DEFAULT '${newData.defaultValue}'`
+          }
+        }
+        if (newData.extra) sql += ` ${newData.extra}`
+        if (newData.comment) sql += ` COMMENT '${newData.comment}'`
+      }
+
+      if (window.electronAPI?.dbExecuteQuery) {
+        const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
+        if (result.success) {
+          loadStructure()
+        } else {
+          alert(result.error || t('common.error'))
+        }
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : t('common.error'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // 键盘事件处理（和表数据一样）
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveCellEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelCellEdit()
+    }
   }
 
   // 添加新列
@@ -1064,15 +959,8 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
     }
     const newColumns = [...columns, newCol]
     setColumns(newColumns)
-    setEditingIndex(newColumns.length - 1)
-    setEditData(newCol)
-    // 聚焦第一个输入框
-    setTimeout(() => {
-      const el = inputRefs.current[0]
-      if (el instanceof HTMLInputElement) {
-        el.focus()
-      }
-    }, 50)
+    // 直接进入编辑name字段
+    startEditCell(newColumns.length - 1, 'name')
   }
 
   // 删除列
@@ -1127,34 +1015,6 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
       setSaving(false)
     }
   }
-
-  // 键盘事件处理
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (editingIndex === null) return
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        handleCancel()
-      } else if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        handleSave()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [editingIndex, editData])
-
-  // 点击外部取消编辑
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (editingIndex === null) return
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        handleCancel()
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [editingIndex, editData])
 
   if (loading) {
     return (
@@ -1215,22 +1075,11 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
             DDL
           </button>
 
-          {/* 添加列按钮 */}
-          {activeView === 'columns' && editingIndex === null && (
-            <button
-              onClick={handleAddColumn}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {t('database.addColumn')}
-            </button>
-          )}
-
-          {/* 编辑时的操作按钮 */}
-          {editingIndex !== null && (
+          {/* 编辑时的保存/取消按钮 */}
+          {activeView === 'columns' && editingCell !== null && (
             <div className="flex items-center gap-1 ml-2">
               <button
-                onClick={() => handleSave()}
+                onClick={saveCellEdit}
                 disabled={saving}
                 className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50 transition-colors"
               >
@@ -1238,16 +1087,24 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                 {t('common.save')}
               </button>
               <button
-                onClick={handleCancel}
+                onClick={cancelCellEdit}
                 className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded transition-colors"
               >
                 <X className="w-3 h-3" />
                 {t('common.cancel')}
               </button>
-              <span className="text-xs text-gray-400 ml-1">
-                Enter {t('common.save')} · Esc {t('common.cancel')}
-              </span>
             </div>
+          )}
+
+          {/* 添加列按钮 */}
+          {activeView === 'columns' && editingCell === null && (
+            <button
+              onClick={handleAddColumn}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {t('database.addColumn')}
+            </button>
           )}
         </div>
         <button
@@ -1280,20 +1137,13 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
             </thead>
             <tbody>
               {columns.map((col, i) => {
-                const isEditing = editingIndex === i
                 const isNew = col.isNew
-                const canEditName = isNew || col.keyType !== 'PRI'
-                const canEditType = isNew || col.keyType !== 'PRI'
-                const canEditNull = isNew
-                const canEditExtra = isNew
 
                 return (
                   <tr
                     key={i}
                     className={`transition-colors ${
-                      isEditing
-                        ? 'bg-blue-50 dark:bg-blue-900/30'
-                        : isNew
+                      isNew
                         ? 'bg-green-50 dark:bg-green-900/20'
                         : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                     }`}
@@ -1306,27 +1156,22 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                       )}
                     </td>
                     {/* Name */}
-                    <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800">
-                      {isEditing ? (
+                    <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800 relative">
+                      {editingCell?.rowIndex === i && editingCell?.field === 'name' ? (
                         <input
-                          ref={el => { if (canEditName) inputRefs.current[0] = el }}
                           type="text"
-                          value={editData.name || ''}
-                          onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Tab') {
-                              e.preventDefault()
-                              handleTab('name', e.shiftKey ? 'prev' : 'next')
-                            }
-                          }}
-                          disabled={!canEditName}
-                          className={`w-full px-2 py-1 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${!canEditName ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={handleKeyDown}
                           placeholder={t('database.columnNamePlaceholder')}
+                          autoFocus
+                          className="absolute inset-0 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
                       ) : (
                         <div
-                          onClick={() => handleCellClick(i, 'name')}
-                          className={`flex items-center gap-1.5 min-h-[28px] px-1 ${canEditName ? 'cursor-pointer' : ''}`}
+                          onDoubleClick={() => startEditCell(i, 'name')}
+                          className="flex items-center gap-1.5 min-h-[28px] cursor-pointer"
+                          title={t('database.doubleClickToEdit')}
                         >
                           {col.keyType === 'PRI' && <Key className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />}
                           {col.keyType === 'UNI' && <Hash className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
@@ -1335,26 +1180,22 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                       )}
                     </td>
                     {/* Type */}
-                    <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800">
-                      {isEditing ? (
-                        <div ref={el => { inputRefs.current[1] = el }}>
-                          <EditableSelect
-                            value={editData.type || ''}
-                            options={dataTypes}
-                            onChange={(val) => setEditData({ ...editData, type: val })}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Tab') {
-                                e.preventDefault()
-                                handleTab('type', e.shiftKey ? 'prev' : 'next')
-                              }
-                            }}
-                            disabled={!canEditType}
-                          />
-                        </div>
+                    <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800 relative">
+                      {editingCell?.rowIndex === i && editingCell?.field === 'type' ? (
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          placeholder="VARCHAR(255)"
+                          autoFocus
+                          className="absolute inset-0 px-2 py-1.5 text-xs font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
+                        />
                       ) : (
                         <div
-                          onClick={() => handleCellClick(i, 'type')}
-                          className={`min-h-[28px] px-1 ${canEditType ? 'cursor-pointer' : ''}`}
+                          onDoubleClick={() => startEditCell(i, 'type')}
+                          className="min-h-[28px] cursor-pointer"
+                          title={t('database.doubleClickToEdit')}
                         >
                           <span className="text-xs font-mono text-gray-600 dark:text-gray-400">{col.type}</span>
                         </div>
@@ -1362,52 +1203,40 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                     </td>
                     {/* Null */}
                     <td className="px-2 py-1.5 text-center border-b border-gray-100 dark:border-gray-800">
-                      {isEditing ? (
-                        <input
-                          type="checkbox"
-                          checked={editData.nullable || false}
-                          onChange={(e) => setEditData({ ...editData, nullable: e.target.checked })}
-                          disabled={!canEditNull}
-                          className={`rounded ${!canEditNull ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        />
-                      ) : (
-                        <span
-                          onClick={() => canEditNull && handleCellClick(i, 'nullable')}
-                          className={`text-xs px-1.5 py-0.5 rounded inline-block ${
-                            col.nullable
-                              ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                              : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-                          }`}
-                        >
-                          {col.nullable ? 'Y' : 'N'}
-                        </span>
-                      )}
+                      <button
+                        onClick={() => toggleNullable(i)}
+                        disabled={saving}
+                        className={`text-xs px-1.5 py-0.5 rounded inline-block cursor-pointer hover:opacity-80 transition-opacity ${
+                          col.nullable
+                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                            : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                        }`}
+                        title={t('database.clickToToggle')}
+                      >
+                        {col.nullable ? 'Y' : 'N'}
+                      </button>
                     </td>
                     {/* Key */}
                     <td className="px-2 py-1.5 text-center border-b border-gray-100 dark:border-gray-800">
                       <span className="text-xs text-gray-500 dark:text-gray-400">{col.keyType || '-'}</span>
                     </td>
                     {/* Default */}
-                    <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800">
-                      {isEditing ? (
+                    <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800 relative">
+                      {editingCell?.rowIndex === i && editingCell?.field === 'defaultValue' ? (
                         <input
-                          ref={el => { inputRefs.current[2] = el }}
                           type="text"
-                          value={editData.defaultValue || ''}
-                          onChange={(e) => setEditData({ ...editData, defaultValue: e.target.value })}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Tab') {
-                              e.preventDefault()
-                              handleTab('defaultValue', e.shiftKey ? 'prev' : 'next')
-                            }
-                          }}
-                          className="w-full px-2 py-1 text-xs font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded focus:outline-none"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={handleKeyDown}
                           placeholder="NULL"
+                          autoFocus
+                          className="absolute inset-0 px-2 py-1.5 text-xs font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
                       ) : (
                         <div
-                          onClick={() => handleCellClick(i, 'defaultValue')}
-                          className="min-h-[28px] px-1 cursor-pointer"
+                          onDoubleClick={() => startEditCell(i, 'defaultValue')}
+                          className="min-h-[28px] cursor-pointer"
+                          title={t('database.doubleClickToEdit')}
                         >
                           <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
                             {col.defaultValue !== null ? String(col.defaultValue) : <span className="text-gray-400 italic">NULL</span>}
@@ -1417,52 +1246,25 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                     </td>
                     {/* Extra */}
                     <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800">
-                      {isEditing ? (
-                        <input
-                          ref={el => { inputRefs.current[3] = el }}
-                          type="text"
-                          value={editData.extra || ''}
-                          onChange={(e) => setEditData({ ...editData, extra: e.target.value })}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Tab') {
-                              e.preventDefault()
-                              handleTab('extra', e.shiftKey ? 'prev' : 'next')
-                            }
-                          }}
-                          disabled={!canEditExtra}
-                          className={`w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded focus:outline-none ${!canEditExtra ? 'opacity-60 cursor-not-allowed' : ''}`}
-                          placeholder="auto_increment"
-                        />
-                      ) : (
-                        <div
-                          onClick={() => canEditExtra && handleCellClick(i, 'extra')}
-                          className={`min-h-[28px] px-1 ${canEditExtra ? 'cursor-pointer' : ''}`}
-                        >
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{col.extra || '-'}</span>
-                        </div>
-                      )}
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{col.extra || '-'}</span>
                     </td>
                     {/* Comment */}
-                    <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800">
-                      {isEditing ? (
+                    <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800 relative">
+                      {editingCell?.rowIndex === i && editingCell?.field === 'comment' ? (
                         <input
-                          ref={el => { inputRefs.current[4] = el }}
                           type="text"
-                          value={editData.comment || ''}
-                          onChange={(e) => setEditData({ ...editData, comment: e.target.value })}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Tab') {
-                              e.preventDefault()
-                              handleTab('comment', e.shiftKey ? 'prev' : 'next')
-                            }
-                          }}
-                          className="w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded focus:outline-none"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={handleKeyDown}
                           placeholder={t('database.columnCommentPlaceholder')}
+                          autoFocus
+                          className="absolute inset-0 px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
                       ) : (
                         <div
-                          onClick={() => handleCellClick(i, 'comment')}
-                          className="min-h-[28px] px-1 cursor-pointer"
+                          onDoubleClick={() => startEditCell(i, 'comment')}
+                          className="min-h-[28px] cursor-pointer"
+                          title={t('database.doubleClickToEdit')}
                         >
                           <span className="text-xs text-gray-500 dark:text-gray-400 truncate" title={col.comment}>{col.comment || '-'}</span>
                         </div>
@@ -1470,7 +1272,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                     </td>
                     {/* Actions */}
                     <td className="px-2 py-1.5 text-center border-b border-gray-100 dark:border-gray-800">
-                      {!isEditing && !isNew && col.keyType !== 'PRI' && (
+                      {!isNew && col.keyType !== 'PRI' && (
                         <button
                           onClick={() => setShowDeleteConfirm({ type: 'column', index: i })}
                           className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"

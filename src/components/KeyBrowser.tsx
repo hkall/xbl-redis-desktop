@@ -277,6 +277,9 @@ export default function KeyBrowser() {
       ? filteredByType.filter((k) => k.name.toLowerCase().includes(searchInput.trim().toLowerCase()))
       : filteredByType
 
+    // Remove duplicates by key name
+    const uniqueKeys = [...new Map(filteredKeys.map(k => [k.name, k])).values()]
+
     // Helper function to check if string starts with Chinese character
     const isChineseStart = (str: string) => {
       if (!str) return false
@@ -285,7 +288,7 @@ export default function KeyBrowser() {
     }
 
     // Sort keys: English first (a-z), then Chinese keys
-    filteredKeys.sort((a, b) => {
+    uniqueKeys.sort((a, b) => {
       const aIsChinese = isChineseStart(a.name)
       const bIsChinese = isChineseStart(b.name)
 
@@ -297,7 +300,7 @@ export default function KeyBrowser() {
     })
 
     // Build tree structure and count keys per folder
-    filteredKeys.forEach((key) => {
+    uniqueKeys.forEach((key) => {
       const parts = key.name.split(':')
       let currentPath = ''
       let currentLevel = tree
@@ -741,10 +744,12 @@ export default function KeyBrowser() {
   const renderTreeNode = (node: TreeNode, level: number = 0): React.ReactNode => {
     const isExpanded = expandedFolders.has(node.path)
     const isSelected = selectedKey === node.path
+    // Use unique key combining path and type to prevent collisions
+    const uniqueKey = `${node.type}-${node.path}-${activeConnectionId || 'default'}`
 
     if (node.type === 'folder') {
       return (
-        <div key={node.path}>
+        <div key={uniqueKey}>
           <div
             onClick={() => handleToggleFolder(node.path)}
             className="group flex items-center gap-1 py-1 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
@@ -784,7 +789,7 @@ export default function KeyBrowser() {
     } else {
       return (
         <div
-          key={node.path}
+          key={uniqueKey}
           onClick={() => setSelectedKey(node.path)}
           className="group flex items-center gap-1 py-1.5 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
           style={{ paddingLeft: `${8 + level * 16}px` }}

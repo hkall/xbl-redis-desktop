@@ -575,6 +575,7 @@ export default function DbSidebar() {
     cacheTables,
     toggleNodeExpand,
     createQueryTab,
+    deleteSavedQuery,
   } = useDbStore()
 
   const [showConnectionDialog, setShowConnectionDialog] = useState(false)
@@ -1061,15 +1062,25 @@ export default function DbSidebar() {
               {savedQueries.map((query) => (
                 <div
                   key={query.id}
-                  className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
+                  className="group flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
                   onClick={() => {
                     createQueryTab(query.name, query.sql)
                   }}
                 >
                   <FileCode className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">
                     {query.name}
                   </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteSavedQuery(query.id)
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                    title={t('common.delete')}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
                 </div>
               ))}
             </div>

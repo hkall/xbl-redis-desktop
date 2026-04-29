@@ -28,6 +28,8 @@ import {
   Info,
   Key,
   Bolt,
+  Download,
+  Check,
 } from 'lucide-react'
 import { useDbStore } from '@/store/dbStore'
 import { QueryResult, UnifiedTab, TableInfo, ColumnInfo } from '@/types/database'
@@ -120,6 +122,73 @@ function ResizableDivider({
   )
 }
 
+// SQL格式化函数
+function formatSql(sql: string): string {
+  // 需要换行的主要关键字（排在前面）
+  const majorKeywords = ['SELECT', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET',
+    'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM',
+    'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'OUTER JOIN', 'JOIN', 'CROSS JOIN']
+
+  // 次级关键字（换行但保持缩进）
+  const secondaryKeywords = ['ON', 'AND', 'OR', 'UNION', 'UNION ALL', 'EXCEPT', 'INTERSECT']
+
+  // 首先清理多余空白
+  let formatted = sql.trim().replace(/\s+/g, ' ')
+
+  // 将关键字转为大写（保留字符串内容）
+  const keywords = ['SELECT', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET',
+    'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE',
+    'LEFT', 'RIGHT', 'INNER', 'OUTER', 'JOIN', 'CROSS', 'ON',
+    'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN', 'IS', 'NULL', 'AS',
+    'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MAX', 'MIN',
+    'UNION', 'ALL', 'INTERSECT', 'EXCEPT',
+    'ASC', 'DESC', 'PRIMARY', 'KEY', 'FOREIGN', 'REFERENCES',
+    'CREATE', 'ALTER', 'DROP', 'TABLE', 'INDEX', 'VIEW', 'DATABASE']
+
+  // 转换关键字为大写（不改变字符串内的内容）
+  keywords.forEach(kw => {
+    const regex = new RegExp(`\\b${kw}\\b`, 'gi')
+    formatted = formatted.replace(regex, kw)
+  })
+
+  // 在主要关键字前添加换行
+  majorKeywords.forEach(kw => {
+    // 匹配关键字（不在字符串引号内）
+    const regex = new RegExp(`\\s+(${kw})\\b`, 'gi')
+    formatted = formatted.replace(regex, '\n$1')
+  })
+
+  // 添加缩进
+  const lines = formatted.split('\n')
+  let indentLevel = 0
+  const indentedLines = lines.map(line => {
+    const upperLine = line.toUpperCase().trim()
+
+    // 减少缩进的关键字
+    if (['FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET'].some(kw => upperLine.startsWith(kw))) {
+      indentLevel = Math.max(0, indentLevel - 1)
+    }
+    if (['LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'OUTER JOIN', 'JOIN', 'CROSS JOIN'].some(kw => upperLine.startsWith(kw))) {
+      indentLevel = Math.max(0, indentLevel - 1)
+    }
+
+    // 添加当前缩进
+    const indented = '  '.repeat(indentLevel) + line.trim()
+
+    // 增加缩进的关键字
+    if (['SELECT', 'INSERT INTO', 'UPDATE', 'DELETE FROM'].some(kw => upperLine.startsWith(kw))) {
+      indentLevel++
+    }
+    if (['LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'OUTER JOIN', 'JOIN', 'CROSS JOIN'].some(kw => upperLine.startsWith(kw))) {
+      indentLevel++
+    }
+
+    return indented
+  })
+
+  return indentedLines.join('\n')
+}
+
 // 自动补全项
 interface SuggestionItem {
   label: string
@@ -132,6 +201,7 @@ function SqlEditor({
   sql,
   onChange,
   onExecute,
+  onFormat,
   executing,
   connectionId,
   database,
@@ -139,6 +209,7 @@ function SqlEditor({
   sql: string
   onChange: (sql: string) => void
   onExecute: () => void
+  onFormat: () => void
   executing: boolean
   connectionId: string
   database: string | null
@@ -434,6 +505,22 @@ function SqlEditor({
       return
     }
 
+    // F5 执行查询
+    if (e.key === 'F5') {
+      e.preventDefault()
+      onExecute()
+      setShowSuggestions(false)
+      return
+    }
+
+    // Ctrl+Shift+F 格式化SQL
+    if (e.key === 'F' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault()
+      onFormat()
+      setShowSuggestions(false)
+      return
+    }
+
     // Tab 插入两个空格（如果没有补全列表）
     if (e.key === 'Tab' && !showSuggestions) {
       e.preventDefault()
@@ -462,6 +549,60 @@ function SqlEditor({
     }
   }
 
+  // SQL语法高亮渲染
+  const highlightSql = (text: string) => {
+    // 按顺序处理，避免重复替换
+    // 1. 先处理字符串（单引号内容）
+    // 2. 然后处理数字
+    // 3. 最后处理关键字和函数
+
+    const parts: { text: string; type: 'keyword' | 'function' | 'string' | 'number' | 'comment' | 'normal' }[] = []
+
+    // 简单的分词策略
+    const tokens = text.split(/(\s+|'[^']*'|"[^"]*"|\d+(?:\.\d+)?|[(),;*\-+\/=<>!&|]+)/)
+
+    tokens.forEach(token => {
+      if (!token) return
+
+      // 空白字符
+      if (/^\s+$/.test(token)) {
+        parts.push({ text: token, type: 'normal' })
+        return
+      }
+
+      // 字符串（单引号或双引号）
+      if (/^['"][^'"]*['"]$/.test(token)) {
+        parts.push({ text: token, type: 'string' })
+        return
+      }
+
+      // 数字
+      if (/^\d+(?:\.\d+)?$/.test(token)) {
+        parts.push({ text: token, type: 'number' })
+        return
+      }
+
+      // 检查是否是关键字（忽略大小写）
+      const upperToken = token.toUpperCase()
+      if (SQL_KEYWORDS.includes(upperToken)) {
+        parts.push({ text: token, type: 'keyword' })
+        return
+      }
+
+      // 检查是否是函数（去掉括号后比较）
+      const funcName = token.replace(/\(.*\)$/, '').toUpperCase() + '()'
+      if (SQL_FUNCTIONS.includes(funcName) || SQL_FUNCTIONS.some(f => f.toUpperCase() === upperToken)) {
+        parts.push({ text: token, type: 'function' })
+        return
+      }
+
+      // 其他
+      parts.push({ text: token, type: 'normal' })
+    })
+
+    return parts
+  }
+
   return (
     <div className="h-full flex flex-col overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm relative">
       {/* 标题栏 */}
@@ -484,25 +625,48 @@ function SqlEditor({
           </div>
         </div>
 
-        {/* 编辑器 */}
-        <textarea
-          ref={textareaRef}
-          value={sql}
-          onChange={handleInput}
-          onKeyDown={handleKeyDown}
-          onBlur={() => {
-            // 延迟关闭，让点击事件有机会触发
-            setTimeout(() => {
-              if (!isSelectingRef.current) {
-                setShowSuggestions(false)
+        {/* 编辑器容器 - 包含高亮层和textarea */}
+        <div className="flex-1 relative">
+          {/* 语法高亮显示层 */}
+          <div
+            className="absolute inset-0 font-mono text-sm p-3 leading-6 overflow-auto whitespace-pre-wrap break-words pointer-events-none"
+            aria-hidden="true"
+          >
+            {highlightSql(sql).map((part, index) => {
+              let colorClass = 'text-gray-800 dark:text-gray-200' // normal
+              if (part.type === 'keyword') {
+                colorClass = 'text-purple-600 dark:text-purple-400 font-semibold'
+              } else if (part.type === 'function') {
+                colorClass = 'text-blue-600 dark:text-blue-400'
+              } else if (part.type === 'string') {
+                colorClass = 'text-green-600 dark:text-green-400'
+              } else if (part.type === 'number') {
+                colorClass = 'text-orange-600 dark:text-orange-400'
               }
-            }, 150)
-          }}
-          placeholder={t('database.sqlPlaceholderHint')}
-          className="flex-1 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-mono text-sm p-3 resize-none focus:outline-none leading-6 placeholder:text-gray-400 dark:placeholder:text-gray-600"
-          spellCheck={false}
-          disabled={executing}
-        />
+              return <span key={index} className={colorClass}>{part.text}</span>
+            })}
+          </div>
+
+          {/* 透明textarea用于编辑 */}
+          <textarea
+            ref={textareaRef}
+            value={sql}
+            onChange={handleInput}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              // 延迟关闭，让点击事件有机会触发
+              setTimeout(() => {
+                if (!isSelectingRef.current) {
+                  setShowSuggestions(false)
+                }
+              }, 150)
+            }}
+            placeholder={t('database.sqlPlaceholderHint')}
+            className="absolute inset-0 bg-transparent text-transparent caret-gray-800 dark:caret-gray-200 font-mono text-sm p-3 resize-none focus:outline-none leading-6 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+            spellCheck={false}
+            disabled={executing}
+          />
+        </div>
       </div>
 
       {/* 自动补全弹出框 */}
@@ -545,13 +709,293 @@ function SqlEditor({
 function DataGrid({
   result,
   loading,
+  connectionId,
+  database,
+  tableName,
 }: {
   result: QueryResult | null | undefined
   loading: boolean
+  connectionId: string
+  database: string | null
+  tableName?: string
 }) {
   const { t } = useTranslation()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(100)
+  const [sortColumn, setSortColumn] = useState<number | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [columnWidths, setColumnWidths] = useState<number[]>([])
+  const [resizingColumn, setResizingColumn] = useState<number | null>(null)
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
+  const [showExportSqlDialog, setShowExportSqlDialog] = useState(false)
+  const [exportTableName, setExportTableName] = useState('')
+  const [editingCell, setEditingCell] = useState<{ rowIndex: number; colIndex: number } | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(0)
+
+  // 初始化列宽和清空选择
+  useEffect(() => {
+    if (result?.columns?.length) {
+      setColumnWidths(result.columns.map(() => 150)) // 默认150px
+      setSelectedRows(new Set()) // 清空选中状态
+    }
+  }, [result?.columns])
+
+  // Ctrl+C 复制选中数据 - 放在顶部，hooks必须无条件调用
+  useEffect(() => {
+    const handleCopy = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedRows.size > 0) {
+        e.preventDefault()
+        // 在effect内部计算sortedData
+        const data = result?.data || []
+        const columns = result?.columns || []
+
+        // 应用排序
+        let sortedData = data
+        if (sortColumn !== null && sortColumn < columns.length) {
+          sortedData = [...data].sort((a, b) => {
+            const valA = a[sortColumn]
+            const valB = b[sortColumn]
+            if (valA === null || valA === undefined) return sortDirection === 'asc' ? -1 : 1
+            if (valB === null || valB === undefined) return sortDirection === 'asc' ? 1 : -1
+            if (typeof valA === 'number' && typeof valB === 'number') {
+              return sortDirection === 'asc' ? valA - valB : valB - valA
+            }
+            const strA = String(valA)
+            const strB = String(valB)
+            const cmp = strA.localeCompare(strB)
+            return sortDirection === 'asc' ? cmp : -cmp
+          })
+        }
+
+        // 获取选中行的数据
+        const selectedDataStr = [...selectedRows]
+          .sort((a, b) => a - b)
+          .map(rowIndex => {
+            const row = sortedData[rowIndex]
+            if (!row) return ''
+            return row.map(cell => {
+              if (cell === null || cell === undefined) return ''
+              return String(cell)
+            }).join('\t')
+          })
+          .join('\n')
+        // 复制到剪贴板
+        navigator.clipboard.writeText(selectedDataStr)
+      }
+    }
+    document.addEventListener('keydown', handleCopy)
+    return () => document.removeEventListener('keydown', handleCopy)
+  }, [selectedRows, result, sortColumn, sortDirection])
+
+  // 自动计算列宽（根据内容最大宽度）
+  const autoFitColumnWidth = (colIndex: number) => {
+    if (!sortedData || sortedData.length === 0 || !columns[colIndex]) return
+
+    // 计算列名宽度
+    const headerWidth = columns[colIndex].length * 8 + 24 // 字符宽度估算 + padding
+
+    // 计算数据最大宽度（取前100行）
+    const maxDataWidth = sortedData.slice(0, 100).reduce((max, row) => {
+      const cell = row[colIndex]
+      if (cell === null || cell === undefined) return max
+      const cellWidth = String(cell).length * 8 + 16
+      return Math.max(max, cellWidth)
+    }, 0)
+
+    // 取最大值，限制在80-400之间
+    const optimalWidth = Math.max(80, Math.min(400, Math.max(headerWidth, maxDataWidth)))
+    setColumnWidths(prev => {
+      const newWidths = [...prev]
+      newWidths[colIndex] = optimalWidth
+      return newWidths
+    })
+  }
+
+  // 列宽调整处理
+  const handleResizeMouseDown = (colIndex: number, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setResizingColumn(colIndex)
+    startXRef.current = e.clientX
+    startWidthRef.current = columnWidths[colIndex] || 150
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }
+
+  useEffect(() => {
+    if (resizingColumn === null) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - startXRef.current
+      const newWidth = Math.max(80, Math.min(500, startWidthRef.current + delta))
+      setColumnWidths(prev => {
+        const newWidths = [...prev]
+        newWidths[resizingColumn] = newWidth
+        return newWidths
+      })
+    }
+
+    const handleMouseUp = () => {
+      setResizingColumn(null)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [resizingColumn])
+
+  // 选择行
+  const handleRowSelect = (rowIndex: number, e: React.MouseEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      // Ctrl+点击：切换选择
+      setSelectedRows(prev => {
+        const newSet = new Set(prev)
+        if (newSet.has(rowIndex)) {
+          newSet.delete(rowIndex)
+        } else {
+          newSet.add(rowIndex)
+        }
+        return newSet
+      })
+    } else if (e.shiftKey && selectedRows.size > 0) {
+      // Shift+点击：选择范围
+      const lastSelected = [...selectedRows].pop() || rowIndex
+      const start = Math.min(lastSelected, rowIndex)
+      const end = Math.max(lastSelected, rowIndex)
+      const newSet = new Set<number>()
+      for (let i = start; i <= end; i++) {
+        newSet.add(i)
+      }
+      setSelectedRows(newSet)
+    } else {
+      // 单击：只选择当前行
+      setSelectedRows(new Set([rowIndex]))
+    }
+  }
+
+  // 排序后的数据
+  const getSortedData = useCallback((data: any[][], columns: string[]) => {
+    if (sortColumn === null) return data
+
+    return [...data].sort((a, b) => {
+      const valA = a[sortColumn]
+      const valB = b[sortColumn]
+
+      // 处理 null/undefined
+      if (valA === null || valA === undefined) return sortDirection === 'asc' ? -1 : 1
+      if (valB === null || valB === undefined) return sortDirection === 'asc' ? 1 : -1
+
+      // 数字比较
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return sortDirection === 'asc' ? valA - valB : valB - valA
+      }
+
+      // 字符串比较
+      const strA = String(valA)
+      const strB = String(valB)
+      const cmp = strA.localeCompare(strB)
+      return sortDirection === 'asc' ? cmp : -cmp
+    })
+  }, [sortColumn, sortDirection])
+
+  // 点击列头排序
+  const handleColumnClick = (colIndex: number) => {
+    if (sortColumn === colIndex) {
+      // 切换排序方向
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      // 新列，默认升序
+      setSortColumn(colIndex)
+      setSortDirection('asc')
+    }
+    // 排序改变时重置到第一页
+    setPage(1)
+  }
+
+  // 检测是否有id列或主键列（用于编辑）
+  const detectIdColumn = (columns: string[]): number | null => {
+    // 检查常见的id列名
+    const idNames = ['id', 'ID', 'Id', '_id', 'uid', 'UID', 'pk', 'PK', 'primary_key']
+    for (let i = 0; i < columns.length; i++) {
+      if (idNames.includes(columns[i].toLowerCase()) || idNames.includes(columns[i])) {
+        return i
+      }
+    }
+    return null
+  }
+
+  // 开始编辑单元格
+  const startEditCell = (rowIndex: number, colIndex: number) => {
+    if (!database) return // 没有数据库无法编辑
+
+    const idCol = detectIdColumn(columns)
+    if (idCol === null) return // 没有id列无法编辑
+
+    const value = sortedData[rowIndex]?.[colIndex]
+    setEditValue(value === null ? '' : String(value))
+    setEditingCell({ rowIndex, colIndex })
+  }
+
+  // 取消编辑
+  const cancelEdit = () => {
+    setEditingCell(null)
+    setEditValue('')
+  }
+
+  // 保存编辑
+  const saveEdit = async () => {
+    if (!editingCell || !database || !tableName) return
+
+    const { rowIndex, colIndex } = editingCell
+    const idCol = detectIdColumn(columns)
+    if (idCol === null) return
+
+    setSavingEdit(true)
+    try {
+      const idValue = sortedData[rowIndex][idCol]
+      const colName = columns[colIndex]
+      const newValue = editValue === '' ? null : editValue
+
+      // 构建UPDATE SQL
+      const sql = `UPDATE \`${tableName}\` SET \`${colName}\` = ${newValue === null ? 'NULL' : `'${String(newValue).replace(/'/g, "''")}'`} WHERE \`${columns[idCol]}\` = ${typeof idValue === 'number' ? idValue : `'${idValue}'`}`
+
+      if (window.electronAPI?.dbExecuteQuery) {
+        const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
+        if (result.success) {
+          setEditingCell(null)
+          setEditValue('')
+          // 更新本地数据
+          // 注：这里需要触发重新查询或更新本地缓存
+        } else {
+          alert(result.error || t('common.error'))
+        }
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : t('common.error'))
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  // 编辑键盘事件
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelEdit()
+    }
+  }
 
   if (loading) {
     return (
@@ -607,11 +1051,14 @@ function DataGrid({
     return [row]
   })
 
+  // 应用排序
+  const sortedData = getSortedData(normalizedData, columns)
+
   // 分页
-  const totalPages = Math.ceil(normalizedData.length / pageSize)
+  const totalPages = Math.ceil(sortedData.length / pageSize)
   const startIndex = (page - 1) * pageSize
   const endIndex = startIndex + pageSize
-  const pageData = normalizedData.slice(startIndex, endIndex)
+  const pageData = sortedData.slice(startIndex, endIndex)
 
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize)
@@ -632,9 +1079,39 @@ function DataGrid({
               {columns.map((col, i) => (
                 <th
                   key={i}
-                  className="px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 border-b-2 border-gray-200 dark:border-gray-700 min-w-[80px] max-w-[300px]"
+                  onClick={(e) => {
+                    // 如果正在调整宽度或点击调整手柄，不触发排序
+                    if (resizingColumn !== null) return
+                    const target = e.target as HTMLElement
+                    if (target.closest('.resize-handle')) return
+                    handleColumnClick(i)
+                  }}
+                  style={{ width: columnWidths[i] || 150, minWidth: 80 }}
+                  className="relative px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 border-b-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 select-none transition-colors group"
                 >
-                  <span className="block truncate" title={col}>{col}</span>
+                  <div className="flex items-center gap-1 overflow-hidden">
+                    <span className="block truncate flex-1" title={col}>{col}</span>
+                    {sortColumn === i && (
+                      sortDirection === 'asc'
+                        ? <ArrowUp className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                        : <ArrowDown className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                    )}
+                    {sortColumn !== i && (
+                      <div className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-30">
+                        <ArrowUp className="w-3 h-3 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  {/* 列宽调整手柄 */}
+                  <div
+                    className="resize-handle absolute right-0 top-0 bottom-0 w-1 bg-transparent hover:bg-blue-500 cursor-col-resize transition-colors"
+                    onMouseDown={(e) => handleResizeMouseDown(i, e)}
+                    onDoubleClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      autoFitColumnWidth(i)
+                    }}
+                  />
                 </th>
               ))}
             </tr>
@@ -642,22 +1119,44 @@ function DataGrid({
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {pageData.map((row, rowIndex) => {
               const actualIndex = startIndex + rowIndex
+              const isSelected = selectedRows.has(actualIndex)
+              const idCol = detectIdColumn(columns)
+              const canEdit = database && idCol !== null && tableName
               return (
                 <tr
                   key={actualIndex}
-                  className={`${actualIndex % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors`}
+                  onClick={(e) => handleRowSelect(actualIndex, e)}
+                  className={`${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : actualIndex % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer`}
                 >
                   <td className="px-2 py-1.5 text-center text-xs text-gray-400 dark:text-gray-500 font-medium border-r border-gray-100 dark:border-gray-800">
-                    {actualIndex + 1}
+                    {isSelected ? <Check className="w-3 h-3 text-blue-500" /> : actualIndex + 1}
                   </td>
-                  {row.map((cell, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 font-mono max-w-[300px]"
-                    >
-                      <CellContent value={cell} />
-                    </td>
-                  ))}
+                  {row.map((cell, colIndex) => {
+                    const isEditing = editingCell?.rowIndex === actualIndex && editingCell?.colIndex === colIndex
+                    return (
+                      <td
+                        key={colIndex}
+                        style={{ width: columnWidths[colIndex] || 150, minWidth: 80 }}
+                        onDoubleClick={() => canEdit && startEditCell(actualIndex, colIndex)}
+                        title={canEdit ? t('database.doubleClickToEdit') : undefined}
+                        className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 font-mono overflow-hidden relative"
+                      >
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={handleEditKeyDown}
+                            onBlur={() => setTimeout(() => cancelEdit(), 150)}
+                            autoFocus
+                            className="absolute inset-0 px-3 py-1.5 text-sm font-mono bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
+                          />
+                        ) : (
+                          <CellContent value={cell} />
+                        )}
+                      </td>
+                    )
+                  })}
                 </tr>
               )
             })}
@@ -666,7 +1165,7 @@ function DataGrid({
       </div>
 
       {/* 分页控制 */}
-      {normalizedData.length > 50 && (
+      {sortedData.length > 50 && (
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             <span>
@@ -674,8 +1173,28 @@ function DataGrid({
             </span>
             <span className="text-gray-300 dark:text-gray-600">|</span>
             <span>
-              {startIndex + 1}-{Math.min(endIndex, normalizedData.length)} / {normalizedData.length} {t('database.rows')}
+              {startIndex + 1}-{Math.min(endIndex, sortedData.length)} / {sortedData.length} {t('database.rows')}
             </span>
+            {selectedRows.size > 0 && (
+              <>
+                <span className="text-gray-300 dark:text-gray-600">|</span>
+                <span className="text-blue-500">
+                  {t('database.selectedRowsCount', { count: selectedRows.size })}
+                </span>
+                <button
+                  onClick={() => setSelectedRows(new Set([...Array(sortedData.length).keys()]))}
+                  className="px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                >
+                  {t('common.selectAll')}
+                </button>
+                <button
+                  onClick={() => setSelectedRows(new Set())}
+                  className="px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                >
+                  {t('common.deselectAll')}
+                </button>
+              </>
+            )}
             <select
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
@@ -720,11 +1239,176 @@ function DataGrid({
             >
               <ChevronLast className="w-4 h-4" />
             </button>
+            <span className="text-gray-300 dark:text-gray-600 mx-2">|</span>
+            <button
+              onClick={() => exportToCsv(columns, sortedData, 'query_result')}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              CSV
+            </button>
+            <button
+              onClick={() => exportToJson(columns, sortedData, 'query_result')}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              JSON
+            </button>
+            <button
+              onClick={() => setShowExportSqlDialog(true)}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              SQL
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 底部操作栏 - 数据少于50行时显示行数和导出按钮 */}
+      {sortedData.length > 0 && sortedData.length <= 50 && (
+        <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {sortedData.length} {t('database.rows')}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => exportToCsv(columns, sortedData, 'query_result')}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              CSV
+            </button>
+            <button
+              onClick={() => exportToJson(columns, sortedData, 'query_result')}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              JSON
+            </button>
+            <button
+              onClick={() => setShowExportSqlDialog(true)}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            >
+              <Download className="w-3 h-3" />
+              SQL
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 导出SQL对话框 */}
+      {showExportSqlDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-sm mx-4">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">{t('database.exportSql')}</h3>
+            <input
+              type="text"
+              value={exportTableName}
+              onChange={(e) => setExportTableName(e.target.value)}
+              placeholder={t('database.enterTableName')}
+              className="w-full px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setShowExportSqlDialog(false)}
+                className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={() => {
+                  if (exportTableName.trim()) {
+                    exportToSqlInsert(columns, sortedData, exportTableName.trim(), 'query_result')
+                    setShowExportSqlDialog(false)
+                    setExportTableName('')
+                  }
+                }}
+                className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded"
+              >
+                {t('common.export')}
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
   )
+}
+
+// 导出数据为CSV
+function exportToCsv(columns: string[], data: any[][], filename: string) {
+  const csvRows = []
+  // 添加BOM头以支持Excel正确显示UTF-8编码
+  csvRows.push('﻿')
+  // 添加表头
+  csvRows.push(columns.map(col => `"${col.replace(/"/g, '""')}"`).join(','))
+  // 添加数据行
+  data.forEach(row => {
+    const values = row.map(cell => {
+      if (cell === null || cell === undefined) return ''
+      const str = String(cell).replace(/"/g, '""')
+      return `"${str}"`
+    })
+    csvRows.push(values.join(','))
+  })
+  const csvContent = csvRows.join('\n')
+  // 创建下载链接
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${filename}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+// 导出数据为JSON
+function exportToJson(columns: string[], data: any[][], filename: string) {
+  const jsonData = data.map(row => {
+    const obj: Record<string, any> = {}
+    columns.forEach((col, i) => {
+      obj[col] = row[i]
+    })
+    return obj
+  })
+  const jsonContent = JSON.stringify(jsonData, null, 2)
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${filename}.json`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+// 导出数据为SQL INSERT语句
+function exportToSqlInsert(columns: string[], data: any[][], tableName: string, filename: string) {
+  const sqlStatements: string[] = []
+
+  data.forEach(row => {
+    const values = row.map(cell => {
+      if (cell === null || cell === undefined) return 'NULL'
+      if (typeof cell === 'number') return String(cell)
+      if (typeof cell === 'boolean') return cell ? '1' : '0'
+      // 字符串需要转义单引号
+      const str = String(cell).replace(/'/g, "''")
+      return `'${str}'`
+    })
+
+    const columnList = columns.map(col => `\`${col}\``).join(', ')
+    const valueList = values.join(', ')
+    sqlStatements.push(`INSERT INTO \`${tableName}\` (${columnList}) VALUES (${valueList});`)
+  })
+
+  const sqlContent = sqlStatements.join('\n')
+  const blob = new Blob([sqlContent], { type: 'text/plain;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${filename}.sql`
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 // 格式化单元格值
@@ -1076,8 +1760,80 @@ function QueryEditorContent({
   executing: boolean
   t: (key: string, params?: any) => string
 }) {
+  const { getQueryHistory, saveSavedQuery } = useDbStore()
+  const [showHistory, setShowHistory] = useState(false)
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [queryName, setQueryName] = useState('')
+  // 过滤当前连接的查询历史
+  const allHistory = getQueryHistory(100)
+  const queryHistory = allHistory.filter(h => h.connectionId === activeConnectionId).slice(0, 20)
+
+  // 保存查询
+  const handleSaveQuery = () => {
+    if (!queryName.trim() || !activeTab?.sql?.trim()) return
+    saveSavedQuery(queryName.trim(), activeTab.sql)
+    setShowSaveDialog(false)
+    setQueryName('')
+  }
+
+  // Ctrl+S 快捷键保存
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (activeTab?.sql?.trim()) {
+          setShowSaveDialog(true)
+          setQueryName(activeTab.name || '')
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [activeTab?.sql, activeTab?.name])
+
   return (
     <>
+      {/* 保存查询对话框 */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowSaveDialog(false)}>
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 w-80"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+              {t('database.saveQuery')}
+            </h3>
+            <input
+              type="text"
+              value={queryName}
+              onChange={(e) => setQueryName(e.target.value)}
+              placeholder={t('database.queryName')}
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 focus:outline-none focus:border-blue-500"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveQuery()
+                if (e.key === 'Escape') setShowSaveDialog(false)
+              }}
+            />
+            <div className="flex justify-end gap-2 mt-3">
+              <button
+                onClick={() => setShowSaveDialog(false)}
+                className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleSaveQuery}
+                disabled={!queryName.trim()}
+                className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t('common.save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 工具栏 */}
       <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
@@ -1129,6 +1885,29 @@ function QueryEditorContent({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 保存查询按钮 */}
+          <button
+            onClick={() => {
+              setShowSaveDialog(true)
+              setQueryName(activeTab?.name || '')
+            }}
+            disabled={!activeTab?.sql?.trim()}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={`${t('database.saveQuery')} (Ctrl+S)`}
+          >
+            <Save className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => activeTab?.id && updateTabSql(activeTab.id, formatSql(activeTab.sql || ''))}
+            disabled={!activeTab?.sql?.trim()}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={t('database.formatSql')}
+          >
+            <FileCode className="w-4 h-4" />
+            {t('database.format')}
+          </button>
+
           <button
             onClick={handleExecute}
             disabled={executing || !activeTab?.sql?.trim()}
@@ -1147,6 +1926,62 @@ function QueryEditorContent({
             +
             <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px]">Enter</kbd>
           </span>
+
+          {/* 历史记录 */}
+          <div className="relative">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="flex items-center gap-1 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title={t('database.queryHistory')}
+            >
+              <Clock className="w-4 h-4" />
+            </button>
+
+            {showHistory && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowHistory(false)} />
+                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto min-w-[400px]">
+                  {queryHistory.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-gray-400 dark:text-gray-500 text-center">
+                      {t('database.noQueryHistory')}
+                    </div>
+                  ) : (
+                    queryHistory.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          if (activeTab?.id) {
+                            updateTabSql(activeTab.id, item.sql)
+                            setShowHistory(false)
+                          }
+                        }}
+                        className="w-full flex flex-col gap-1 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                      >
+                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs">
+                          <Clock className="w-3 h-3" />
+                          <span>{new Date(item.timestamp).toLocaleString()}</span>
+                          <span className="text-gray-300 dark:text-gray-600">|</span>
+                          <span>{item.executionTime}ms</span>
+                          {item.rowCount !== undefined && (
+                            <>
+                              <span className="text-gray-300 dark:text-gray-600">|</span>
+                              <span>{item.rowCount} {t('database.rows')}</span>
+                            </>
+                          )}
+                          {item.error && (
+                            <span className="text-red-500">{t('database.queryFailed')}</span>
+                          )}
+                        </div>
+                        <div className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate">
+                          {item.sql}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1160,6 +1995,7 @@ function QueryEditorContent({
             sql={activeTab?.sql || ''}
             onChange={(sql) => activeTab?.id && updateTabSql(activeTab.id, sql)}
             onExecute={handleExecute}
+            onFormat={() => activeTab?.id && updateTabSql(activeTab.id, formatSql(activeTab.sql || ''))}
             executing={executing}
             connectionId={activeConnectionId || ''}
             database={activeDatabase}
@@ -1189,7 +2025,12 @@ function QueryEditorContent({
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <DataGrid result={activeTab?.result} loading={executing} />
+              <DataGrid
+                result={activeTab?.result}
+                loading={executing}
+                connectionId={activeConnectionId}
+                database={activeDatabase}
+              />
               <ExecutionInfo result={activeTab?.result} />
             </div>
           </>
