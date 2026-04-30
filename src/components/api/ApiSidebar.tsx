@@ -1368,7 +1368,7 @@ export default function ApiSidebar() {
           setShowImportExport('import')
         }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
           <Download className="w-4 h-4" />
-          <span>{t('common.loading')}</span>
+          <span>{t('redis.import')}</span>
         </button>
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
         <button onClick={() => {

@@ -642,6 +642,10 @@ function DataGrid({
   const startXRef = useRef(0)
   const startWidthRef = useRef(0)
 
+  // 手动选择主键列
+  const [selectedIdColumn, setSelectedIdColumn] = useState<number | null>(null)
+  const [showEditSetupDialog, setShowEditSetupDialog] = useState(false)
+
   // 篮选状态
   const [filters, setFilters] = useState<FilterCondition[]>([])
   const [filterColumn, setFilterColumn] = useState<number | null>(null)
@@ -661,12 +665,18 @@ function DataGrid({
   const gridRef = useRef<HTMLDivElement>(null)
   const contextMenuCellRef = useRef<{ rowIndex: number; colIndex: number } | null>(null)
 
+  // 重置编辑设置当结果变化
   useEffect(() => {
     if (tableName) {
       setEditTableName(tableName)
       setEditConfirmed(true)
+      setSelectedIdColumn(null)
+    } else {
+      setEditTableName('')
+      setEditConfirmed(false)
+      setSelectedIdColumn(null)
     }
-  }, [tableName])
+  }, [tableName, result?.columns])
 
   // 右键菜单处理
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -696,13 +706,14 @@ function DataGrid({
     const effectiveTable = tableName || (editConfirmed ? editTableName : null)
     if (!effectiveTable) return
 
-    const idCol = detectIdColumn(columns)
-    if (idCol === null) return
+    // 使用手动选择或自动检测的主键列
+    const effectiveIdCol = selectedIdColumn !== null ? selectedIdColumn : detectIdColumn(columns)
+    if (effectiveIdCol === null) return
 
     const sqls = pendingChanges.map(change => {
-      const idValue = sortedData[change.rowIndex][idCol]
+      const idValue = sortedData[change.rowIndex][effectiveIdCol]
       const colName = columns[change.colIndex]
-      return `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${String(change.newValue).replace(/'/g, "''")}'`} WHERE \`${columns[idCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`};`
+      return `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${String(change.newValue).replace(/'/g, "''")}'`} WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`};`
     })
     setSaveConfirmMessage(sqls.join('\n'))
     setShowSaveConfirm(true)
@@ -714,14 +725,15 @@ function DataGrid({
     const effectiveTable = tableName || (editConfirmed ? editTableName : null)
     if (!effectiveTable) return
 
-    const idCol = detectIdColumn(columns)
-    if (idCol === null) return
+    // 使用手动选择或自动检测的主键列
+    const effectiveIdCol = selectedIdColumn !== null ? selectedIdColumn : detectIdColumn(columns)
+    if (effectiveIdCol === null) return
 
     try {
       for (const change of pendingChanges) {
-        const idValue = sortedData[change.rowIndex][idCol]
+        const idValue = sortedData[change.rowIndex][effectiveIdCol]
         const colName = columns[change.colIndex]
-        const sql = `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${String(change.newValue).replace(/'/g, "''")}'`} WHERE \`${columns[idCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`}`
+        const sql = `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${String(change.newValue).replace(/'/g, "''")}'`} WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`}`
 
         const res = await window.electronAPI?.dbExecuteQuery(connectionId, sql, database)
         if (!res?.success) {
@@ -758,8 +770,9 @@ function DataGrid({
     setContextMenu(null)
     if (!database || selectedRows.size === 0) return
 
-    const idCol = detectIdColumn(columns)
-    if (idCol === null) {
+    // 使用手动选择或自动检测的主键列
+    const effectiveIdCol = selectedIdColumn !== null ? selectedIdColumn : detectIdColumn(columns)
+    if (effectiveIdCol === null) {
       alert(t('database.noPrimaryKeyWarning'))
       return
     }
@@ -771,8 +784,8 @@ function DataGrid({
 
     try {
       for (const rowIndex of selectedRows) {
-        const idValue = sortedData[rowIndex][idCol]
-        const sql = `DELETE FROM \`${effectiveTable}\` WHERE \`${columns[idCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`}`
+        const idValue = sortedData[rowIndex][effectiveIdCol]
+        const sql = `DELETE FROM \`${effectiveTable}\` WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`}`
 
         const res = await window.electronAPI?.dbExecuteQuery(connectionId, sql, database)
         if (!res?.success) {
@@ -1161,28 +1174,45 @@ function DataGrid({
   const totalPages = Math.ceil(sortedData.length / pageSize)
   const startIndex = (page - 1) * pageSize
   const pageData = sortedData.slice(startIndex, startIndex + pageSize)
-  const idCol = detectIdColumn(columns)
-  const canEdit = database && idCol !== null && (tableName || (editConfirmed && editTableName))
+  // 使用自动检测或手动选择的主键列
+  const effectiveIdCol = selectedIdColumn !== null ? selectedIdColumn : detectIdColumn(columns)
+  const effectiveTable = tableName || (editConfirmed ? editTableName : null)
+  const canEdit = database && effectiveIdCol !== null && effectiveTable
   const hasChanges = pendingChanges.length > 0
 
   return (
     <div className="flex-1 flex flex-col min-h-0" onContextMenu={handleContextMenu}>
       {/* 编辑状态栏 */}
-      {idCol !== null && database && (
-        <div className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 border-b ${canEdit ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'}`}>
+      {database && (
+        <div className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 border-b ${canEdit ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
           {canEdit ? (
             <>
               <Pencil className="w-3.5 h-3.5 text-green-500 dark:text-green-400" />
-              <span className="text-xs text-green-600 dark:text-green-400 font-medium">{t('database.doubleClickToEdit')}</span>
+              <span className="text-xs text-green-600 dark:text-green-400 font-medium">{t('database.editModeEnabled')}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">|</span>
+              <span className="text-xs text-gray-600 dark:text-gray-300">{t('database.table')}: {effectiveTable}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">|</span>
+              <span className="text-xs text-gray-600 dark:text-gray-300">{t('database.keyColumn')}: {columns[effectiveIdCol!]}</span>
               {hasChanges && (
                 <>
-                  <span className="text-xs text-orange-500 dark:text-orange-400 ml-2">({pendingChanges.length} {t('database.rows')} {t('common.edit')})</span>
-                  <button onClick={hasChanges ? showSaveConfirmation : undefined} className="ml-2 px-2 py-0.5 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors">{t('common.save')} (Ctrl+S)</button>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">|</span>
+                  <span className="text-xs text-orange-500 dark:text-orange-400 font-medium">{pendingChanges.length} {t('database.pendingChanges')}</span>
+                  <button onClick={showSaveConfirmation} className="ml-2 px-2 py-0.5 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors">{t('common.save')} (Ctrl+S)</button>
+                  <button onClick={() => { setPendingChanges([]); onRefresh?.() }} className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 rounded transition-colors">{t('common.cancel')}</button>
                 </>
               )}
             </>
           ) : (
-            <span className="text-xs text-blue-600 dark:text-blue-400">{editTableName}</span>
+            <>
+              <Info className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">{t('database.clickToEnableEdit')}</span>
+              <button
+                onClick={() => setShowEditSetupDialog(true)}
+                className="ml-2 px-2 py-0.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+              >
+                {t('database.setupEdit')}
+              </button>
+            </>
           )}
         </div>
       )}
@@ -1452,6 +1482,64 @@ function DataGrid({
             <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
               <button onClick={() => setShowSaveConfirm(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">{t('common.cancel')}</button>
               <button onClick={executeSaveChanges} className="px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded transition-colors">{t('common.save')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 编辑设置弹窗 */}
+      {showEditSetupDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('database.setupEdit')}</h3>
+              <button onClick={() => setShowEditSetupDialog(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* 表名输入 */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('database.tableName')}</label>
+                <input
+                  type="text"
+                  value={editTableName}
+                  onChange={(e) => setEditTableName(e.target.value)}
+                  placeholder={t('database.enterTableName')}
+                  className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                />
+              </div>
+              {/* 主键列选择 */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('database.keyColumn')}</label>
+                <select
+                  value={selectedIdColumn !== null ? selectedIdColumn : (detectIdColumn(columns) !== null ? detectIdColumn(columns)! : '')}
+                  onChange={(e) => setSelectedIdColumn(e.target.value === '' ? null : Number(e.target.value))}
+                  className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                >
+                  {detectIdColumn(columns) === null && (
+                    <option value="">-- {t('database.selectKeyColumn')} --</option>
+                  )}
+                  {columns.map((col, i) => (
+                    <option key={i} value={i}>{col}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('database.keyColumnHint')}</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+              <button onClick={() => setShowEditSetupDialog(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">{t('common.cancel')}</button>
+              <button
+                onClick={() => {
+                  if (editTableName.trim() && (selectedIdColumn !== null || detectIdColumn(columns) !== null)) {
+                    setEditConfirmed(true)
+                    setShowEditSetupDialog(false)
+                  } else {
+                    alert(t('database.editSetupRequired'))
+                  }
+                }}
+                className="px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded transition-colors"
+              >
+                {t('common.confirm')}
+              </button>
             </div>
           </div>
         </div>

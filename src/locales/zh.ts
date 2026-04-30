@@ -513,6 +513,42 @@ export default {
     responseNormal: '响应正常',
     responseSlow: '响应较慢',
     responseVerySlow: '响应很慢',
+
+    // 请求状态补充
+    requestCancelled: '请求已取消',
+    pleaseEnterUrl: '请输入URL',
+    pleaseEnterName: '请输入名称',
+    nameAlreadyExists: '同目录下已存在同名请求',
+    unnamedRequest: '未命名请求',
+    clickToAddRequest: '点击 + 新建请求',
+    selectOrCreateRequest: '选择或创建请求',
+
+    // 超时设置
+    minutes: '分钟',
+    seconds: '秒',
+
+    // 实际请求信息
+    actualRequestSent: '实际发送的请求',
+    noCustomHeaders: '无自定义请求头',
+    updateRequest: '更新请求',
+    saveLocation: '保存位置',
+    empty: '空',
+
+    // 参数/表单
+    enabled: '启用',
+    format: '格式',
+    noBody: '无请求体',
+    noParams: '暂无参数',
+    addField: '添加字段',
+    addParam: '添加参数',
+    paramName: '参数名',
+    paramValue: '参数值',
+    headerName: '请求头名',
+    headerValue: '请求头值',
+    file: '文件',
+    text: '文本',
+    bodyContent: '请求体内容',
+    noFormFields: '暂无表单字段',
   },
 
   // 数据库模块
@@ -723,6 +759,18 @@ export default {
 
     // 错误提示
     notNullCannotHaveDefaultNull: 'NOT NULL 列不能设置 DEFAULT NULL',
+
+    // 编辑设置
+    setupEdit: '设置编辑',
+    editModeEnabled: '编辑模式已启用',
+    clickToEnableEdit: '点击按钮启用编辑模式',
+    tableName: '表名',
+    keyColumn: '主键列',
+    selectKeyColumn: '选择主键列',
+    keyColumnHint: '选择能唯一标识行的列（如id、主键）',
+    editSetupRequired: '请输入表名并选择主键列',
+    pendingChanges: '处修改',
+    enterTableName: '输入表名',
   },
 
   // 更新

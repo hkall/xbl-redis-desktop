@@ -1,5 +1,5 @@
 export default {
-  // 通用
+  // Common
   common: {
     save: 'Save',
     cancel: 'Cancel',
@@ -42,7 +42,7 @@ export default {
     deselectAll: 'Deselect All',
   },
 
-  // 工具栏
+  // Toolbar
   toolbar: {
     redis: 'Redis',
     api: 'API',
@@ -82,9 +82,9 @@ export default {
     replaceBtn: 'Replace',
   },
 
-  // Redis 模块
+  // Redis module
   redis: {
-    // 连接面板
+    // Connection panel
     connections: 'Connections',
     newConnection: 'New Connection',
     noConnections: 'No connections yet',
@@ -94,7 +94,7 @@ export default {
     connecting: 'Connecting...',
     connectionFailed: 'Connection failed',
 
-    // 连接表单
+    // Connection form
     connectionName: 'Connection Name',
     host: 'Host',
     port: 'Port',
@@ -108,7 +108,7 @@ export default {
     deleteConfirm: 'Are you sure you want to delete this connection?',
     copyConfirm: 'Create a copy of "{name}"? The new connection will be named "{name} (copy)".',
 
-    // 键浏览器
+    // Key browser
     keys: 'Keys',
     key: 'Key',
     selectConnection: 'Select a connection to view keys',
@@ -131,14 +131,14 @@ export default {
     newKeyNamePlaceholder: 'Enter new key name',
     keysFound: '{count} key(s) found',
 
-    // 数据面板
+    // Data panel
     data: 'Data',
     selectKey: 'Select a key to view and edit its data',
     editData: 'Edit',
     saveData: 'Save',
     noData: 'No data',
 
-    // 数据类型
+    // Data types
     string: 'String',
     hash: 'Hash',
     list: 'List',
@@ -154,7 +154,7 @@ export default {
     clearHistory: 'Clear history',
     clearHistoryConfirm: 'Are you sure you want to clear all command history?',
 
-    // 服务器信息
+    // Server info
     server: 'Server',
     serverInfo: 'Server Info',
     realtimeMonitor: 'Real-time Monitor',
@@ -210,7 +210,7 @@ export default {
     dataRefreshInterval: 'Data refreshes every 5s',
     auto: 'Auto',
 
-    // 批量操作
+    // Batch operations
     batch: 'Batch',
     batchOperations: 'Batch Operations',
     pattern: 'Pattern',
@@ -245,12 +245,12 @@ export default {
     deserializing: 'Deserializing...',
     exportFailed: 'Export failed',
 
-    // 空状态提示
+    // Empty state messages
     pleaseConnect: 'Please connect to a Redis server first',
     pleaseConnectBatch: 'Please connect to server for batch operations',
     pleaseConnectExport: 'Please connect to server to export data',
 
-    // 数据查看器
+    // Data viewer
     field: 'Field',
     fields: 'fields',
     value: 'Value',
@@ -299,7 +299,7 @@ export default {
     addZSetMember2: 'Add Member',
     updateZSetMember: 'Update Member',
 
-    // 编辑器
+    // Editor
     copied: 'Copied',
     copy: 'Copy',
     cancel: 'Cancel',
@@ -352,9 +352,9 @@ export default {
     formatLabel: 'Format',
   },
 
-  // API 模块
+  // API module
   api: {
-    // 项目
+    // Projects
     projects: 'Projects',
     newProject: 'New Project',
     projectName: 'Project Name',
@@ -363,7 +363,7 @@ export default {
     selectTargetFolder: 'Select target folder',
     current: 'Current',
 
-    // 请求
+    // Requests
     requests: 'Requests',
     newRequest: 'New Request',
     newFolder: 'New Folder',
@@ -374,7 +374,7 @@ export default {
     sendRequest: 'Send Request',
     cancelRequest: 'Cancel Request',
 
-    // 请求配置
+    // Request config
     headers: 'Headers',
     params: 'Params',
     body: 'Body',
@@ -386,7 +386,7 @@ export default {
     raw: 'Raw',
     binary: 'Binary',
 
-    // 响应
+    // Response
     response: 'Response',
     responseBody: 'Response Body',
     responseHeaders: 'Response Headers',
@@ -394,21 +394,21 @@ export default {
     responseTime: 'Response Time',
     responseSize: 'Response Size',
 
-    // 环境
+    // Environment
     environments: 'Environments',
     variables: 'Variables',
     variableName: 'Variable Name',
     variableValue: 'Variable Value',
 
-    // 历史和收藏
+    // History and saved
     history: 'History',
     saved: 'Saved',
 
-    // 代码生成
+    // Code generation
     generateCode: 'Generate Code',
     copyCode: 'Copy Code',
 
-    // 回收站
+    // Recycle bin
     recycleBin: 'Recycle Bin',
     restore: 'Restore',
     permanentDelete: 'Permanent Delete',
@@ -513,11 +513,47 @@ export default {
     responseNormal: 'Normal response',
     responseSlow: 'Slow response',
     responseVerySlow: 'Very slow response',
+
+    // Request states
+    requestCancelled: 'Request cancelled',
+    pleaseEnterUrl: 'Please enter URL',
+    pleaseEnterName: 'Please enter name',
+    nameAlreadyExists: 'A request with this name already exists in the same directory',
+    unnamedRequest: 'Unnamed request',
+    clickToAddRequest: 'Click + to add a request',
+    selectOrCreateRequest: 'Select or create a request',
+
+    // Timeout settings
+    minutes: 'min',
+    seconds: 's',
+
+    // Actual request sent
+    actualRequestSent: 'Actual request sent',
+    noCustomHeaders: 'No custom headers',
+    updateRequest: 'Update Request',
+    saveLocation: 'Save location',
+    empty: 'empty',
+
+    // Params/Form
+    enabled: 'Enabled',
+    format: 'Format',
+    noBody: 'No Body',
+    noParams: 'No params',
+    addField: 'Add Field',
+    addParam: 'Add param',
+    paramName: 'Param name',
+    paramValue: 'Param value',
+    headerName: 'Header name',
+    headerValue: 'Header value',
+    file: 'File',
+    text: 'Text',
+    bodyContent: 'Body content',
+    noFormFields: 'No form fields',
   },
 
-  // 数据库模块
+  // Database module
   database: {
-    // 连接
+    // Connection
     databases: 'Databases',
     newConnection: 'New Connection',
     connectionName: 'Connection Name',
@@ -535,7 +571,7 @@ export default {
     connectionSuccess: 'Connection successful',
     connectionFailed: 'Connection failed',
 
-    // 数据库浏览器
+    // Database browser
     tables: 'Tables',
     views: 'Views',
     procedures: 'Procedures',
@@ -543,7 +579,7 @@ export default {
     selectConnection: 'Select a database connection to start',
     noConnections: 'No database connections',
 
-    // SQL 编辑器
+    // SQL editor
     query: 'Query',
     newQuery: 'New Query',
     execute: 'Execute',
@@ -557,7 +593,7 @@ export default {
     rowsReturned: 'rows returned',
     executionTime: 'Execution time',
 
-    // 数据表格
+    // Data table
     noData: 'No data',
     null: 'NULL',
 
@@ -573,12 +609,12 @@ export default {
     ctrlEnterHint: 'Ctrl+Enter',
     sqlPlaceholderHint: '-- Enter SQL query...\nSELECT * FROM users LIMIT 100;',
 
-    // 收藏查询
+    // Saved queries
     savedQueries: 'Saved Queries',
     saveQuery: 'Save Query',
     queryName: 'Query Name',
 
-    // 表详情
+    // Table details
     dataTab: 'Data',
     structureTab: 'Structure',
     infoTab: 'Info',
@@ -586,7 +622,7 @@ export default {
     indexesTab: 'Indexes',
     ddlTab: 'DDL',
 
-    // 数据 CRUD
+    // Data CRUD
     addRow: 'Add Row',
     deleteSelectedRows: 'Delete Selected Rows',
     doubleClickToEdit: 'Double-click to edit',
@@ -604,7 +640,7 @@ export default {
     primaryKeyCannotEdit: 'Primary key column cannot be edited',
     primaryKeyCannotDelete: 'Primary key column cannot be deleted',
 
-    // 表结构 CRUD
+    // Table structure CRUD
     addColumn: 'Add Column',
     columnNamePlaceholder: 'Column name',
     columnTypePlaceholder: 'VARCHAR(255)',
@@ -620,15 +656,15 @@ export default {
     saving: 'Saving...',
     customType: 'Custom...',
 
-    // 表信息
+    // Table info
     columnsCount: 'Columns',
     indexesCount: 'Indexes',
     createTable: 'CREATE TABLE',
 
-    // 表搜索
+    // Table search
     searchTables: 'Search tables...',
 
-    // 存储过程和触发器
+    // Stored procedures and triggers
     definer: 'Definer',
     securityType: 'Security Type',
     parameters: 'Parameters:',
@@ -637,7 +673,7 @@ export default {
     triggerTiming: 'Timing:',
     relatedTable: 'Related Table:',
 
-    // 工作区
+    // Workspace
     noMatchingResults: 'No matching results',
     selectTab: 'Select a tab',
     autocompleteEnabled: 'Autocomplete enabled',
@@ -722,9 +758,21 @@ export default {
 
     // Error messages
     notNullCannotHaveDefaultNull: 'NOT NULL column cannot have DEFAULT NULL',
+
+    // Edit setup
+    setupEdit: 'Setup Edit',
+    editModeEnabled: 'Edit mode enabled',
+    clickToEnableEdit: 'Click button to enable edit mode',
+    tableName: 'Table Name',
+    keyColumn: 'Key Column',
+    selectKeyColumn: 'Select key column',
+    keyColumnHint: 'Select a column that uniquely identifies a row (e.g., id, primary key)',
+    editSetupRequired: 'Please enter table name and select key column',
+    pendingChanges: 'pending changes',
+    enterTableName: 'Enter table name',
   },
 
-  // 更新
+  // Update
   update: {
     newVersionAvailable: 'A new version is available!',
     currentVersion: 'Current',
@@ -745,7 +793,7 @@ export default {
     upToDateTitle: 'Up to Date',
   },
 
-  // 设置
+  // Settings
   settings: {
     settings: 'Settings',
     language: 'Language',

@@ -1039,32 +1039,32 @@ export default function ApiWorkspace() {
           </div>
 
           {/* Request Bar */}
-        <div className="flex-shrink-0 px-3 py-2.5 bg-gray-100 dark:bg-gray-800/50">
-          <div className="flex items-center gap-2">
-            {/* Method Selector */}
-            <div className="relative">
-              <button
-                onClick={() => setShowMethodDropdown(!showMethodDropdown)}
-                className={`select-none px-3 py-1.5 rounded-lg text-white text-sm font-semibold min-w-[80px] flex items-center justify-between transition-all duration-200 ${METHOD_COLORS[currentRequest.method].bg}`}
-              >
-                <span>{currentRequest.method}</span>
-                <ChevronDown className="w-3.5 h-3.5 ml-1" />
-              </button>
-              {showMethodDropdown && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowMethodDropdown(false)} />
-                  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[100px] py-1 select-none">
-                    {HTTP_METHODS.map((method) => (
-                      <button
-                        key={method}
-                        onClick={() => {
-                          updateCurrentRequest({ method })
-                          setShowMethodDropdown(false)
-                        }}
-                        className={`w-full px-3 py-1.5 text-left text-sm font-medium transition-colors ${
-                          method === currentRequest.method
-                            ? `${getStatusBg(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(method) ? method === 'GET' ? 200 : method === 'POST' ? 201 : method === 'DELETE' ? 204 : 200 : 200)} ${METHOD_COLORS[method].text}`
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          <div className="flex-shrink-0 px-3 py-2.5 bg-gray-100 dark:bg-gray-800/50">
+            <div className="flex items-center gap-2">
+              {/* Method Selector */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowMethodDropdown(!showMethodDropdown)}
+                  className={`select-none px-3 py-1.5 rounded-lg text-white text-sm font-semibold min-w-[80px] flex items-center justify-between transition-all duration-200 ${METHOD_COLORS[currentRequest.method].bg}`}
+                >
+                  <span>{currentRequest.method}</span>
+                  <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                </button>
+                {showMethodDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowMethodDropdown(false)} />
+                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[100px] py-1 select-none">
+                      {HTTP_METHODS.map((method) => (
+                        <button
+                          key={method}
+                          onClick={() => {
+                            updateCurrentRequest({ method })
+                            setShowMethodDropdown(false)
+                          }}
+                          className={`w-full px-3 py-1.5 text-left text-sm font-medium transition-colors ${
+                            method === currentRequest.method
+                              ? `${getStatusBg(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(method) ? method === 'GET' ? 200 : method === 'POST' ? 201 : method === 'DELETE' ? 204 : 200 : 200)} ${METHOD_COLORS[method].text}`
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                         }`}
                       >
                         {method}
@@ -1726,101 +1726,97 @@ function KeyValueEditor({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Table Header */}
-      <div className="flex-shrink-0 h-10 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 flex items-center px-3 select-none gap-0">
-        <div className="w-12 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">{t('api.enabled')}</div>
-        <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-        <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{keyPlaceholder}</div>
-        <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-        <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{valuePlaceholder}</div>
-        <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-        <div className="w-14 text-xs text-gray-500 text-center pl-2 whitespace-nowrap">
-          {data.length > 0 && <span>{enabledCount}/{data.length}</span>}
+      {/* Scrollable table */}
+      <div className="flex-1 overflow-auto min-h-0 px-3 pt-2">
+        {/* Table Header */}
+        <div className="sticky top-0 z-10 flex items-center h-9 px-1 mb-1 bg-white dark:bg-gray-900 select-none">
+          <div className="w-[40px] flex-shrink-0" />
+          <div className="flex-1 min-w-0 px-2 text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{keyPlaceholder}</div>
+          <div className="flex-1 min-w-0 px-2 text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{valuePlaceholder}</div>
+          <div className="w-[72px] flex-shrink-0 text-[11px] font-medium text-gray-400 dark:text-gray-500 text-right pr-1">
+            {data.length > 0 && <span>{enabledCount}/{data.length}</span>}
+          </div>
         </div>
-      </div>
 
-      {/* Table Body */}
-      <div className="flex-1 overflow-auto min-h-0">
+        {/* Table Body */}
         {data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 py-8">
+          <div className="flex flex-col items-center justify-center h-32 text-gray-400 dark:text-gray-500">
             <div className="text-sm">{t('api.noParams')}</div>
           </div>
         ) : (
-          data.map((item, index) => (
-            <div
-              key={index}
-              className={`group flex items-center h-10 px-3 border-b border-gray-100 dark:border-gray-800 transition-colors gap-0 ${
-                !item.enabled ? 'opacity-40' : 'hover:bg-gray-50 dark:hover:bg-gray-800/30'
-              }`}
-            >
-              {/* Enable Toggle */}
-              <div className="w-12 flex justify-center flex-shrink-0">
-                <button
-                  onClick={() => toggleEnabled(index)}
-                  className={`w-4 h-4 rounded flex items-center justify-center transition-colors ${
-                    item.enabled
-                      ? 'bg-blue-500 text-white'
-                      : 'border-2 border-gray-300 dark:border-gray-600'
-                  }`}
-                >
-                  {item.enabled && <Check className="w-3 h-3" />}
-                </button>
+          <div className="space-y-1">
+            {data.map((item, index) => (
+              <div
+                key={index}
+                className={`group flex items-center h-11 px-1 rounded-lg transition-all ${
+                  !item.enabled
+                    ? 'opacity-40'
+                    : 'hover:bg-gray-50 dark:hover:bg-white/[0.04]'
+                }`}
+              >
+                {/* Enable Toggle */}
+                <div className="w-[40px] flex-shrink-0 flex justify-center">
+                  <button
+                    onClick={() => toggleEnabled(index)}
+                    className={`w-[18px] h-[18px] rounded-md flex items-center justify-center transition-all ${
+                      item.enabled
+                        ? 'bg-blue-500 text-white shadow-sm shadow-blue-500/25'
+                        : 'border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    }`}
+                  >
+                    {item.enabled && <Check className="w-3 h-3" strokeWidth={3} />}
+                  </button>
+                </div>
+
+                {/* Key Input */}
+                <div className="flex-1 min-w-0 px-2">
+                  <input
+                    type="text"
+                    value={item.key}
+                    onChange={(e) => updateRow(index, 'key', e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && item.key && addRow()}
+                    placeholder={keyPlaceholder}
+                    spellCheck={false}
+                    className="w-full px-3 py-1.5 text-sm font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
+                    title={item.key}
+                    list={suggestions.length > 0 ? `kv-suggestions-${keyPlaceholder}` : undefined}
+                  />
+                </div>
+
+                {/* Value Input */}
+                <div className="flex-1 min-w-0 px-2">
+                  <VariableInput
+                    value={item.value}
+                    onChange={(val) => updateRow(index, 'value', val)}
+                    onKeyDown={(e) => e.key === 'Enter' && addRow()}
+                    placeholder={valuePlaceholder}
+                    variables={variables}
+                    className="w-full px-3 py-1.5 text-sm font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
+                    title={item.value}
+                  />
+                </div>
+
+                {/* Delete Button */}
+                <div className="w-[72px] flex-shrink-0 flex justify-end pr-1">
+                  <button
+                    onClick={() => removeRow(index)}
+                    className="w-7 h-7 flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                    title={t('common.delete')}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-
-              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
-
-              {/* Key Input */}
-              <div className="flex-1 min-w-0 min-w-[80px] overflow-hidden pl-3 flex-shrink-0">
-                <input
-                  type="text"
-                  value={item.key}
-                  onChange={(e) => updateRow(index, 'key', e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && item.key && addRow()}
-                  placeholder={keyPlaceholder}
-                  spellCheck={false}
-                  className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
-                  title={item.key}
-                  list={suggestions.length > 0 ? `kv-suggestions-${keyPlaceholder}` : undefined}
-                />
-              </div>
-
-              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
-
-              {/* Value Input */}
-              <div className="flex-1 min-w-0 min-w-[80px] overflow-hidden pl-3 flex-shrink-0">
-                <VariableInput
-                  value={item.value}
-                  onChange={(val) => updateRow(index, 'value', val)}
-                  onKeyDown={(e) => e.key === 'Enter' && addRow()}
-                  placeholder={valuePlaceholder}
-                  variables={variables}
-                  className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
-                  title={item.value}
-                />
-              </div>
-
-              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
-
-              {/* Delete Button */}
-              <div className="w-14 flex justify-center flex-shrink-0">
-                <button
-                  onClick={() => removeRow(index)}
-                  className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                  title={t('common.delete')}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
 
       {/* Add Button */}
-      <div className="flex-shrink-0 h-11 px-3 flex items-center border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+      <div className="flex-shrink-0 h-11 px-5 flex items-center border-t border-gray-100 dark:border-gray-800">
         <button
           onClick={addRow}
-          className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded transition-colors"
+          className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           {t('api.addParam')}
@@ -1851,7 +1847,7 @@ function TypeSelect({
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-2 py-0.5 text-xs rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors min-w-[52px] justify-between"
+        className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:border-gray-300 dark:hover:border-gray-600 transition-all min-w-[56px] justify-between"
       >
         <span className={type === 'file' ? 'text-orange-500' : 'text-gray-600 dark:text-gray-400'}>
           {type === 'file' ? t('api.file') : t('api.text')}
@@ -1861,7 +1857,7 @@ function TypeSelect({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-20 overflow-hidden py-0.5">
+          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden py-1 min-w-[72px]">
             <button
               onClick={() => { onChange('text'); setOpen(false) }}
               className={`w-full px-3 py-1.5 text-xs text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'text' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
@@ -2050,74 +2046,68 @@ function BodyEditor({
       {/* Editor - Form Data / X-WWW-Form-URLEncoded */}
       {(body.type === 'form-data' || body.type === 'x-www-form-urlencoded') && (
         <>
-          {/* Table Header */}
-          <div className="flex-shrink-0 h-10 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 flex items-center px-3 select-none gap-0">
-            <div className="w-12 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">{t('api.enabled')}</div>
-            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-            <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{t('api.fieldName')}</div>
-            {isMultipart && (
-              <>
-                <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-                <div className="w-16 text-xs text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center whitespace-nowrap">{t('common.type')}</div>
-              </>
-            )}
-            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-            <div className="flex-1 min-w-[80px] text-xs text-gray-600 dark:text-gray-300 font-semibold pl-3 whitespace-nowrap">{t('common.value')}</div>
-            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-            <div className="w-14 text-xs text-gray-500 text-center pl-2 whitespace-nowrap">
-              {totalCount > 0 && <span>{enabledCount}/{totalCount}</span>}
+          {/* Scrollable table */}
+          <div className="flex-1 overflow-auto min-h-0 px-3 pt-2">
+            {/* Table Header */}
+            <div className="sticky top-0 z-10 flex items-center h-9 px-1 mb-1 bg-white dark:bg-gray-900 select-none">
+              <div className="w-[40px] flex-shrink-0" />
+              <div className="flex-1 min-w-0 px-2 text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('api.fieldName')}</div>
+              {isMultipart && (
+                <div className="w-[72px] flex-shrink-0 px-2 text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('common.type')}</div>
+              )}
+              <div className="flex-1 min-w-0 px-2 text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('common.value')}</div>
+              <div className="w-[72px] flex-shrink-0 text-[11px] font-medium text-gray-400 dark:text-gray-500 text-right pr-1">
+                {totalCount > 0 && <span>{enabledCount}/{totalCount}</span>}
+              </div>
             </div>
-          </div>
 
-          {/* Table Body */}
-          <div className="flex-1 overflow-auto min-h-0">
+            {/* Table Body */}
             {totalCount === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 py-8">
+              <div className="flex flex-col items-center justify-center h-32 text-gray-400 dark:text-gray-500">
                 <div className="text-sm">{t('api.noFormFields')}</div>
               </div>
             ) : (
-              formData.map((field, index) => (
-                <div
-                  key={index}
-                  className={`group flex items-center h-10 px-3 border-b border-gray-100 dark:border-gray-800 transition-colors gap-0 ${
-                    !field.enabled ? 'opacity-40' : 'hover:bg-gray-50 dark:hover:bg-gray-800/30'
-                  }`}
-                >
-                  {/* Enable Toggle */}
-                  <div className="w-12 flex justify-center flex-shrink-0">
-                    <button
-                      onClick={() => updateFormField(index, 'enabled', !field.enabled)}
-                      className={`w-4 h-4 rounded flex items-center justify-center transition-colors ${
-                        field.enabled
-                          ? 'bg-blue-500 text-white'
-                          : 'border-2 border-gray-300 dark:border-gray-600'
-                      }`}
-                    >
-                      {field.enabled && <Check className="w-3 h-3" />}
-                    </button>
-                  </div>
+              <div className="space-y-1">
+                {formData.map((field, index) => (
+                  <div
+                    key={index}
+                    className={`group flex items-center h-11 px-1 rounded-lg transition-all ${
+                      !field.enabled
+                        ? 'opacity-40'
+                        : 'hover:bg-gray-50 dark:hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    {/* Enable Toggle */}
+                    <div className="w-[40px] flex-shrink-0 flex justify-center">
+                      <button
+                        onClick={() => updateFormField(index, 'enabled', !field.enabled)}
+                        className={`w-[18px] h-[18px] rounded-md flex items-center justify-center transition-all ${
+                          field.enabled
+                            ? 'bg-blue-500 text-white shadow-sm shadow-blue-500/25'
+                            : 'border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                        }`}
+                      >
+                        {field.enabled && <Check className="w-3 h-3" strokeWidth={3} />}
+                      </button>
+                    </div>
 
-                  <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+                    {/* Key Input */}
+                    <div className="flex-1 min-w-0 px-2">
+                      <input
+                        type="text"
+                        value={field.key}
+                        onChange={(e) => updateFormField(index, 'key', e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && field.key && addFormField()}
+                        placeholder={t('api.fieldName')}
+                        spellCheck={false}
+                        className="w-full px-3 py-1.5 text-sm font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
+                        title={field.key}
+                      />
+                    </div>
 
-                  {/* Key Input */}
-                  <div className="flex-1 min-w-[80px] overflow-hidden pl-3 flex-shrink-0">
-                    <input
-                      type="text"
-                      value={field.key}
-                      onChange={(e) => updateFormField(index, 'key', e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && field.key && addFormField()}
-                      placeholder={t('api.fieldName')}
-                      spellCheck={false}
-                      className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
-                      title={field.key}
-                    />
-                  </div>
-
-                  {/* Type Select (only for form-data) */}
-                  {isMultipart && (
-                    <>
-                      <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
-                      <div className="w-16 flex justify-center flex-shrink-0">
+                    {/* Type Select (only for form-data) */}
+                    {isMultipart && (
+                      <div className="w-[72px] flex-shrink-0 px-2 flex justify-center">
                         <TypeSelect
                           type={field.type}
                           onChange={(newType) => {
@@ -2127,83 +2117,79 @@ function BodyEditor({
                           }}
                         />
                       </div>
-                    </>
-                  )}
-
-                  <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
-
-                  {/* Value Input */}
-                  <div className="flex-1 min-w-[80px] overflow-hidden pl-3 flex-shrink-0">
-                    {(!isMultipart || field.type === 'text') ? (
-                      <input
-                        type="text"
-                        value={field.value || ''}
-                        onChange={(e) => updateFormField(index, 'value', e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addFormField()}
-                        placeholder={t('common.value')}
-                        spellCheck={false}
-                        className="w-full px-2 py-1 text-sm font-mono bg-transparent border-0 focus:outline-none rounded text-gray-800 dark:text-gray-200 truncate"
-                        title={field.value}
-                      />
-                    ) : (
-                      <div className="flex items-center min-w-0">
-                        <input
-                          type="file"
-                          onChange={(e) => handleFileSelect(index, e)}
-                          className="hidden"
-                          id={`file-${index}`}
-                        />
-                        <button
-                          onClick={() => document.getElementById(`file-${index}`)?.click()}
-                          className="flex-1 text-left px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors truncate"
-                          title={field.fileName}
-                        >
-                          {field.fileName ? (
-                            <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1 truncate">
-                              <Paperclip className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">{field.fileName}</span>
-                            </span>
-                          ) : (
-                            <span className="text-gray-500 dark:text-gray-400">{t('api.selectFile')}</span>
-                          )}
-                        </button>
-                        {field.fileName && (
-                          <button
-                            onClick={() => {
-                              const newFormData = [...formData]
-                              newFormData[index] = { ...newFormData[index], value: '', fileName: '', fileType: '' }
-                              onChange({ ...body, formData: newFormData })
-                            }}
-                            className="p-1 text-gray-400 hover:text-red-500 rounded flex-shrink-0"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
                     )}
-                  </div>
 
-                  <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+                    {/* Value Input */}
+                    <div className="flex-1 min-w-0 px-2">
+                      {(!isMultipart || field.type === 'text') ? (
+                        <input
+                          type="text"
+                          value={field.value || ''}
+                          onChange={(e) => updateFormField(index, 'value', e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && addFormField()}
+                          placeholder={t('common.value')}
+                          spellCheck={false}
+                          className="w-full px-3 py-1.5 text-sm font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
+                          title={field.value}
+                        />
+                      ) : (
+                        <div className="flex items-center min-w-0">
+                          <input
+                            type="file"
+                            onChange={(e) => handleFileSelect(index, e)}
+                            className="hidden"
+                            id={`file-${index}`}
+                          />
+                          <button
+                            onClick={() => document.getElementById(`file-${index}`)?.click()}
+                            className="flex-1 text-left px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all truncate"
+                            title={field.fileName}
+                          >
+                            {field.fileName ? (
+                              <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1.5 truncate">
+                                <Paperclip className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{field.fileName}</span>
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 dark:text-gray-500">{t('api.selectFile')}</span>
+                            )}
+                          </button>
+                          {field.fileName && (
+                            <button
+                              onClick={() => {
+                                const newFormData = [...formData]
+                                newFormData[index] = { ...newFormData[index], value: '', fileName: '', fileType: '' }
+                                onChange({ ...body, formData: newFormData })
+                              }}
+                              className="p-1 text-gray-300 hover:text-red-500 rounded-md flex-shrink-0 ml-1"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Delete Button */}
-                  <div className="w-14 flex justify-center flex-shrink-0">
-                    <button
-                      onClick={() => removeFormField(index)}
-                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Delete Button */}
+                    <div className="w-[72px] flex-shrink-0 flex justify-end pr-1">
+                      <button
+                        onClick={() => removeFormField(index)}
+                        className="w-7 h-7 flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
 
           {/* Add Button */}
-          <div className="flex-shrink-0 h-11 px-3 flex items-center border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex-shrink-0 h-11 px-5 flex items-center border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={addFormField}
-              className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded transition-colors"
+              className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />
               {t('api.addField')}
@@ -2226,7 +2212,7 @@ function BodyEditor({
             className="px-6 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl flex items-center gap-3 text-lg font-medium transition-all shadow-lg hover:shadow-xl"
           >
             <Upload className="w-6 h-6" />
-            选择{t('api.file')}
+            {t('api.selectFile')}
           </button>
           {body.binaryFile && (
             <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
