@@ -65,7 +65,7 @@ interface ApiActions {
   deleteFolder: (id: string) => void
 
   // 请求管理（项目内）
-  saveRequest: (request: Omit<SavedRequest, 'id' | 'createdAt' | 'updatedAt'>, folderId: string | null) => void
+  saveRequest: (request: Omit<SavedRequest, 'id' | 'createdAt' | 'updatedAt'>, folderId: string | null) => { success: boolean; limitReached?: boolean; requestId?: string }
   updateSavedRequest: (id: string, request: Partial<SavedRequest>) => void
   deleteSavedRequest: (id: string) => void
   moveRequest: (id: string, folderId: string | null) => boolean
@@ -84,8 +84,9 @@ interface ApiActions {
   // Tab管理
   openTabs: string[]
   activeTabId: string | null
-  openTab: (requestId: string) => void
+  openTab: (requestId: string) => { success: boolean; limitReached?: boolean }
   closeTab: (requestId: string) => void
+  closeAllTabs: () => void
   switchTab: (requestId: string) => void
 
   // 当前请求
@@ -121,6 +122,9 @@ interface ApiActions {
 
 // 历史记录最大条数
 const MAX_HISTORY = 30
+
+// Tab 最大数量
+const MAX_OPEN_TABS = 20
 
 // ==================== 辅助函数 ====================
 
@@ -276,6 +280,7 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
   activeProjectId: DEFAULT_PROJECT.id,
   history: [],
   currentRequest: createDefaultRequest(),
+  originalRequest: null, // 请求打开时的原始状态
   currentResponse: null,
   currentError: null,
   loading: false,
@@ -350,22 +355,34 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
   }),
 
   // Tab管理
-  openTab: (requestId) => set((state) => {
+  openTab: (requestId) => {
+    const state = get()
     const project = state.getActiveProject()
-    if (!project) return state
+    if (!project) return { success: false }
 
+    // 如果已经在 openTabs 中，直接切换
     if (state.openTabs.includes(requestId)) {
       const request = findRequest(project.requestFolders, project.rootRequests, requestId)
-      return { activeTabId: requestId, currentRequest: request || state.currentRequest }
+      set({ activeTabId: requestId, currentRequest: request || state.currentRequest, originalRequest: request ? { ...request } : null })
+      return { success: true }
     }
+
+    // 检查 Tab 数量限制
+    if (state.openTabs.length >= MAX_OPEN_TABS) {
+      return { success: false, limitReached: true }
+    }
+
     const request = findRequest(project.requestFolders, project.rootRequests, requestId)
-    if (!request) return state
-    return {
+    if (!request) return { success: false }
+
+    set({
       openTabs: [...state.openTabs, requestId],
       activeTabId: requestId,
-      currentRequest: request
-    }
-  }),
+      currentRequest: request,
+      originalRequest: { ...request }
+    })
+    return { success: true }
+  },
 
   closeTab: (requestId) => set((state) => {
     const project = state.getActiveProject()
@@ -386,6 +403,12 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
       }
     }
     return { openTabs: newTabs }
+  }),
+
+  closeAllTabs: () => set({
+    openTabs: [],
+    activeTabId: null,
+    currentRequest: createDefaultRequest()
   }),
 
   switchTab: (requestId) => set((state) => {
@@ -565,7 +588,12 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
   saveRequest: (request, folderId) => {
     const state = get()
     const project = state.getActiveProject()
-    if (!project) return
+    if (!project) return { success: false }
+
+    // 检查 Tab 数量限制
+    if (state.openTabs.length >= MAX_OPEN_TABS) {
+      return { success: false, limitReached: true }
+    }
 
     const newId = crypto.randomUUID()
     const newRequest: SavedRequest = {
@@ -597,8 +625,11 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
         openTabs: [...s.openTabs, newId],
         activeTabId: newId,
         currentRequest: newRequest,
+        originalRequest: { ...newRequest },
       }
     })
+
+    return { success: true, requestId: newId }
   },
 
   updateSavedRequest: (id, request) => set((state) => {

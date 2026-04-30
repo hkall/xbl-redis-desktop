@@ -24,6 +24,12 @@ import {
   FolderOpen,
   Bolt,
   Info,
+  FileText,
+  Clipboard,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Search,
+  Terminal,
 } from 'lucide-react'
 import { useDbStore, createDefaultConnection } from '@/store/dbStore'
 import { useTranslation } from '@/store/i18nStore'
@@ -316,6 +322,7 @@ function ConnectionItem({
   onSelect,
   expanded,
   onToggle,
+  onContextMenu,
 }: {
   connection: DbConnection
   isActive: boolean
@@ -327,6 +334,7 @@ function ConnectionItem({
   onSelect: () => void
   expanded?: boolean
   onToggle?: () => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }) {
   const { t } = useTranslation()
   const [showMenu, setShowMenu] = useState(false)
@@ -347,6 +355,7 @@ function ConnectionItem({
           : 'hover:bg-gray-100 dark:hover:bg-gray-700'
       }`}
       onClick={onSelect}
+      onContextMenu={onContextMenu}
     >
       {/* 展开/折叠按钮（仅已连接时显示） */}
       {connection.connected && (
@@ -592,11 +601,127 @@ export default function DbSidebar() {
   const [loadedDatabases, setLoadedDatabases] = useState<Set<string>>(new Set())
   const [tableSearchText, setTableSearchText] = useState<Record<string, string>>({}) // 每个数据库的表搜索文本
 
+  // 右键菜单状态
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+    type: 'connection' | 'database' | 'table' | 'view' | 'procedure' | 'trigger'
+    connectionId: string
+    database?: string
+    itemName?: string
+  } | null>(null)
+
   const activeConnection = connections.find((c) => c.id === activeConnectionId)
 
   // 分类展开状态 - 使用 expandedNodes 存储
   const isCategoryExpanded = (categoryKey: string) => expandedNodes.has(categoryKey)
   const toggleCategory = (categoryKey: string) => toggleNodeExpand(categoryKey)
+
+  // 右键菜单处理
+  const handleContextMenu = (e: React.MouseEvent, type: 'connection' | 'database' | 'table' | 'view' | 'procedure' | 'trigger', connectionId: string, database?: string, itemName?: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const x = Math.min(e.clientX, window.innerWidth - 180)
+    const y = Math.min(e.clientY, window.innerHeight - 300)
+    setContextMenu({ x, y, type, connectionId, database, itemName })
+  }
+
+  const closeContextMenu = () => setContextMenu(null)
+
+  // 生成 SQL
+  const generateSelectSql = (tableName: string) => {
+    const sql = `SELECT * FROM \`${tableName}\` LIMIT 100;`
+    createQueryTab(`${tableName} - SELECT`, sql)
+    closeContextMenu()
+  }
+
+  const generateInsertSql = (tableName: string) => {
+    const sql = `INSERT INTO \`${tableName}\` (\n  -- columns\n) VALUES (\n  -- values\n);`
+    createQueryTab(`${tableName} - INSERT`, sql)
+    closeContextMenu()
+  }
+
+  const generateUpdateSql = (tableName: string) => {
+    const sql = `UPDATE \`${tableName}\` SET\n  -- column = value\nWHERE -- condition;`
+    createQueryTab(`${tableName} - UPDATE`, sql)
+    closeContextMenu()
+  }
+
+  const generateDeleteSql = (tableName: string) => {
+    const sql = `DELETE FROM \`${tableName}\` WHERE -- condition;`
+    createQueryTab(`${tableName} - DELETE`, sql)
+    closeContextMenu()
+  }
+
+  // 复制表名
+  const copyTableName = (tableName: string) => {
+    navigator.clipboard.writeText(tableName)
+    closeContextMenu()
+  }
+
+  // 刷新表列表
+  const refreshTableList = async (connectionId: string, database: string) => {
+    await loadTables(connectionId, database)
+    closeContextMenu()
+  }
+
+  // 刷新数据库列表
+  const refreshDatabaseList = async (connectionId: string) => {
+    await loadDatabases(connectionId)
+    closeContextMenu()
+  }
+
+  // 为表新建查询
+  const newQueryForTable = (connectionId: string, database: string, tableName: string) => {
+    setActiveDatabase(database)
+    const sql = `SELECT * FROM \`${tableName}\` LIMIT 100;`
+    createQueryTab(`Query - ${tableName}`, sql)
+    closeContextMenu()
+  }
+
+  // 生成CREATE TABLE语句
+  const generateCreateTableSql = async (connectionId: string, database: string, tableName: string) => {
+    setActiveDatabase(database)
+    try {
+      const result = await window.electronAPI?.dbGetTableStructure?.(connectionId, database, tableName)
+      if (result?.success && result.createStatement) {
+        createQueryTab(`${tableName} - DDL`, result.createStatement)
+      } else {
+        createQueryTab(`${tableName} - DDL`, `-- Failed to get CREATE TABLE for ${tableName}`)
+      }
+    } catch {
+      createQueryTab(`${tableName} - DDL`, `-- Error getting CREATE TABLE for ${tableName}`)
+    }
+    closeContextMenu()
+  }
+
+  // 删除表
+  const dropTable = (connectionId: string, database: string, tableName: string) => {
+    if (!confirm(t('database.dropTableConfirm', { name: tableName }))) return
+    setActiveDatabase(database)
+    const sql = `DROP TABLE \`${tableName}\`;`
+    if (window.electronAPI?.dbExecuteQuery) {
+      window.electronAPI.dbExecuteQuery(connectionId, sql, database).then((result: any) => {
+        if (result?.success) {
+          loadTables(connectionId, database)
+        } else {
+          alert(result?.error || t('common.error'))
+        }
+      })
+    }
+    closeContextMenu()
+  }
+
+  // 新建表
+  const newTableForDatabase = (connectionId: string, database: string) => {
+    setActiveDatabase(database)
+    const sql = `CREATE TABLE \`new_table\` (\n  \`id\` INT NOT NULL AUTO_INCREMENT,\n  \`name\` VARCHAR(255) NOT NULL,\n  \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (\`id\`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
+    createQueryTab('New Table', sql)
+    closeContextMenu()
+  }
+
+  // 全局搜索状态
+  const [globalSearchText, setGlobalSearchText] = useState('')
 
   // 默认展开所有分类
   useEffect(() => {
@@ -724,17 +849,50 @@ export default function DbSidebar() {
           <Database className="w-4 h-4 text-orange-500" />
           <span className="text-sm font-medium text-gray-900 dark:text-white">{t('database.databases')}</span>
         </div>
-        <button
-          onClick={() => {
-            setEditingConnection(null)
-            setShowConnectionDialog(true)
-          }}
-          className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"
-          title={t('database.newConnection')}
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => createQueryTab('New Query', '')}
+            className="p-1.5 text-gray-400 hover:text-green-500 transition-colors"
+            title={t('database.newQuery')}
+          >
+            <Terminal className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              setEditingConnection(null)
+              setShowConnectionDialog(true)
+            }}
+            className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"
+            title={t('database.newConnection')}
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
       </div>
+
+      {/* 全局搜索框 */}
+      {connections.some(c => c.connected) && (
+        <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <input
+              type="text"
+              placeholder={t('database.searchTables')}
+              value={globalSearchText}
+              onChange={(e) => setGlobalSearchText(e.target.value)}
+              className="w-full pl-7 pr-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500"
+            />
+            {globalSearchText && (
+              <button
+                onClick={() => setGlobalSearchText('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 连接列表 */}
       <div className="flex-1 overflow-y-auto p-2">
@@ -782,6 +940,7 @@ export default function DbSidebar() {
                         loadDatabases(connection.id)
                       }
                     }}
+                    onContextMenu={(e) => handleContextMenu(e, 'connection', connection.id)}
                   />
 
                   {/* 已连接且展开时显示数据库树 */}
@@ -819,6 +978,7 @@ export default function DbSidebar() {
                                   loadTables(connection.id, db.name)
                                 }
                               }}
+                              onContextMenu={(e) => handleContextMenu(e, 'database', connection.id, db.name)}
                             >
                               {isLoadingThisDb ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400 flex-shrink-0" />
@@ -881,7 +1041,7 @@ export default function DbSidebar() {
                                   <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
                                 ) : dbTables.length > 0 ? (
                                   (() => {
-                                    const searchText = (tableSearchText[`${connection.id}:${db.name}`] || '').toLowerCase()
+                                    const searchText = (tableSearchText[`${connection.id}:${db.name}`] || globalSearchText).toLowerCase()
                                     const filteredTables = searchText
                                       ? dbTables.filter(t => t.name.toLowerCase().includes(searchText))
                                       : dbTables
@@ -897,6 +1057,7 @@ export default function DbSidebar() {
                                         setActiveDatabase(db.name)
                                         openTableTab(connection.id, db.name, table.name, 'TABLE')
                                       }}
+                                      onContextMenu={(e) => handleContextMenu(e, 'table', connection.id, db.name, table.name)}
                                     >
                                       <Table className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
                                       <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{table.name}</span>
@@ -943,6 +1104,7 @@ export default function DbSidebar() {
                                         setActiveDatabase(db.name)
                                         openTableTab(connection.id, db.name, view.name, 'VIEW')
                                       }}
+                                      onContextMenu={(e) => handleContextMenu(e, 'view', connection.id, db.name, view.name)}
                                     >
                                       <Eye className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
                                       <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{view.name}</span>
@@ -1110,6 +1272,171 @@ export default function DbSidebar() {
         onConfirm={handleDeleteConnection}
         onCancel={() => setDeleteConfirm({ isOpen: false, id: '', name: '' })}
       />
+
+      {/* 右键菜单 */}
+      {contextMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={closeContextMenu} />
+          <div
+            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-[160px]"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+          >
+            {/* 表节点右键菜单 */}
+            {contextMenu.type === 'table' && (
+              <>
+                <button
+                  onClick={() => { setActiveDatabase(contextMenu.database!); openTableTab(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!, 'TABLE'); closeContextMenu() }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Table className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                  {t('database.openData')}
+                </button>
+                <button
+                  onClick={() => newQueryForTable(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Terminal className="w-4 h-4 text-green-500" />
+                  {t('database.newQueryForTable')}
+                </button>
+                <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
+                <button
+                  onClick={() => generateSelectSql(contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  {t('database.generateSelectSql')}
+                </button>
+                <button
+                  onClick={() => generateInsertSql(contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  {t('database.generateInsertSql')}
+                </button>
+                <button
+                  onClick={() => generateUpdateSql(contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  {t('database.generateUpdateSql')}
+                </button>
+                <button
+                  onClick={() => generateDeleteSql(contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  {t('database.generateDeleteSql')}
+                </button>
+                <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
+                <button
+                  onClick={() => generateCreateTableSql(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  {t('database.openStructure')}
+                </button>
+                <button
+                  onClick={() => dropTable(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {t('database.dropTable')}
+                </button>
+                <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
+                <button
+                  onClick={() => copyTableName(contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Clipboard className="w-4 h-4 text-gray-500" />
+                  {t('database.copyTableName')}
+                </button>
+              </>
+            )}
+
+            {/* 视图节点右键菜单 */}
+            {contextMenu.type === 'view' && (
+              <>
+                <button
+                  onClick={() => { setActiveDatabase(contextMenu.database!); openTableTab(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!, 'VIEW'); closeContextMenu() }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Eye className="w-4 h-4 text-purple-500" />
+                  {t('database.openData')}
+                </button>
+                <button
+                  onClick={() => generateSelectSql(contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  {t('database.generateSelectSql')}
+                </button>
+                <button
+                  onClick={() => copyTableName(contextMenu.itemName!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Clipboard className="w-4 h-4 text-gray-500" />
+                  {t('database.copyTableName')}
+                </button>
+              </>
+            )}
+
+            {/* 数据库节点右键菜单 */}
+            {contextMenu.type === 'database' && (
+              <>
+                <button
+                  onClick={() => refreshTableList(contextMenu.connectionId, contextMenu.database!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <RefreshCw className="w-4 h-4 text-gray-500" />
+                  {t('database.refreshTableList')}
+                </button>
+                <button
+                  onClick={() => { createQueryTab(`Query - ${contextMenu.database}`, ''); closeContextMenu() }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Terminal className="w-4 h-4 text-green-500" />
+                  {t('database.newQuery')}
+                </button>
+                <button
+                  onClick={() => newTableForDatabase(contextMenu.connectionId, contextMenu.database!)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Plus className="w-4 h-4 text-blue-500" />
+                  {t('database.newTable')}
+                </button>
+              </>
+            )}
+
+            {/* 连接节点右键菜单 */}
+            {contextMenu.type === 'connection' && (
+              <>
+                <button
+                  onClick={() => { createQueryTab('New Query', ''); closeContextMenu() }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Terminal className="w-4 h-4 text-green-500" />
+                  {t('database.newQuery')}
+                </button>
+                <button
+                  onClick={() => refreshDatabaseList(contextMenu.connectionId)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <RefreshCw className="w-4 h-4 text-gray-500" />
+                  {t('database.refreshConnection')}
+                </button>
+                <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
+                <button
+                  onClick={() => disconnect(contextMenu.connectionId)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <XCircle className="w-4 h-4" />
+                  {t('database.disconnect')}
+                </button>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -173,6 +173,7 @@ export default function ApiWorkspace() {
   const { t } = useTranslation()
   const {
     currentRequest,
+    originalRequest,
     currentResponse,
     currentError,
     loading,
@@ -190,6 +191,7 @@ export default function ApiWorkspace() {
     activeTabId,
     openTab,
     closeTab,
+    closeAllTabs,
     switchTab,
     // 定位请求
     setLocateRequestId,
@@ -251,6 +253,19 @@ export default function ApiWorkspace() {
   const activeEnv = environments.find(e => e.id === activeEnvId)
   const activeVariables = activeEnv?.variables.filter(v => v.enabled) || []
 
+  // 计算是否有未保存的修改
+  const hasUnsavedChanges = React.useMemo(() => {
+    if (!currentRequest || !originalRequest) return false
+    // 比较 method, url, headers, params, body, auth
+    const fieldsToCompare = ['method', 'url', 'headers', 'params', 'body', 'auth'] as const
+    for (const field of fieldsToCompare) {
+      const current = JSON.stringify(currentRequest[field])
+      const original = JSON.stringify(originalRequest[field])
+      if (current !== original) return true
+    }
+    return false
+  }, [currentRequest, originalRequest])
+
   // 检查同一目录下是否存在同名请求
   const checkNameExists = (name: string, folderId: string | null, excludeId?: string): boolean => {
     const checkInFolder = (folders: typeof requestFolders, requests: typeof rootRequests): boolean => {
@@ -260,14 +275,14 @@ export default function ApiWorkspace() {
           if (r.id !== excludeId && r.name === name) return true
         }
       }
-      // 检查{t('api.file')}夹中的请求
+      // 检查文件夹中的请求
       for (const f of folders) {
         if (folderId === null || f.id === folderId) {
           for (const c of f.children) {
             if ('method' in c && c.id !== excludeId && c.name === name) return true
           }
         }
-        // 递归检查子{t('api.file')}夹
+        // 递归检查子文件夹
         const childFolders = f.children.filter(isFolder) as RequestFolder[]
         if (childFolders.length > 0) {
           if (checkInFolder(childFolders, [])) return true
@@ -278,7 +293,7 @@ export default function ApiWorkspace() {
     return checkInFolder(requestFolders, rootRequests)
   }
 
-  // {t('common.cancel')}请求
+  // 取消请求
   const handleCancel = () => {
     // Electron 环境
     if (window.electronAPI?.httpCancel && currentRequestIdRef.current) {
@@ -301,11 +316,11 @@ export default function ApiWorkspace() {
       return
     }
 
-    // 创建 AbortController 用于{t('common.cancel')}请求
+    // 创建 AbortController 用于取消请求
     const controller = new AbortController()
     abortControllerRef.current = controller
 
-    // 获取当前项目的{t('api.environmentVariables')}（确保是最新的）
+    // 获取当前项目的环境变量（确保是最新的）
     const state = useApiStore.getState()
     const project = state.getActiveProject()
     const activeEnv = project?.environments.find(e => e.id === project.activeEnvId)
@@ -389,7 +404,7 @@ export default function ApiWorkspace() {
             const formData = new FormData()
             ;(currentRequest.body.formData || []).filter(f => f.enabled && f.key).forEach(f => {
               if (f.type === 'file' && f.value) {
-                // 从base64恢复{t('api.file')}
+                // 从base64恢复文件
                 const byteCharacters = atob(f.value)
                 const byteNumbers = new Array(byteCharacters.length)
                 for (let i = 0; i < byteCharacters.length; i++) {
@@ -457,7 +472,7 @@ export default function ApiWorkspace() {
       let result
 
       if (window.electronAPI?.httpRequest) {
-        // Electron环境 - 生成 requestId 用于{t('common.cancel')}
+        // Electron环境 - 生成 requestId 用于取消请求
         const requestId = crypto.randomUUID()
         currentRequestIdRef.current = requestId
 
@@ -473,7 +488,7 @@ export default function ApiWorkspace() {
             const entries: { key: string; value: string; type: string; fileName?: string }[] = []
             requestBody.forEach((value, key) => {
               if (value instanceof File) {
-                // 需要异步读取{t('api.file')}，这里简化处理
+                // 需要异步读取文件，这里简化处理
                 entries.push({ key, value: '', type: 'file', fileName: value.name })
               } else {
                 entries.push({ key, value, type: 'text' })
@@ -570,7 +585,7 @@ export default function ApiWorkspace() {
         })
       }
     } catch (error) {
-      // 处理{t('common.cancel')}请求
+      // 处理取消请求
       if (error instanceof Error && error.name === 'AbortError') {
         setCurrentError(t('api.requestCancelled'))
       } else {
@@ -722,7 +737,7 @@ export default function ApiWorkspace() {
     setSaveFolderId(null)
   }
 
-  // 获取所有{t('api.file')}夹选项（扁平化）
+  // 获取所有文件夹选项（扁平化）
   const getFolderOptions = (folders: RequestFolder[], depth = 0): { id: string | null; name: string; depth: number }[] => {
     const result: { id: string | null; name: string; depth: number }[] = [
       { id: null, name: t('api.rootDirectory'), depth: 0 }
@@ -842,6 +857,11 @@ export default function ApiWorkspace() {
                   onClick={() => switchTab(tabId)}
                   title={tabRequest.name || t('api.unnamed')}
                 >
+                  {/* 未保存标记 */}
+                  {isActive && hasUnsavedChanges && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" title={t('api.unsavedChanges')} />
+                  )}
+
                   {/* 方法标签 */}
                   <span className={`text-xs font-semibold mr-2 ${METHOD_TAB_COLORS[tabRequest.method]}`}>
                     {tabRequest.method}
@@ -890,13 +910,26 @@ export default function ApiWorkspace() {
                 body: { type: 'none', content: '', formData: [] },
                 auth: { type: 'none' },
               }
-              saveRequest(newRequest, null)
+              const result = saveRequest(newRequest, null)
+              if (!result.success && result.limitReached) {
+                showToast(t('api.tabLimitReached'), 'error')
+              }
             }}
             className="flex-shrink-0 px-2 h-full text-gray-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors"
             title={t('api.newRequest')}
           >
             <Plus className="w-4 h-4" />
           </button>
+          {/* 关闭所有按钮 */}
+          {openTabs.length > 0 && (
+            <button
+              onClick={() => closeAllTabs()}
+              className="flex-shrink-0 px-2 h-full text-gray-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors"
+              title={t('api.closeAllTabs')}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     )
@@ -1420,6 +1453,7 @@ function VariableInput({
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   title?: string
 }) {
+  const { t } = useTranslation()
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hoveredVar, setHoveredVar] = useState<{ key: string; value: string; rect: DOMRect } | null>(null)
@@ -1428,7 +1462,7 @@ function VariableInput({
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // 解析{t('api.text')}中的变量位置
+  // 解析文本中的变量位置
   const parseVariables = (text: string) => {
     const regex = /\{\{(\w+)\}\}/g
     const parts: { text: string; isVar: boolean; varKey?: string }[] = []
@@ -1669,6 +1703,7 @@ function KeyValueEditor({
   suggestions?: string[]
   variables?: { key: string; value: string }[]
 }) {
+  const { t } = useTranslation()
   const updateRow = (index: number, field: 'key' | 'value' | 'enabled', value: string | boolean) => {
     const newData = [...data]
     newData[index] = { ...newData[index], [field]: value }
@@ -1809,6 +1844,7 @@ function TypeSelect({
   type: 'text' | 'file'
   onChange: (type: 'text' | 'file') => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   return (
@@ -1904,7 +1940,7 @@ function BodyEditor({
     onChange({ ...body, formData: newFormData })
   }
 
-  // 处理{t('api.file')}选择
+  // 处理文件选择
   const handleFileSelect = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -1924,7 +1960,7 @@ function BodyEditor({
     reader.readAsDataURL(file)
   }
 
-  // 处理binary{t('api.file')}选择
+  // 处理binary文件选择
   const handleBinaryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -2230,11 +2266,12 @@ function AuthEditor({
   onChange: (auth: AuthConfig) => void
   variables?: { key: string; value: string }[]
 }) {
+  const { t: translate } = useTranslation()
   const authTypes: { type: AuthConfig['type']; label: string; desc: string }[] = [
-    { type: 'none', label: t('api.noAuth'), desc: t('api.noAuthDesc') },
-    { type: 'bearer', label: t('api.bearerAuth'), desc: 'OAuth 2.0 / JWT' },
-    { type: 'basic', label: t('api.basicAuth'), desc: t('api.basicAuthDesc') },
-    { type: 'api-key', label: t('api.apiKeyAuth'), desc: t('api.apiKeyDesc') },
+    { type: 'none', label: translate('api.noAuth'), desc: translate('api.noAuthDesc') },
+    { type: 'bearer', label: translate('api.bearerAuth'), desc: 'OAuth 2.0 / JWT' },
+    { type: 'basic', label: translate('api.basicAuth'), desc: translate('api.basicAuthDesc') },
+    { type: 'api-key', label: translate('api.apiKeyAuth'), desc: translate('api.apiKeyDesc') },
   ]
 
   return (
@@ -2263,11 +2300,11 @@ function AuthEditor({
       {auth.type === 'bearer' && (
         <div className="space-y-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.tokenLabel')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.tokenLabel')}</label>
             <VariableInput
               value={auth.token || ''}
               onChange={(token) => onChange({ ...auth, token })}
-              placeholder={t('api.enterBearerToken')}
+              placeholder={translate('api.enterBearerToken')}
               variables={variables}
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -2278,21 +2315,21 @@ function AuthEditor({
       {auth.type === 'basic' && (
         <div className="space-y-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('database.username')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('database.username')}</label>
             <VariableInput
               value={auth.username || ''}
               onChange={(username) => onChange({ ...auth, username })}
-              placeholder={t('database.username')}
+              placeholder={translate('database.username')}
               variables={variables}
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('database.password')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('database.password')}</label>
             <VariableInput
               value={auth.password || ''}
               onChange={(password) => onChange({ ...auth, password })}
-              placeholder={t('database.password')}
+              placeholder={translate('database.password')}
               variables={variables}
               type="password"
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -2304,7 +2341,7 @@ function AuthEditor({
       {auth.type === 'api-key' && (
         <div className="space-y-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.keyLabel')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.keyLabel')}</label>
             <input
               type="text"
               value={auth.apiKeyName || ''}
@@ -2314,17 +2351,17 @@ function AuthEditor({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.valueLabel')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.valueLabel')}</label>
             <VariableInput
               value={auth.apiKeyValue || ''}
               onChange={(apiKeyValue) => onChange({ ...auth, apiKeyValue })}
-              placeholder={t('api.apiKeyPlaceholder')}
+              placeholder={translate('api.apiKeyPlaceholder')}
               variables={variables}
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.addTo')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.addTo')}</label>
             <div className="flex gap-1.5 select-none">
               {['header', 'query'].map((loc) => (
                 <button
@@ -2336,7 +2373,7 @@ function AuthEditor({
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
-                  {loc === 'header' ? t('api.headerLabel') : t('api.queryParam')}
+                  {loc === 'header' ? translate('api.headerLabel') : translate('api.queryParam')}
                 </button>
               ))}
             </div>
@@ -2361,12 +2398,26 @@ function ResponsePanel({
   onCopy: () => void
   copied: boolean
 }) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'body' | 'headers'>('body')
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  }
+
+  // 响应大小颜色指示 (阈值: 100KB)
+  const getSizeColor = (bytes: number) => {
+    if (bytes < 100 * 1024) return 'text-emerald-500' // < 100KB: 绿色
+    if (bytes < 1024 * 1024) return 'text-amber-500' // 100KB - 1MB: 黄色
+    return 'text-red-500' // > 1MB: 红色
+  }
+
+  const getSizeWarning = (bytes: number) => {
+    if (bytes >= 1024 * 1024) return t('api.largeResponseWarning')
+    if (bytes >= 100 * 1024) return t('api.mediumResponseWarning')
+    return null
   }
 
   // 格式化JSON
@@ -2378,6 +2429,68 @@ function ResponsePanel({
     }
   }
 
+  // 分块渲染阈值 (100KB)
+  const CHUNK_THRESHOLD = 100 * 1024
+  const CHUNK_LINES = 100 // 每块显示 100 行
+
+  // 是否需要分块渲染
+  const needsChunkedRender = response?.size && response.size >= CHUNK_THRESHOLD
+
+  // 分块渲染状态
+  const [visibleLines, setVisibleLines] = useState(CHUNK_LINES)
+
+  // 重置分块状态当响应变化时
+  useEffect(() => {
+    setVisibleLines(CHUNK_LINES)
+  }, [response?.body])
+
+  // 获取分块内容
+  const getChunkedContent = (formatted: string) => {
+    const lines = formatted.split('\n')
+    return {
+      visible: lines.slice(0, visibleLines).join('\n'),
+      totalLines: lines.length,
+      remaining: lines.length - visibleLines,
+    }
+  }
+
+  // 响应时间颜色指示
+  const getTimeColor = (ms: number) => {
+    if (ms < 200) return 'text-emerald-500' // < 200ms: 快
+    if (ms < 1000) return 'text-blue-500' // 200ms - 1s: 正常
+    if (ms < 5000) return 'text-amber-500' // 1s - 5s: 较慢
+    return 'text-red-500' // > 5s: 慢
+  }
+
+  const getTimeLabel = (ms: number) => {
+    if (ms < 200) return t('api.responseFast')
+    if (ms < 1000) return t('api.responseNormal')
+    if (ms < 5000) return t('api.responseSlow')
+    return t('api.responseVerySlow')
+  }
+
+  // 响应类型识别
+  const getResponseType = (headers: Record<string, string>) => {
+    const contentType = headers['content-type'] || headers['Content-Type'] || ''
+    if (contentType.includes('application/json')) return 'json'
+    if (contentType.includes('application/xml') || contentType.includes('text/xml')) return 'xml'
+    if (contentType.includes('text/html')) return 'html'
+    if (contentType.includes('image/')) return 'image'
+    if (contentType.includes('application/pdf')) return 'pdf'
+    return 'other'
+  }
+
+  const responseTypeIcon = (type: string) => {
+    switch (type) {
+      case 'json': return <Braces className="w-3 h-3 text-blue-500" />
+      case 'xml': return <FileCode className="w-3 h-3 text-orange-500" />
+      case 'html': return <FileText className="w-3 h-3 text-purple-500" />
+      case 'image': return <HardDrive className="w-3 h-3 text-green-500" />
+      case 'pdf': return <FileText className="w-3 h-3 text-red-500" />
+      default: return <FileText className="w-3 h-3 text-gray-500" />
+    }
+  }
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -2386,17 +2499,23 @@ function ResponsePanel({
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('api.responseLabel')}</span>
           {response && (
             <div className="flex items-center gap-3 text-xs">
+              {/* 状态码 */}
               <span className={`font-bold ${getStatusColor(response.status)}`}>
                 {response.status} {response.statusText}
               </span>
-              <span className="text-gray-500 flex items-center gap-1">
+              {/* 响应时间 */}
+              <span className={`flex items-center gap-1 ${getTimeColor(response.time)}`} title={getTimeLabel(response.time)}>
                 <Clock className="w-3 h-3" />
                 {response.time}ms
               </span>
-              <span className="text-gray-500 flex items-center gap-1">
+              {/* 响应大小 */}
+              <span className={`flex items-center gap-1 ${getSizeColor(response.size)}`} title={getSizeWarning(response.size) || ''}>
                 <HardDrive className="w-3 h-3" />
                 {formatSize(response.size)}
+                {response.size >= 100 * 1024 && <span className="text-xs opacity-70">⚠</span>}
               </span>
+              {/* 响应类型 */}
+              {responseTypeIcon(getResponseType(response.headers))}
             </div>
           )}
         </div>
@@ -2462,9 +2581,42 @@ function ResponsePanel({
 
             {/* Tab Content */}
             {activeTab === 'body' ? (
-              <pre className="p-3 text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
-                {formatJson(response.body)}
-              </pre>
+              needsChunkedRender ? (
+                <div className="flex flex-col h-full">
+                  <div className="px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <span>⚠</span>
+                    <span>{t('api.largeResponseHint')}</span>
+                  </div>
+                  <pre className="flex-1 p-3 text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
+                    {(() => {
+                      const formatted = formatJson(response.body)
+                      const chunked = getChunkedContent(formatted)
+                      return chunked.visible
+                    })()}
+                  </pre>
+                  {(() => {
+                    const formatted = formatJson(response.body)
+                    const chunked = getChunkedContent(formatted)
+                    return chunked.remaining > 0 && (
+                      <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {t('api.linesRemaining', { count: chunked.remaining })}
+                        </span>
+                        <button
+                          onClick={() => setVisibleLines(prev => prev + CHUNK_LINES)}
+                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded flex items-center gap-1"
+                        >
+                          <span>{t('api.loadMore')}</span>
+                        </button>
+                      </div>
+                    )
+                  })()}
+                </div>
+              ) : (
+                <pre className="p-3 text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
+                  {formatJson(response.body)}
+                </pre>
+              )
             ) : (
               <div className="p-3">
                 <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">

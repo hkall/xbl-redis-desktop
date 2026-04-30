@@ -2,7 +2,7 @@ declare global {
   interface Window {
     electronAPI: {
       redisTest: (config: { host: string; port: number; password?: string; db: number }) => Promise<{ success: boolean; error?: string }>
-      redisConnect: (id: string, config: { host: string; port: number; password?: string; db: number }) => Promise<{ success: boolean; error?: string }>
+      redisConnect: (id: string, config: { host: string; port: number; password?: string; db: number }) => Promise<{ success: boolean; db?: number; error?: string }>
       redisDisconnect: (id: string) => Promise<{ success: boolean; error?: string }>
       redisScan: (id: string, pattern?: string, count?: number, cursor?: string) => Promise<{ success: boolean; data?: string[]; cursor?: string; error?: string }>
       redisKeyInfo: (id: string, key: string) => Promise<{ success: boolean; data?: any; error?: string }>
@@ -17,7 +17,7 @@ declare global {
       redisDbSize: (id: string) => Promise<{ success: boolean; data?: number; error?: string }>
       redisExecuteCommand: (id: string, command: string) => Promise<{ success: boolean; data?: any; encoding?: string; command?: string; error?: string }>
       redisGetServerInfo: (id: string, section?: string) => Promise<{ success: boolean; data?: any; error?: string }>
-      redisHscan: (id: string, key: string, cursor?: string, count?: number) => Promise<{ success: boolean; data?: any; error?: string }>
+      redisHscan: (id: string, key: string, cursor?: string, count?: number) => Promise<{ success: boolean; data?: any; cursor?: string; hasMore?: boolean; total?: number; error?: string }>
       javaDeserialize: (byteArray: number[]) => Promise<{ success: boolean; data?: any; error?: string }>
       createAndDownloadArchive: (options: { filename: string; files: { name: string; content: string }[] }) => Promise<{ success: boolean; error?: string }>
       saveConfig: (key: string, data: any) => Promise<{ success: boolean; error?: string }>

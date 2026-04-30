@@ -78,7 +78,7 @@ interface DbActions {
 
   // 查询执行
   executeQuery: (sql: string, database?: string) => Promise<QueryResult>
-  executeCurrentTab: () => Promise<QueryResult | null>
+  executeCurrentTab: (sqlOverride?: string) => Promise<QueryResult | null>
 
   // 历史管理
   addQueryHistory: (item: Omit<QueryHistory, 'id' | 'timestamp'>) => void
@@ -94,6 +94,15 @@ interface DbActions {
   setSidebarWidth: (width: number) => void
   toggleNodeExpand: (nodeId: string) => void
   setNodeExpanded: (nodeId: string, expanded: boolean) => void
+
+  // 元数据缓存
+  cacheDatabases: (connectionId: string, databases: DatabaseInfo[]) => void
+  cacheTables: (connectionId: string, database: string, tables: TableInfo[]) => void
+  cacheColumns: (connectionId: string, database: string, table: string, columns: ColumnInfo[]) => void
+  clearCache: (connectionId?: string) => void
+  getCachedDatabases: (connectionId: string) => DatabaseInfo[] | undefined
+  getCachedTables: (connectionId: string, database: string) => TableInfo[] | undefined
+  getCachedColumns: (connectionId: string, database: string, table: string) => ColumnInfo[] | undefined
 
   // 持久化
   loadFromStorage: () => Promise<void>
@@ -123,6 +132,10 @@ export const useDbStore = create<DbState & DbActions>()(
       connections: [],
       activeConnectionId: null,
       activeDatabase: null,
+      selectedTable: null,
+      selectedTableType: null,
+      selectedProcedure: null,
+      selectedTrigger: null,
       databasesCache: {},
       tablesCache: {},
       columnsCache: {},
@@ -619,11 +632,13 @@ export const useDbStore = create<DbState & DbActions>()(
         }
       },
 
-      executeCurrentTab: async () => {
+      executeCurrentTab: async (sqlOverride?: string) => {
         const tab = get().getActiveTab()
-        if (!tab || !tab.sql.trim()) return null
+        if (!tab) return null
+        const sql = sqlOverride || tab.sql
+        if (!sql.trim()) return null
 
-        const result = await get().executeQuery(tab.sql)
+        const result = await get().executeQuery(sql)
         get().updateTabResult(tab.id, result)
         return result
       },

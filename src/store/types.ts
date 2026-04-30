@@ -160,6 +160,9 @@ export interface ApiState {
   // 当前编辑的请求
   currentRequest: SavedRequest | null
 
+  // 请求打开时的原始状态（用于检测未保存修改）
+  originalRequest: SavedRequest | null
+
   // 当前响应
   currentResponse: ResponseData | null
 

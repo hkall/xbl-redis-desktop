@@ -482,6 +482,37 @@ export default {
 
     // Environment
     environmentVariables: '环境变量',
+
+    // 搜索过滤
+    filters: '筛选',
+    httpMethod: 'HTTP方法',
+    clearAllFilters: '清除所有筛选',
+    dateRange: '日期范围',
+    startDate: '开始日期',
+    endDate: '结束日期',
+    activeFilters: '已启用筛选',
+
+    // 响应大小警告
+    largeResponseWarning: '响应过大，建议分块查看',
+    mediumResponseWarning: '响应较大，可能影响性能',
+
+    // Tab 管理
+    tabLimitReached: 'Tab 数量已达上限（20），请先关闭一些 Tab',
+    closeAllTabs: '关闭所有 Tab',
+
+    // 分块渲染
+    largeResponseHint: '响应过大，已启用分块渲染',
+    linesRemaining: '还有 {count} 行未显示',
+    loadMore: '加载更多',
+
+    // 未保存提醒
+    unsavedChanges: '未保存的修改',
+
+    // 响应时间指示
+    responseFast: '响应快',
+    responseNormal: '响应正常',
+    responseSlow: '响应较慢',
+    responseVerySlow: '响应很慢',
   },
 
   // 数据库模块
@@ -621,8 +652,77 @@ export default {
     exportCsv: '导出CSV',
     exportJson: '导出JSON',
     exportSql: '导出SQL',
-    tableNameForExport: '导出表名',
-    enterTableName: '请输入表名',
+
+    // 篮选和排序
+    filter: '筛选',
+    clearFilter: '清除筛选',
+    filterBy: '按{column}筛选',
+    contains: '包含',
+    notContains: '不包含',
+    equals: '等于',
+    notEquals: '不等于',
+    startsWith: '开头是',
+    endsWith: '结尾是',
+    greaterThan: '大于',
+    lessThan: '小于',
+    between: '介于',
+    isNull: '为空',
+    isNotNull: '不为空',
+    sortAsc: '升序',
+    sortDesc: '降序',
+    sortNone: '无排序',
+    multiSort: '多列排序',
+    sortPriority: '排序优先级',
+    shiftClickMultiSort: 'Shift+点击添加排序',
+    autoFitWidth: '自动调整宽度',
+    resetAllWidths: '重置所有列宽',
+    lockColumn: '锁定列',
+
+    // 右键菜单
+    newQueryForTable: '为表新建查询',
+    openData: '打开数据',
+    openStructure: '打开结构',
+    generateSelectSql: '生成 SELECT SQL',
+    generateInsertSql: '生成 INSERT SQL',
+    generateUpdateSql: '生成 UPDATE SQL',
+    generateDeleteSql: '生成 DELETE SQL',
+    copyTableName: '复制表名',
+    exportTableData: '导出表数据',
+    importTableData: '导入表数据',
+    refreshTableList: '刷新表列表',
+    newTable: '新建表',
+    dropTable: '删除表',
+    dropTableConfirm: '确定要删除表 "{name}" 吗？此操作不可撤销。',
+    truncateTable: '清空表',
+    truncateTableConfirm: '确定要清空表 "{name}" 的所有数据吗？',
+    dropDatabase: '删除数据库',
+    dropDatabaseConfirm: '确定要删除数据库 "{name}" 吗？此操作不可撤销。',
+    refreshDatabase: '刷新数据库',
+    disconnect: '断开连接',
+    duplicateConnection: '复制连接',
+    refreshConnection: '刷新连接',
+
+    confirmSaveChanges: '确认修改',
+    confirmSaveChangesHint: '以下SQL语句将被执行，请确认后再保存：',
+    saveChangesFirst: '请先保存未完成的修改',
+
+    // 快捷操作栏
+    quickActions: '快捷操作',
+    importData: '导入数据',
+    exportData: '导出数据',
+    runSqlFile: '执行SQL文件',
+
+    // DataGrid增强
+    columnsHidden: '列已隐藏',
+    showAllColumns: '显示全部',
+    copyCellValue: '复制单元格值',
+    filterByValue: '按此值筛选',
+    setNull: '设为NULL',
+    copyAsInsert: '复制为INSERT',
+    executeSelection: '执行选中',
+
+    // 错误提示
+    notNullCannotHaveDefaultNull: 'NOT NULL 列不能设置 DEFAULT NULL',
   },
 
   // 更新

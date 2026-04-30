@@ -363,9 +363,9 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
         // Load all data for searching
         let allFields: HashField[] = [...fields]
         let currentCursor = cursor
-        let hasMoreData = hasMore
+        let hasMoreData: boolean = hasMore
 
-        while (hasMoreData) {
+        while (hasMoreData === true) {
           const result = await window.electronAPI.redisHscan(
             connectionId!,
             keyName,
@@ -381,7 +381,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
             }))
             allFields = [...allFields, ...newFields]
             currentCursor = result.cursor
-            hasMoreData = result.hasMore
+            hasMoreData = Boolean(result.hasMore)
           } else {
             break
           }

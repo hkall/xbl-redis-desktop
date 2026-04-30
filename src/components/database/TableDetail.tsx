@@ -18,6 +18,8 @@ import {
   Check,
   Square,
   CheckSquare,
+  Edit2,
+  Save,
 } from 'lucide-react'
 import { useTranslation } from '@/store/i18nStore'
 
@@ -81,6 +83,11 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
   const [primaryKeyColumns, setPrimaryKeyColumns] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  // SQL 确认弹窗状态
+  const [showSqlConfirm, setShowSqlConfirm] = useState(false)
+  const [pendingSql, setPendingSql] = useState<string>('')
+  const [pendingUpdateData, setPendingUpdateData] = useState<{ primaryKey: Record<string, any>; updateData: Record<string, any> } | null>(null)
 
   // 新增行 ref
   const newRowRef = useRef<HTMLTableRowElement>(null)
@@ -185,29 +192,67 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
     }
   }
 
-  // 保存单元格编辑
-  const saveCellEdit = async () => {
-    if (!editingCell) return
-    setSaving(true)
-    try {
-      const { rowIndex, colIndex } = editingCell
-      const col = columns[colIndex]
-      const primaryKey = getPrimaryKeyForRow(rowIndex)
-      if (!primaryKey) {
-        setEditingCell(null)
-        setSaving(false)
-        return
+  // 生成 UPDATE SQL 语句
+  const generateUpdateSql = (tableName: string, primaryKey: Record<string, any>, updateData: Record<string, any>): string => {
+    const setClauses = Object.entries(updateData).map(([col, val]) => {
+      if (val === null) {
+        return `\`${col}\` = NULL`
+      } else if (typeof val === 'number') {
+        return `\`${col}\` = ${val}`
+      } else {
+        const escaped = String(val).replace(/'/g, "''")
+        return `\`${col}\` = '${escaped}'`
       }
+    }).join(',\n  ')
 
-      // 准备更新数据
-      const updateData: Record<string, any> = {}
-      updateData[col] = editValue === '' ? null : editValue
+    const whereClauses = Object.entries(primaryKey).map(([col, val]) => {
+      if (val === null) {
+        return `\`${col}\` IS NULL`
+      } else if (typeof val === 'number') {
+        return `\`${col}\` = ${val}`
+      } else {
+        const escaped = String(val).replace(/'/g, "''")
+        return `\`${col}\` = '${escaped}'`
+      }
+    }).join(' AND ')
 
+    return `UPDATE \`${tableName}\` SET\n  ${setClauses}\nWHERE ${whereClauses};`
+  }
+
+  // 保存单元格编辑 - 先显示SQL确认弹窗
+  const saveCellEdit = () => {
+    if (!editingCell) return
+    const { rowIndex, colIndex } = editingCell
+    const col = columns[colIndex]
+    const primaryKey = getPrimaryKeyForRow(rowIndex)
+    if (!primaryKey) {
+      setEditingCell(null)
+      return
+    }
+
+    // 准备更新数据
+    const updateData: Record<string, any> = {}
+    updateData[col] = editValue === '' ? null : editValue
+
+    // 生成SQL语句
+    const sql = generateUpdateSql(table, primaryKey, updateData)
+    setPendingSql(sql)
+    setPendingUpdateData({ primaryKey, updateData })
+    setShowSqlConfirm(true)
+  }
+
+  // 确认执行SQL更新
+  const confirmSqlUpdate = async () => {
+    if (!pendingUpdateData) return
+    setSaving(true)
+    setShowSqlConfirm(false)
+    try {
       if (window.electronAPI?.dbUpdateRow) {
-        const result = await window.electronAPI.dbUpdateRow(connectionId, database, table, primaryKey, updateData)
+        const result = await window.electronAPI.dbUpdateRow(connectionId, database, table, pendingUpdateData.primaryKey, pendingUpdateData.updateData)
         if (result.success) {
           setEditingCell(null)
           setEditValue('')
+          setPendingUpdateData(null)
           loadData()
         } else {
           alert(result.error || t('common.error'))
@@ -218,6 +263,13 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
     } finally {
       setSaving(false)
     }
+  }
+
+  // 取消SQL确认弹窗
+  const cancelSqlConfirm = () => {
+    setShowSqlConfirm(false)
+    setPendingSql('')
+    setPendingUpdateData(null)
   }
 
   // 取消单元格编辑
@@ -719,6 +771,35 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
           </div>
         </div>
       )}
+
+      {/* SQL确认弹窗 */}
+      {showSqlConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xl mx-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t('database.confirmSaveChanges')}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('database.confirmSaveChangesHint')}</p>
+            <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre font-mono border border-gray-200 dark:border-gray-700 mb-4">
+              {pendingSql}
+            </pre>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={cancelSqlConfirm}
+                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={confirmSqlUpdate}
+                disabled={saving}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
+              >
+                {saving && <Loader2 className="w-3 h-3 animate-spin" />}
+                {t('common.confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -740,14 +821,51 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ type: 'column' | 'index'; index: number | string } | null>(null)
 
+  // 未保存修改状态 - 跟踪每个列的修改
+  const [columnChanges, setColumnChanges] = useState<Map<number, Partial<any>>>(new Map()) // rowIndex -> changes
+  const [newColumns, setNewColumns] = useState<any[]>([]) // 新添加的列
+  const [deletedColumns, setDeletedColumns] = useState<Set<number>>(new Set()) // 待删除的列索引
+  const [deletedIndexes, setDeletedIndexes] = useState<Set<string>>(new Set()) // 待删除的索引名
+
+  // SQL 确认弹窗状态
+  const [showSqlConfirm, setShowSqlConfirm] = useState(false)
+  const [pendingSql, setPendingSql] = useState<string>('')
+  const [pendingSqlList, setPendingSqlList] = useState<string[]>([])
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
+
+  // 计算是否有未保存的修改
+  const hasUnsavedChanges = columnChanges.size > 0 || newColumns.length > 0 || deletedColumns.size > 0 || deletedIndexes.size > 0
+
+  // 跟踪nullable列的pending修改
+  const [nullableChanges, setNullableChanges] = useState<Map<number, boolean>>(new Map()) // rowIndex -> nullable value
+
   // refs
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // 获取显示用的列数据（合并修改）
+  const getDisplayColumns = () => {
+    const displayColumns = [...columns]
+    // 应用修改
+    columnChanges.forEach((changes, rowIndex) => {
+      if (displayColumns[rowIndex]) {
+        displayColumns[rowIndex] = { ...displayColumns[rowIndex], ...changes }
+      }
+    })
+    // 移除待删除的列
+    const filteredColumns = displayColumns.filter((_, i) => !deletedColumns.has(i))
+    // 添加新列
+    return [...filteredColumns, ...newColumns]
+  }
 
   const loadStructure = async () => {
     setLoading(true)
     setError(null)
     setEditingCell(null)
+    setColumnChanges(new Map())
+    setNewColumns([])
+    setDeletedColumns(new Set())
+    setDeletedIndexes(new Set())
     try {
       if (window.electronAPI?.dbGetTableStructure) {
         const result = await window.electronAPI.dbGetTableStructure(connectionId, database, table)
@@ -772,10 +890,11 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
 
   // 双击单元格进入编辑
   const startEditCell = (rowIndex: number, field: string) => {
-    const col = columns[rowIndex]
+    const displayColumns = getDisplayColumns()
+    const col = displayColumns[rowIndex]
     if (!col) return
 
-    // 获取当前值
+    // 获取当前值（优先使用pending的值）
     let value = ''
     if (field === 'name') value = col.name || ''
     else if (field === 'type') value = col.type || ''
@@ -786,163 +905,247 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
     setEditingCell({ rowIndex, field })
   }
 
-  // 保存单元格编辑
-  const saveCellEdit = async () => {
+  // 保存单元格编辑 - 只更新pending状态，不直接执行SQL
+  const saveCellEdit = () => {
     if (!editingCell) return
     const { rowIndex, field } = editingCell
-    const col = columns[rowIndex]
+    const displayColumns = getDisplayColumns()
+    const col = displayColumns[rowIndex]
     if (!col) return
 
-    // 构建新的列数据
-    const newData = {
-      name: field === 'name' ? editValue : col.name,
-      type: field === 'type' ? editValue : col.type,
-      nullable: col.nullable,
-      defaultValue: field === 'defaultValue' ? editValue : col.defaultValue,
-      extra: col.extra || '',
-      comment: field === 'comment' ? editValue : col.comment,
-    }
+    // 检查是否是新列
+    const isNewColumn = col.isNew && rowIndex >= columns.length - deletedColumns.size
 
-    // 检查是否有变化
-    const hasChange =
-      (field === 'name' && newData.name !== col.name) ||
-      (field === 'type' && newData.type !== col.type) ||
-      (field === 'defaultValue' && newData.defaultValue !== col.defaultValue) ||
-      (field === 'comment' && newData.comment !== col.comment)
-
-    if (!hasChange) {
-      setEditingCell(null)
-      setEditValue('')
-      return
-    }
-
-    // 新列必须有名称
-    if (col.isNew && !newData.name?.trim()) {
-      setEditingCell(null)
-      setEditValue('')
-      return
-    }
-
-    setSaving(true)
-    try {
-      let sql: string
-
-      if (col.isNew) {
-        sql = `ALTER TABLE \`${table}\` ADD COLUMN \`${newData.name}\` ${newData.type}`
-        if (!newData.nullable) sql += ' NOT NULL'
-        if (newData.defaultValue) {
-          if (newData.defaultValue.toUpperCase() === 'NULL') {
-            sql += ' DEFAULT NULL'
-          } else {
-            sql += ` DEFAULT '${newData.defaultValue}'`
-          }
-        }
-        if (newData.comment) sql += ` COMMENT '${newData.comment}'`
-      } else {
-        sql = `ALTER TABLE \`${table}\` MODIFY COLUMN \`${newData.name}\` ${newData.type}`
-        if (!newData.nullable) sql += ' NOT NULL'
-        if (newData.defaultValue) {
-          if (newData.defaultValue.toUpperCase() === 'NULL') {
-            sql += ' DEFAULT NULL'
-          } else {
-            sql += ` DEFAULT '${newData.defaultValue}'`
-          }
-        }
-        if (newData.extra) sql += ` ${newData.extra}`
-        if (newData.comment) sql += ` COMMENT '${newData.comment}'`
+    // 构建修改数据
+    const changes: Partial<any> = {}
+    if (field === 'name') changes.name = editValue
+    else if (field === 'type') changes.type = editValue
+    else if (field === 'defaultValue') {
+      // 验证：NOT NULL列不能设置DEFAULT NULL
+      const isNullable = col.nullable
+      const valueIsNull = editValue === '' || editValue.toUpperCase() === 'NULL'
+      if (!isNullable && valueIsNull) {
+        alert(t('database.notNullCannotHaveDefaultNull'))
+        return
       }
-
-      if (window.electronAPI?.dbExecuteQuery) {
-        const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
-        if (result.success) {
-          setEditingCell(null)
-          setEditValue('')
-          loadStructure()
-        } else {
-          alert(result.error || t('common.error'))
-        }
-      }
-    } catch (e) {
-      alert(e instanceof Error ? e.message : t('common.error'))
-    } finally {
-      setSaving(false)
+      changes.defaultValue = editValue === '' ? null : editValue
     }
-  }
+    else if (field === 'comment') changes.comment = editValue
 
-  // 取消编辑（不删除新列）
-  const cancelCellEdit = () => {
+    if (isNewColumn) {
+      // 更新newColumns数组
+      const newColIndex = rowIndex - (columns.length - deletedColumns.size)
+      setNewColumns(prev => {
+        const updated = [...prev]
+        if (updated[newColIndex]) {
+          updated[newColIndex] = { ...updated[newColIndex], ...changes }
+        }
+        return updated
+      })
+    } else {
+      // 更新columnChanges
+      const originalRowIndex = columns.findIndex(c => c.name === col.name)
+      if (originalRowIndex >= 0) {
+        setColumnChanges(prev => {
+          const updated = new Map(prev)
+          const existing = updated.get(originalRowIndex) || {}
+          updated.set(originalRowIndex, { ...existing, ...changes })
+          return updated
+        })
+      }
+    }
+
     setEditingCell(null)
     setEditValue('')
   }
 
-  // 切换Nullable
-  const toggleNullable = async (rowIndex: number) => {
-    const col = columns[rowIndex]
+  // 切换Nullable - 只更新pending状态，不直接执行SQL
+  const toggleNullable = (rowIndex: number) => {
+    const displayColumns = getDisplayColumns()
+    const col = displayColumns[rowIndex]
     if (!col) return
 
-    // 构建新的列数据
-    const newData = {
-      name: col.name,
-      type: col.type,
-      nullable: !col.nullable,
-      defaultValue: col.defaultValue,
-      extra: col.extra || '',
-      comment: col.comment,
+    const newNullable = !col.nullable
+
+    // 检查是否是新列
+    const isNewColumn = col.isNew && rowIndex >= columns.length - deletedColumns.size
+
+    if (isNewColumn) {
+      // 更新newColumns数组
+      const newColIndex = rowIndex - (columns.length - deletedColumns.size)
+      setNewColumns(prev => {
+        const updated = [...prev]
+        if (updated[newColIndex]) {
+          updated[newColIndex] = { ...updated[newColIndex], nullable: newNullable }
+        }
+        return updated
+      })
+    } else {
+      // 更新columnChanges和nullableChanges
+      const originalRowIndex = columns.findIndex(c => c.name === col.name)
+      if (originalRowIndex >= 0) {
+        setColumnChanges(prev => {
+          const updated = new Map(prev)
+          const existing = updated.get(originalRowIndex) || {}
+          updated.set(originalRowIndex, { ...existing, nullable: newNullable })
+          return updated
+        })
+        setNullableChanges(prev => {
+          const updated = new Map(prev)
+          updated.set(rowIndex, newNullable)
+          return updated
+        })
+      }
     }
+  }
 
-    setSaving(true)
-    try {
-      let sql: string
+  // 生成修改列的SQL
+  const generateAlterColumnSql = (col: any, newData: any): string => {
+    let sql: string
+    const isNullable = newData.nullable ?? col.nullable
+    // 判断nullable是否被改变：从nullable变成NOT NULL
+    const nullableChangedToNotNull = col.nullable && !isNullable
 
-      if (col.isNew) {
-        sql = `ALTER TABLE \`${table}\` ADD COLUMN \`${newData.name}\` ${newData.type}`
-        if (!newData.nullable) sql += ' NOT NULL'
-        if (newData.defaultValue) {
-          if (String(newData.defaultValue).toUpperCase() === 'NULL') {
-            sql += ' DEFAULT NULL'
-          } else {
-            sql += ` DEFAULT '${newData.defaultValue}'`
-          }
-        }
-        if (newData.comment) sql += ` COMMENT '${newData.comment}'`
-      } else {
-        sql = `ALTER TABLE \`${table}\` MODIFY COLUMN \`${newData.name}\` ${newData.type}`
-        if (!newData.nullable) sql += ' NOT NULL'
-        if (newData.defaultValue) {
-          if (String(newData.defaultValue).toUpperCase() === 'NULL') {
-            sql += ' DEFAULT NULL'
-          } else {
-            sql += ` DEFAULT '${newData.defaultValue}'`
-          }
-        }
-        if (newData.extra) sql += ` ${newData.extra}`
-        if (newData.comment) sql += ` COMMENT '${newData.comment}'`
+    if (col.isNew) {
+      sql = `ALTER TABLE \`${table}\` ADD COLUMN \`${newData.name || col.name}\` ${newData.type || col.type}`
+      if (!isNullable) sql += ' NOT NULL'
+      // NOT NULL 列不能有 DEFAULT NULL
+      if (newData.defaultValue !== undefined && newData.defaultValue !== null) {
+        sql += ` DEFAULT '${newData.defaultValue}'`
+      } else if (!isNullable && newData.defaultValue === undefined) {
+        // NOT NULL 且没有设置默认值，不添加 DEFAULT（用户需要手动处理）
+      } else if (isNullable && newData.defaultValue === null) {
+        sql += ' DEFAULT NULL'
       }
-
-      if (window.electronAPI?.dbExecuteQuery) {
-        const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
-        if (result.success) {
-          loadStructure()
+      if (newData.comment || col.comment) sql += ` COMMENT '${newData.comment || col.comment}'`
+    } else {
+      sql = `ALTER TABLE \`${table}\` MODIFY COLUMN \`${newData.name || col.name}\` ${newData.type || col.type}`
+      if (!isNullable) sql += ' NOT NULL'
+      // 处理默认值：NOT NULL 列不能有 DEFAULT NULL
+      if (newData.defaultValue !== undefined) {
+        if (newData.defaultValue === null || String(newData.defaultValue).toUpperCase() === 'NULL') {
+          // 只有 nullable 列才能有 DEFAULT NULL
+          if (isNullable) {
+            sql += ' DEFAULT NULL'
+          }
+          // NOT NULL 列不添加 DEFAULT NULL，保持无默认值状态
         } else {
-          alert(result.error || t('common.error'))
+          sql += ` DEFAULT '${newData.defaultValue}'`
+        }
+      } else if (nullableChangedToNotNull && (col.defaultValue === null || String(col.defaultValue).toUpperCase() === 'NULL')) {
+        // 从nullable变为NOT NULL，且原默认值是NULL，则不保留默认值
+        // 不添加任何DEFAULT
+      } else if (col.defaultValue !== null && col.defaultValue !== undefined && String(col.defaultValue).toUpperCase() !== 'NULL') {
+        // 保留原有的非NULL默认值
+        sql += ` DEFAULT '${col.defaultValue}'`
+      } else if (isNullable && (col.defaultValue === null || col.defaultValue === undefined)) {
+        // nullable列且无默认值，保持DEFAULT NULL或不设置
+        if (col.defaultValue === null) {
+          sql += ' DEFAULT NULL'
         }
       }
+      if (col.extra) sql += ` ${col.extra}`
+      if (newData.comment !== undefined ? newData.comment : col.comment) sql += ` COMMENT '${newData.comment !== undefined ? newData.comment : col.comment}'`
+    }
+    return sql + ';'
+  }
+
+  // 批量保存所有修改
+  const saveAllChanges = () => {
+    const sqlList: string[] = []
+
+    // 收集删除列的SQL
+    deletedColumns.forEach(index => {
+      const col = columns[index]
+      if (col && !col.isNew) {
+        sqlList.push(`ALTER TABLE \`${table}\` DROP COLUMN \`${col.name}\`;`)
+      }
+    })
+
+    // 收集删除索引的SQL
+    deletedIndexes.forEach(name => {
+      if (name === 'PRIMARY') {
+        sqlList.push(`ALTER TABLE \`${table}\` DROP PRIMARY KEY;`)
+      } else {
+        sqlList.push(`ALTER TABLE \`${table}\` DROP INDEX \`${name}\`;`)
+      }
+    })
+
+    // 收集修改列的SQL
+    columnChanges.forEach((changes, rowIndex) => {
+      const col = columns[rowIndex]
+      if (col && !deletedColumns.has(rowIndex)) {
+        const newData = { ...col, ...changes }
+        sqlList.push(generateAlterColumnSql(col, newData))
+      }
+    })
+
+    // 收集新增列的SQL
+    newColumns.forEach(col => {
+      if (col.name?.trim()) {
+        sqlList.push(generateAlterColumnSql({ ...col, isNew: true }, col))
+      }
+    })
+
+    if (sqlList.length === 0) return
+
+    setPendingSql('')  // 清空单条SQL，确保显示列表
+    setPendingSqlList(sqlList)
+    // 用箭头函数包装，避免React把async函数当作updater执行
+    setPendingAction(() => async () => {
+      if (window.electronAPI?.dbExecuteQuery) {
+        for (const sql of sqlList) {
+          const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
+          if (!result.success) {
+            alert(`SQL执行失败: ${sql}\n错误: ${result.error}`)
+            return
+          }
+        }
+        loadStructure()
+      }
+    })
+    setShowSqlConfirm(true)
+  }
+
+  // 取消所有修改
+  const cancelAllChanges = () => {
+    setColumnChanges(new Map())
+    setNullableChanges(new Map())
+    setNewColumns([])
+    setDeletedColumns(new Set())
+    setDeletedIndexes(new Set())
+    setEditingCell(null)
+    setEditValue('')
+  }
+
+  // 确认执行SQL
+  const confirmSqlExecute = async () => {
+    if (!pendingAction) return
+    setSaving(true)
+    setShowSqlConfirm(false)
+    try {
+      await pendingAction()
     } catch (e) {
       alert(e instanceof Error ? e.message : t('common.error'))
     } finally {
       setSaving(false)
+      setPendingAction(null)
+      setPendingSqlList([])
     }
   }
 
-  // 键盘事件处理（和表数据一样）
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      saveCellEdit()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      cancelCellEdit()
-    }
+  // 取消SQL确认弹窗
+  const cancelSqlConfirm = () => {
+    setShowSqlConfirm(false)
+    setPendingSql('')
+    setPendingSqlList([])
+    setPendingAction(null)
+  }
+
+  // 取消编辑（不删除pending状态）
+  const cancelCellEdit = () => {
+    setEditingCell(null)
+    setEditValue('')
   }
 
   // 添加新列
@@ -963,8 +1166,8 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
     startEditCell(newColumns.length - 1, 'name')
   }
 
-  // 删除列
-  const handleDeleteColumn = async (index: number) => {
+  // 删除列 - 先显示SQL确认弹窗
+  const handleDeleteColumn = (index: number) => {
     const col = columns[index]
     if (!col || col.isNew) {
       // 直接移除新添加的行
@@ -973,9 +1176,11 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
       return
     }
 
-    setSaving(true)
-    try {
-      const sql = `ALTER TABLE \`${table}\` DROP COLUMN \`${col.name}\``
+    const sql = `ALTER TABLE \`${table}\` DROP COLUMN \`${col.name}\`;`
+    setPendingSql(sql)
+    setPendingSqlList([])  // 清空列表，确保显示单条SQL
+    // 用箭头函数包装，避免React把async函数当作updater执行
+    setPendingAction(() => async () => {
       if (window.electronAPI?.dbExecuteQuery) {
         const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
         if (result.success) {
@@ -985,21 +1190,22 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           alert(result.error || t('common.error'))
         }
       }
-    } catch (e) {
-      alert(e instanceof Error ? e.message : t('common.error'))
-    } finally {
-      setSaving(false)
-    }
+    })
+    setShowSqlConfirm(true)
   }
 
-  // 删除索引
-  const handleDeleteIndex = async (indexName: string) => {
-    setSaving(true)
-    try {
-      let sql = indexName === 'PRIMARY'
-        ? `ALTER TABLE \`${table}\` DROP PRIMARY KEY`
-        : `ALTER TABLE \`${table}\` DROP INDEX \`${indexName}\``
-
+  // 删除索引 - 先显示SQL确认弹窗
+  const handleDeleteIndex = (indexName: string) => {
+    let sql: string
+    if (indexName === 'PRIMARY') {
+      sql = `ALTER TABLE \`${table}\` DROP PRIMARY KEY;`
+    } else {
+      sql = `ALTER TABLE \`${table}\` DROP INDEX \`${indexName}\`;`
+    }
+    setPendingSql(sql)
+    setPendingSqlList([])  // 清空列表，确保显示单条SQL
+    // 用箭头函数包装，避免React把async函数当作updater执行
+    setPendingAction(() => async () => {
       if (window.electronAPI?.dbExecuteQuery) {
         const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
         if (result.success) {
@@ -1009,10 +1215,18 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           alert(result.error || t('common.error'))
         }
       }
-    } catch (e) {
-      alert(e instanceof Error ? e.message : t('common.error'))
-    } finally {
-      setSaving(false)
+    })
+    setShowSqlConfirm(true)
+  }
+
+  // 键盘事件处理（和表数据一样）
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveCellEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelCellEdit()
     }
   }
 
@@ -1076,10 +1290,10 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           </button>
 
           {/* 编辑时的保存/取消按钮 */}
-          {activeView === 'columns' && editingCell !== null && (
+          {activeView === 'columns' && (editingCell !== null || hasUnsavedChanges) && (
             <div className="flex items-center gap-1 ml-2">
               <button
-                onClick={saveCellEdit}
+                onClick={saveAllChanges}
                 disabled={saving}
                 className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50 transition-colors"
               >
@@ -1087,7 +1301,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                 {t('common.save')}
               </button>
               <button
-                onClick={cancelCellEdit}
+                onClick={cancelAllChanges}
                 className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded transition-colors"
               >
                 <X className="w-3 h-3" />
@@ -1097,7 +1311,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           )}
 
           {/* 添加列按钮 */}
-          {activeView === 'columns' && editingCell === null && (
+          {activeView === 'columns' && editingCell === null && !hasUnsavedChanges && (
             <button
               onClick={handleAddColumn}
               className="flex items-center gap-1 px-2 py-1 text-xs text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
@@ -1170,8 +1384,8 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                       ) : (
                         <div
                           onDoubleClick={() => startEditCell(i, 'name')}
-                          className="flex items-center gap-1.5 min-h-[28px] cursor-pointer"
-                          title={t('database.doubleClickToEdit')}
+                          className={`flex items-center gap-1.5 min-h-[28px] cursor-pointer ${hasUnsavedChanges ? 'opacity-50 pointer-events-none' : ''}`}
+                          title={hasUnsavedChanges ? t('database.saveChangesFirst') : t('database.doubleClickToEdit')}
                         >
                           {col.keyType === 'PRI' && <Key className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />}
                           {col.keyType === 'UNI' && <Hash className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
@@ -1194,8 +1408,8 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                       ) : (
                         <div
                           onDoubleClick={() => startEditCell(i, 'type')}
-                          className="min-h-[28px] cursor-pointer"
-                          title={t('database.doubleClickToEdit')}
+                          className={`min-h-[28px] cursor-pointer ${hasUnsavedChanges ? 'opacity-50 pointer-events-none' : ''}`}
+                          title={hasUnsavedChanges ? t('database.saveChangesFirst') : t('database.doubleClickToEdit')}
                         >
                           <span className="text-xs font-mono text-gray-600 dark:text-gray-400">{col.type}</span>
                         </div>
@@ -1207,13 +1421,17 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                         onClick={() => toggleNullable(i)}
                         disabled={saving}
                         className={`text-xs px-1.5 py-0.5 rounded inline-block cursor-pointer hover:opacity-80 transition-opacity ${
-                          col.nullable
+                          nullableChanges.has(i)
+                            ? (nullableChanges.get(i)
+                                ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                                : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400')
+                            : col.nullable
                             ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                             : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
                         }`}
                         title={t('database.clickToToggle')}
                       >
-                        {col.nullable ? 'Y' : 'N'}
+                        {nullableChanges.has(i) ? (nullableChanges.get(i) ? 'Y' : 'N') : (col.nullable ? 'Y' : 'N')}
                       </button>
                     </td>
                     {/* Key */}
@@ -1235,8 +1453,8 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                       ) : (
                         <div
                           onDoubleClick={() => startEditCell(i, 'defaultValue')}
-                          className="min-h-[28px] cursor-pointer"
-                          title={t('database.doubleClickToEdit')}
+                          className={`min-h-[28px] cursor-pointer ${hasUnsavedChanges ? 'opacity-50 pointer-events-none' : ''}`}
+                          title={hasUnsavedChanges ? t('database.saveChangesFirst') : t('database.doubleClickToEdit')}
                         >
                           <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
                             {col.defaultValue !== null ? String(col.defaultValue) : <span className="text-gray-400 italic">NULL</span>}
@@ -1263,8 +1481,8 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                       ) : (
                         <div
                           onDoubleClick={() => startEditCell(i, 'comment')}
-                          className="min-h-[28px] cursor-pointer"
-                          title={t('database.doubleClickToEdit')}
+                          className={`min-h-[28px] cursor-pointer ${hasUnsavedChanges ? 'opacity-50 pointer-events-none' : ''}`}
+                          title={hasUnsavedChanges ? t('database.saveChangesFirst') : t('database.doubleClickToEdit')}
                         >
                           <span className="text-xs text-gray-500 dark:text-gray-400 truncate" title={col.comment}>{col.comment || '-'}</span>
                         </div>
@@ -1274,7 +1492,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                     <td className="px-2 py-1.5 text-center border-b border-gray-100 dark:border-gray-800">
                       {!isNew && col.keyType !== 'PRI' && (
                         <button
-                          onClick={() => setShowDeleteConfirm({ type: 'column', index: i })}
+                          onClick={() => handleDeleteColumn(i)}
                           className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                           title={t('common.delete')}
                         >
@@ -1333,7 +1551,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                   <td className="px-2 py-1.5 text-center border-b border-gray-100 dark:border-gray-800">
                     {idx.name !== 'PRIMARY' && (
                       <button
-                        onClick={() => setShowDeleteConfirm({ type: 'index', index: idx.name })}
+                        onClick={() => handleDeleteIndex(idx.name)}
                         className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                         title={t('common.delete')}
                       >
@@ -1357,39 +1575,29 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
         )}
       </div>
 
-      {/* 删除确认对话框 */}
-      {showDeleteConfirm && (
+      {/* SQL确认弹窗 */}
+      {showSqlConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-sm mx-4">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-              {showDeleteConfirm.type === 'column'
-                ? t('database.confirmDeleteColumnTitle')
-                : t('database.confirmDeleteIndexTitle')}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              {showDeleteConfirm.type === 'column'
-                ? t('database.confirmDeleteColumnMsg', { name: columns[showDeleteConfirm.index as number]?.name })
-                : t('database.confirmDeleteIndexMsg', { name: showDeleteConfirm.index })}
-            </p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xl mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t('database.confirmSaveChanges')}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('database.confirmSaveChangesHint')}</p>
+            <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre font-mono border border-gray-200 dark:border-gray-700 mb-4">
+              {pendingSqlList.length > 0 ? pendingSqlList.join('\n\n') : pendingSql}
+            </pre>
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => setShowDeleteConfirm(null)}
-                className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                onClick={cancelSqlConfirm}
+                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 {t('common.cancel')}
               </button>
               <button
-                onClick={() => {
-                  if (showDeleteConfirm.type === 'column') {
-                    handleDeleteColumn(showDeleteConfirm.index as number)
-                  } else {
-                    handleDeleteIndex(showDeleteConfirm.index as string)
-                  }
-                }}
+                onClick={confirmSqlExecute}
                 disabled={saving}
-                className="px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded disabled:opacity-50"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
               >
-                {saving ? t('database.deleting') : t('common.delete')}
+                {saving && <Loader2 className="w-3 h-3 animate-spin" />}
+                {t('common.confirm')}
               </button>
             </div>
           </div>

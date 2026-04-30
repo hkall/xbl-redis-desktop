@@ -482,6 +482,37 @@ export default {
 
     // Environment
     environmentVariables: 'Environment Variables',
+
+    // Search filters
+    filters: 'Filters',
+    httpMethod: 'HTTP Method',
+    clearAllFilters: 'Clear all filters',
+    dateRange: 'Date Range',
+    startDate: 'Start date',
+    endDate: 'End date',
+    activeFilters: 'Active filters',
+
+    // Response size warning
+    largeResponseWarning: 'Large response, consider chunked viewing',
+    mediumResponseWarning: 'Medium response, may affect performance',
+
+    // Tab management
+    tabLimitReached: 'Tab limit reached (20), please close some tabs first',
+    closeAllTabs: 'Close all tabs',
+
+    // Chunked rendering
+    largeResponseHint: 'Large response, chunked rendering enabled',
+    linesRemaining: '{count} lines remaining',
+    loadMore: 'Load more',
+
+    // Unsaved changes
+    unsavedChanges: 'Unsaved changes',
+
+    // Response time indicator
+    responseFast: 'Fast response',
+    responseNormal: 'Normal response',
+    responseSlow: 'Slow response',
+    responseVerySlow: 'Very slow response',
   },
 
   // 数据库模块
@@ -621,8 +652,76 @@ export default {
     exportCsv: 'Export CSV',
     exportJson: 'Export JSON',
     exportSql: 'Export SQL',
-    tableNameForExport: 'Table name for export',
-    enterTableName: 'Enter table name',
+
+    // Filter and Sort
+    filter: 'Filter',
+    clearFilter: 'Clear Filter',
+    filterBy: 'Filter by {column}',
+    contains: 'Contains',
+    notContains: 'Not contains',
+    equals: 'Equals',
+    notEquals: 'Not equals',
+    startsWith: 'Starts with',
+    endsWith: 'Ends with',
+    greaterThan: 'Greater than',
+    lessThan: 'Less than',
+    between: 'Between',
+    isNull: 'Is NULL',
+    isNotNull: 'Is not NULL',
+    sortAsc: 'Sort Ascending',
+    sortDesc: 'Sort Descending',
+    sortNone: 'No Sort',
+    multiSort: 'Multi-column Sort',
+    sortPriority: 'Sort Priority',
+    shiftClickMultiSort: 'Shift+Click to add sort',
+    autoFitWidth: 'Auto-fit Width',
+    resetAllWidths: 'Reset All Widths',
+    lockColumn: 'Lock Column',
+
+    // Context Menu
+    newQueryForTable: 'New Query for Table',
+    openData: 'Open Data',
+    openStructure: 'Open Structure',
+    generateSelectSql: 'Generate SELECT SQL',
+    generateInsertSql: 'Generate INSERT SQL',
+    generateUpdateSql: 'Generate UPDATE SQL',
+    generateDeleteSql: 'Generate DELETE SQL',
+    copyTableName: 'Copy Table Name',
+    exportTableData: 'Export Table Data',
+    importTableData: 'Import Table Data',
+    refreshTableList: 'Refresh Table List',
+    newTable: 'New Table',
+    dropTable: 'Drop Table',
+    dropTableConfirm: 'Are you sure you want to drop table "{name}"? This action cannot be undone.',
+    truncateTable: 'Truncate Table',
+    truncateTableConfirm: 'Are you sure you want to truncate table "{name}"?',
+    dropDatabase: 'Drop Database',
+    dropDatabaseConfirm: 'Are you sure you want to drop database "{name}"? This action cannot be undone.',
+    refreshDatabase: 'Refresh Database',
+    disconnect: 'Disconnect',
+    duplicateConnection: 'Duplicate Connection',
+    refreshConnection: 'Refresh Connection',
+
+    confirmSaveChanges: 'Confirm Changes',
+    confirmSaveChangesHint: 'The following SQL statements will be executed. Please review before confirming:',
+    saveChangesFirst: 'Please save pending changes first',
+
+    // Quick Actions Toolbar
+    importData: 'Import Data',
+    exportData: 'Export Data',
+    runSqlFile: 'Run SQL File',
+
+    // DataGrid enhancements
+    columnsHidden: 'columns hidden',
+    showAllColumns: 'Show All',
+    copyCellValue: 'Copy Cell Value',
+    filterByValue: 'Filter by This Value',
+    setNull: 'Set NULL',
+    copyAsInsert: 'Copy as INSERT',
+    executeSelection: 'Execute selection',
+
+    // Error messages
+    notNullCannotHaveDefaultNull: 'NOT NULL column cannot have DEFAULT NULL',
   },
 
   // 更新

@@ -2,13 +2,18 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Globe, Clock, Folder, FolderOpen, ChevronDown, ChevronRight, Trash2, Plus,
-  Download, Upload, Edit2, X, Send, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, RotateCcw, Archive, Check
+  Download, Upload, Edit2, X, Send, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, RotateCcw, Archive, Check, Filter
 } from 'lucide-react'
 import { useApiStore } from '@/store/apiStore'
 import { useTranslation } from '@/store/i18nStore'
 import { SavedRequest, HistoryItem, Environment, KeyValue, HttpMethod, RequestFolder, isFolder, isRequest, ApiProject, RecycleBinItem } from '@/store/types'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useToast } from '@/components/common/Toast'
+
+interface SearchFilters {
+  methods?: HttpMethod[]
+  dateRange?: { start?: Date; end?: Date }
+}
 
 // HTTP方法颜色
 const METHOD_COLORS: Record<HttpMethod, string> = {
@@ -29,6 +34,31 @@ const METHOD_BG: Record<HttpMethod, string> = {
   PATCH: 'bg-purple-500/10',
   HEAD: 'bg-gray-500/10',
   OPTIONS: 'bg-gray-500/10',
+}
+
+// 转义正则表达式特殊字符
+const escapeRegExp = (string: string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// 高亮显示搜索文本
+const HighlightedText = ({ text, highlight }: { text: string; highlight: string }) => {
+  if (!highlight.trim()) return <>{text}</>
+
+  const parts = text.split(new RegExp(`(${escapeRegExp(highlight)})`, 'gi'))
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === highlight.toLowerCase() ? (
+          <mark key={i} className="bg-yellow-200 dark:bg-yellow-700/50 text-inherit rounded px-0.5">
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  )
 }
 
 export default function ApiSidebar() {
@@ -121,6 +151,8 @@ export default function ApiSidebar() {
 
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({})
+  const [showFilters, setShowFilters] = useState(false)
 
   // 项目编辑状态
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
@@ -211,7 +243,12 @@ export default function ApiSidebar() {
     })
   }
 
-  const handleSelectRequest = (request: SavedRequest) => { openTab(request.id) }
+  const handleSelectRequest = (request: SavedRequest) => {
+    const result = openTab(request.id)
+    if (!result.success && result.limitReached) {
+      showToast(t('api.tabLimitReached'), 'error')
+    }
+  }
 
   const handleSelectHistory = (item: HistoryItem) => {
     setCurrentRequest({
@@ -674,25 +711,44 @@ export default function ApiSidebar() {
   }
 
   // 搜索过滤请求
-  const filterRequestsBySearch = (folders: RequestFolder[], requests: SavedRequest[], query: string): {
+  const filterRequestsBySearch = (folders: RequestFolder[], requests: SavedRequest[], query: string, filters?: SearchFilters): {
     folders: RequestFolder[]
     requests: SavedRequest[]
   } => {
-    if (!query.trim()) return { folders, requests }
+    if (!query.trim() && !filters) return { folders, requests }
 
     const lowerQuery = query.toLowerCase()
+
+    const hasQuery = query.trim().length > 0
+    const hasMethodFilter = filters?.methods && filters.methods.length > 0
+    const hasDateFilter = filters?.dateRange
 
     const filterFolders = (folderList: RequestFolder[]): RequestFolder[] => {
       return folderList.map(f => {
         const filteredChildren = f.children.filter(c => {
           if (isRequest(c)) {
-            return c.name.toLowerCase().includes(lowerQuery) || c.url.toLowerCase().includes(lowerQuery)
+            // 名称和URL匹配（无搜索词时默认通过）
+            let matches = !hasQuery || c.name.toLowerCase().includes(lowerQuery) || c.url.toLowerCase().includes(lowerQuery)
+            // HTTP方法过滤
+            if (hasMethodFilter) {
+              matches = matches && filters.methods!.includes(c.method)
+            }
+            // 日期范围过滤
+            if (hasDateFilter) {
+              const requestDate = new Date(c.updatedAt || c.createdAt)
+              if (filters!.dateRange!.start && requestDate < filters!.dateRange!.start) {
+                matches = false
+              }
+              if (filters!.dateRange!.end && requestDate > filters!.dateRange!.end) {
+                matches = false
+              }
+            }
+            return matches
           }
           return true
         })
         const childFolders = f.children.filter(isFolder)
         const filteredChildFolders = filterFolders(childFolders)
-        // 只包含匹配的请求或包含匹配子项的文件夹
         const hasMatchingChildren = filteredChildren.length > 0 || filteredChildFolders.some(cf => cf.children.length > 0)
         if (hasMatchingChildren) {
           return { ...f, children: [...filteredChildren, ...filteredChildFolders] }
@@ -701,9 +757,22 @@ export default function ApiSidebar() {
       }).filter((f): f is RequestFolder => f !== null)
     }
 
-    const filteredRequests = requests.filter(r =>
-      r.name.toLowerCase().includes(lowerQuery) || r.url.toLowerCase().includes(lowerQuery)
-    )
+    const filteredRequests = requests.filter(r => {
+      let matches = !hasQuery || r.name.toLowerCase().includes(lowerQuery) || r.url.toLowerCase().includes(lowerQuery)
+      if (hasMethodFilter) {
+        matches = matches && filters.methods!.includes(r.method)
+      }
+      if (hasDateFilter) {
+        const requestDate = new Date(r.updatedAt || r.createdAt)
+        if (filters!.dateRange!.start && requestDate < filters!.dateRange!.start) {
+          matches = false
+        }
+        if (filters!.dateRange!.end && requestDate > filters!.dateRange!.end) {
+          matches = false
+        }
+      }
+      return matches
+    })
 
     return { folders: filterFolders(folders), requests: filteredRequests }
   }
@@ -712,9 +781,25 @@ export default function ApiSidebar() {
   const folderOptions = activeProject ? getFolderOptions(activeProject.requestFolders) : []
 
   // 应用搜索过滤
-  const filteredData = activeProject && searchQuery
-    ? filterRequestsBySearch(activeProject.requestFolders, activeProject.rootRequests, searchQuery)
+  const filteredData = activeProject && (searchQuery || searchFilters.methods?.length || searchFilters.dateRange)
+    ? filterRequestsBySearch(activeProject.requestFolders, activeProject.rootRequests, searchQuery, searchFilters)
     : { folders: activeProject?.requestFolders || [], requests: activeProject?.rootRequests || [] }
+
+  // HTTP方法选项
+  const httpMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
+
+  const toggleMethodFilter = (method: HttpMethod) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      methods: prev.methods?.includes(method)
+        ? prev.methods.filter(m => m !== method)
+        : [...(prev.methods || []), method]
+    }))
+  }
+
+  const clearFilters = () => {
+    setSearchFilters({})
+  }
 
   return (
     <div className="h-full bg-white dark:bg-gray-800 flex flex-col">
@@ -742,17 +827,129 @@ export default function ApiSidebar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('common.search')}
-            className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-8 pr-16 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
-          {searchQuery && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
+                title={t('common.clear')}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-0.5 rounded transition-colors ${showFilters ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              title={t('api.filters')}
             >
-              <X className="w-3.5 h-3.5" />
+              <Filter className="w-3.5 h-3.5" />
             </button>
-          )}
+          </div>
         </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 animate-in slide-in-from-top-2 duration-200">
+            {/* HTTP Methods */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t('api.httpMethod')}</span>
+                {(searchFilters.methods?.length || 0) > 0 && (
+                  <button
+                    onClick={() => setSearchFilters(prev => ({ ...prev, methods: [] }))}
+                    className="text-xs text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                  >
+                    {t('common.clear')}
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {httpMethods.map(method => (
+                  <button
+                    key={method}
+                    onClick={() => toggleMethodFilter(method)}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                      searchFilters.methods?.includes(method)
+                        ? `${METHOD_BG[method]} ${METHOD_COLORS[method]} ring-1 ring-current`
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {method}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date Range */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t('api.dateRange')}</span>
+                {searchFilters.dateRange && (
+                  <button
+                    onClick={() => setSearchFilters(prev => ({ ...prev, dateRange: undefined }))}
+                    className="text-xs text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                  >
+                    {t('common.clear')}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <input
+                    type="date"
+                    value={searchFilters.dateRange?.start ? new Date(searchFilters.dateRange.start).toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setSearchFilters(prev => ({
+                        ...prev,
+                        dateRange: {
+                          ...prev.dateRange,
+                          start: val ? new Date(val) : undefined,
+                          end: prev.dateRange?.end,
+                        }
+                      }))
+                    }}
+                    placeholder={t('api.startDate')}
+                    className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <span className="text-xs text-gray-400">—</span>
+                <div className="flex-1">
+                  <input
+                    type="date"
+                    value={searchFilters.dateRange?.end ? new Date(searchFilters.dateRange.end).toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setSearchFilters(prev => ({
+                        ...prev,
+                        dateRange: {
+                          ...prev.dateRange,
+                          start: prev.dateRange?.start,
+                          end: val ? new Date(new Date(val).getTime() + 86400000 - 1) : undefined,
+                        }
+                      }))
+                    }}
+                    placeholder={t('api.endDate')}
+                    className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Clear All Filters */}
+            {(searchFilters.methods?.length || searchFilters.dateRange) && (
+              <button
+                onClick={clearFilters}
+                className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1.5"
+              >
+                <RotateCcw className="w-3 h-3" />
+                {t('api.clearAllFilters')}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -1018,6 +1215,7 @@ export default function ApiSidebar() {
                         showToast={showToast}
                         folderContextMenu={folderContextMenu}
                         onFolderContextMenu={handleFolderContextMenu}
+                        searchQuery={searchQuery}
                       />
                     </div>
                   )}
@@ -1563,7 +1761,7 @@ function RequestTree({
   setEditingRequestName, onStartEditRequest, onConfirmEditRequest, onCancelEditRequest, movingRequestId,
   onStartMoveRequest, onAddFolder, onAddRequest, depth = 0,
   requestContextMenu, onContextMenu, duplicateRequest, openTab, showToast,
-  folderContextMenu, onFolderContextMenu,
+  folderContextMenu, onFolderContextMenu, searchQuery = '',
 }: {
   folders: RequestFolder[]; rootRequests: SavedRequest[]; expandedFolders: Set<string>; onToggleFolder: (id: string) => void;
   onSelectRequest: (request: SavedRequest) => void; onDeleteRequest: (id: string) => void; onDeleteFolder: (id: string) => void;
@@ -1582,7 +1780,9 @@ function RequestTree({
   showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
   folderContextMenu: { id: string; top: number; left: number } | null;
   onFolderContextMenu: (e: React.MouseEvent, folder: RequestFolder) => void;
+  searchQuery?: string;
 }) {
+  const { t } = useTranslation()
   // 计算文件夹内的请求数量
   const countFolderRequests = (folder: RequestFolder): number => {
     let count = 0
@@ -1619,7 +1819,7 @@ function RequestTree({
               </div>
             ) : (
               <>
-                <span className="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 truncate" title={folder.name}>{folder.name}</span>
+                <span className="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 truncate" title={folder.name}>{searchQuery ? <HighlightedText text={folder.name} highlight={searchQuery} /> : folder.name}</span>
                 <span className="text-xs text-gray-400 flex-shrink-0 ml-1">{countFolderRequests(folder)}</span>
               </>
             )}
@@ -1634,7 +1834,7 @@ function RequestTree({
                   <button onClick={onCancelAddFolder} className="p-1 text-gray-400 hover:text-gray-600 rounded"><X className="w-3.5 h-3.5" /></button>
                 </div>
               )}
-              <RequestTree folders={folder.children.filter(isFolder) as RequestFolder[]} rootRequests={folder.children.filter(isRequest) as SavedRequest[]} expandedFolders={expandedFolders} onToggleFolder={onToggleFolder} onSelectRequest={onSelectRequest} onDeleteRequest={onDeleteRequest} onDeleteFolder={onDeleteFolder} showNewFolderInput={showNewFolderInput} newFolderName={newFolderName} setNewFolderName={setNewFolderName} onConfirmAddFolder={onConfirmAddFolder} onCancelAddFolder={onCancelAddFolder} editingFolderId={editingFolderId} editingFolderName={editingFolderName} setEditingFolderName={setEditingFolderName} onStartEditFolder={onStartEditFolder} onConfirmEditFolder={onConfirmEditFolder} onCancelEditFolder={onCancelEditFolder} editingRequestId={editingRequestId} editingRequestName={editingRequestName} setEditingRequestName={setEditingRequestName} onStartEditRequest={onStartEditRequest} onConfirmEditRequest={onConfirmEditRequest} onCancelEditRequest={onCancelEditRequest} movingRequestId={movingRequestId} onStartMoveRequest={onStartMoveRequest} onAddFolder={onAddFolder} onAddRequest={onAddRequest} depth={depth + 1} requestContextMenu={requestContextMenu} onContextMenu={onContextMenu} duplicateRequest={duplicateRequest} openTab={openTab} showToast={showToast} folderContextMenu={folderContextMenu} onFolderContextMenu={onFolderContextMenu} />
+              <RequestTree folders={folder.children.filter(isFolder) as RequestFolder[]} rootRequests={folder.children.filter(isRequest) as SavedRequest[]} expandedFolders={expandedFolders} onToggleFolder={onToggleFolder} onSelectRequest={onSelectRequest} onDeleteRequest={onDeleteRequest} onDeleteFolder={onDeleteFolder} showNewFolderInput={showNewFolderInput} newFolderName={newFolderName} setNewFolderName={setNewFolderName} onConfirmAddFolder={onConfirmAddFolder} onCancelAddFolder={onCancelAddFolder} editingFolderId={editingFolderId} editingFolderName={editingFolderName} setEditingFolderName={setEditingFolderName} onStartEditFolder={onStartEditFolder} onConfirmEditFolder={onConfirmEditFolder} onCancelEditFolder={onCancelEditFolder} editingRequestId={editingRequestId} editingRequestName={editingRequestName} setEditingRequestName={setEditingRequestName} onStartEditRequest={onStartEditRequest} onConfirmEditRequest={onConfirmEditRequest} onCancelEditRequest={onCancelEditRequest} movingRequestId={movingRequestId} onStartMoveRequest={onStartMoveRequest} onAddFolder={onAddFolder} onAddRequest={onAddRequest} depth={depth + 1} requestContextMenu={requestContextMenu} onContextMenu={onContextMenu} duplicateRequest={duplicateRequest} openTab={openTab} showToast={showToast} folderContextMenu={folderContextMenu} onFolderContextMenu={onFolderContextMenu} searchQuery={searchQuery} />
             </div>
           )}
         </div>
@@ -1662,7 +1862,9 @@ function RequestTree({
               <button onClick={(e) => { e.stopPropagation(); onCancelEditRequest() }} className="p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded flex-shrink-0"><X className="w-3 h-3" /></button>
             </div>
           ) : (
-            <span className="text-sm text-gray-700 dark:text-gray-300 truncate flex-1" title={request.name || request.url}>{request.name || request.url}</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300 truncate flex-1" title={request.name || request.url}>
+              {searchQuery ? <HighlightedText text={request.name || request.url} highlight={searchQuery} /> : (request.name || request.url)}
+            </span>
           )}
         </div>
       ))}

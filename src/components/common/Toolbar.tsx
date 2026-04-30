@@ -181,7 +181,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
       }
 
       // Combine chunks
-      const blob = new Blob(chunks)
+      const blob = new Blob(chunks as BlobPart[])
       const arrayBuffer = await blob.arrayBuffer()
 
       // Save file
