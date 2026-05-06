@@ -24,8 +24,8 @@ interface I18nState {
 export const useI18n = create<I18nState>()(
   persist(
     (set, get) => ({
-      language: 'zh', // 默认中文
-      t: zh,
+      language: 'en', // 默认英文
+      t: en,
 
       setLanguage: (lang) => {
         set({
@@ -41,6 +41,12 @@ export const useI18n = create<I18nState>()(
       partialize: (state) => ({
         language: state.language,
       }),
+      // 恢复后同步翻译对象
+      onRehydrateStorage: () => (state) => {
+        if (state && state.language) {
+          state.t = translations[state.language]
+        }
+      },
     }
   )
 )

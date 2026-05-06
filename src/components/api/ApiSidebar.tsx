@@ -802,16 +802,16 @@ export default function ApiSidebar() {
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-800 flex flex-col">
+    <div className="h-full bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
-      <div className="px-4 h-11 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex items-center justify-between bg-gray-100 dark:bg-gray-800/50">
+      <div className="px-4 h-12 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex items-center justify-between bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-blue-500" />
           <span className="text-sm font-semibold text-gray-800 dark:text-white">{t('api.projects')}</span>
         </div>
         <button
           onClick={() => addProject(t('api.newProject'))}
-          className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-all"
+          className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
           title={t('api.newProject')}
         >
           <Plus className="w-4 h-4" />
@@ -1360,21 +1360,20 @@ export default function ApiSidebar() {
       </div>
 
       {/* Footer - Import/Export */}
-      <div className="flex-shrink-0 h-14 px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 flex items-center gap-2">
+      <div className="flex-shrink-0 h-14 px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 flex items-center gap-3">
         <button onClick={() => {
           setImportText('')
           setImportMode('new')
           setImportTargetProjectId(null)
           setShowImportExport('import')
-        }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+        }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors border border-gray-200 dark:border-gray-700">
           <Download className="w-4 h-4" />
           <span>{t('redis.import')}</span>
         </button>
-        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
         <button onClick={() => {
           setSelectedExportProjectId(null)
           setShowImportExport('export')
-        }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+        }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors border border-gray-200 dark:border-gray-700">
           <Upload className="w-4 h-4" />
           <span>{t('redis.export')}</span>
         </button>
