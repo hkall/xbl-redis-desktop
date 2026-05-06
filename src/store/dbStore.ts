@@ -13,7 +13,11 @@ import {
   TableStructure,
   DATABASE_CONFIGS,
   UnifiedTab,
+  SqlResultItem,
 } from '@/types/database'
+
+// 生成唯一ID
+const generateId = () => crypto.randomUUID()
 
 // 数据库状态
 interface DbState {
@@ -49,7 +53,7 @@ interface DbState {
 
   // UI状态
   sidebarWidth: number
-  expandedNodes: Set<string>
+  expandedNodes: string[]  // 改用数组以便正确序列化
 }
 
 // 数据库操作
@@ -75,10 +79,15 @@ interface DbActions {
   getActiveTab: () => UnifiedTab | null
   updateTabSql: (id: string, sql: string) => void
   updateTabResult: (id: string, result: QueryResult) => void
+  updateTabResults: (id: string, results: SqlResultItem[]) => void
+  setActiveResult: (tabId: string, resultId: string) => void
+  clearTabResults: (id: string) => void
 
   // 查询执行
   executeQuery: (sql: string, database?: string) => Promise<QueryResult>
   executeCurrentTab: (sqlOverride?: string) => Promise<QueryResult | null>
+  executeMultipleSql: (sqlStatements: string[]) => Promise<SqlResultItem[]>
+  parseMultipleSql: (sql: string) => string[]
 
   // 历史管理
   addQueryHistory: (item: Omit<QueryHistory, 'id' | 'timestamp'>) => void
@@ -107,9 +116,6 @@ interface DbActions {
   // 持久化
   loadFromStorage: () => Promise<void>
 }
-
-// 生成唯一ID
-const generateId = () => crypto.randomUUID()
 
 // 默认连接配置
 export const createDefaultConnection = (type: DatabaseType = 'mysql'): Omit<DbConnection, 'id' | 'connected' | 'connecting' | 'error' | 'createdAt' | 'updatedAt'> => ({
@@ -146,7 +152,7 @@ export const useDbStore = create<DbState & DbActions>()(
       executing: false,
       currentResult: null,
       sidebarWidth: 280,
-      expandedNodes: new Set(),
+      expandedNodes: [],
 
       // ============ 连接管理 ============
       addConnection: (config) => {
@@ -506,6 +512,290 @@ export const useDbStore = create<DbState & DbActions>()(
         }))
       },
 
+      updateTabResults: (id, results) => {
+        set((state) => ({
+          tabs: state.tabs.map((t) =>
+            t.id === id ? {
+              ...t,
+              results,
+              activeResultId: results.length > 0 ? results[0].id : undefined,
+              isModified: false
+            } : t
+          ),
+          currentResult: results.length > 0 ? results[0].result : null,
+        }))
+      },
+
+      setActiveResult: (tabId, resultId) => {
+        set((state) => {
+          const tab = state.tabs.find(t => t.id === tabId)
+          const resultItem = tab?.results?.find(r => r.id === resultId)
+          return {
+            tabs: state.tabs.map(t =>
+              t.id === tabId ? { ...t, activeResultId: resultId } : t
+            ),
+            currentResult: resultItem?.result || null,
+          }
+        })
+      },
+
+      clearTabResults: (id) => {
+        set((state) => ({
+          tabs: state.tabs.map((t) =>
+            t.id === id ? { ...t, results: undefined, activeResultId: undefined } : t
+          ),
+          currentResult: null,
+        }))
+      },
+
+      // 解析多条SQL语句
+      parseMultipleSql: (sql) => {
+        const statements: string[] = []
+
+        // 标记所有需要忽略的区域（注释和字符串）
+        const ignoreRanges: { start: number; end: number }[] = []
+        let i = 0
+        while (i < sql.length) {
+          // 单行注释 --
+          if (sql[i] === '-' && sql[i + 1] === '-' && i + 1 < sql.length) {
+            const start = i
+            while (i < sql.length && sql[i] !== '\n') i++
+            ignoreRanges.push({ start, end: i })
+            continue
+          }
+          // 单行注释 #
+          if (sql[i] === '#') {
+            const start = i
+            while (i < sql.length && sql[i] !== '\n') i++
+            ignoreRanges.push({ start, end: i })
+            continue
+          }
+          // 多行注释 /* */
+          if (sql[i] === '/' && sql[i + 1] === '*' && i + 1 < sql.length) {
+            const start = i
+            i += 2
+            while (i < sql.length - 1 && !(sql[i] === '*' && sql[i + 1] === '/')) i++
+            i += 2
+            ignoreRanges.push({ start, end: i })
+            continue
+          }
+          // 单引号字符串
+          if (sql[i] === "'") {
+            const start = i
+            i++
+            while (i < sql.length) {
+              // 处理转义单引号 ''
+              if (sql[i] === "'" && sql[i + 1] === "'" && i + 1 < sql.length) {
+                i += 2
+                continue
+              }
+              // 处理反斜杠转义（MySQL风格）
+              if (sql[i] === '\\' && i + 1 < sql.length) {
+                i += 2
+                continue
+              }
+              // 字符串结束
+              if (sql[i] === "'") {
+                i++
+                break
+              }
+              i++
+            }
+            ignoreRanges.push({ start, end: i })
+            continue
+          }
+          // 双引号字符串（MySQL中双引号也可用于字符串，取决于SQL模式）
+          if (sql[i] === '"') {
+            const start = i
+            i++
+            while (i < sql.length) {
+              // 处理转义双引号 ""
+              if (sql[i] === '"' && sql[i + 1] === '"' && i + 1 < sql.length) {
+                i += 2
+                continue
+              }
+              // 处理反斜杠转义
+              if (sql[i] === '\\' && i + 1 < sql.length) {
+                i += 2
+                continue
+              }
+              if (sql[i] === '"') {
+                i++
+                break
+              }
+              i++
+            }
+            ignoreRanges.push({ start, end: i })
+            continue
+          }
+          i++
+        }
+
+        // 检查某个位置是否在忽略区域内
+        const isIgnored = (pos: number): boolean => {
+          return ignoreRanges.some(r => pos >= r.start && pos < r.end)
+        }
+
+        // 找到所有不在忽略区域内的分号位置
+        const semicolonPositions: number[] = []
+        for (let j = 0; j < sql.length; j++) {
+          if (sql[j] === ';' && !isIgnored(j)) {
+            semicolonPositions.push(j)
+          }
+        }
+
+        // 按分号分割
+        let lastEnd = 0
+        for (const pos of semicolonPositions) {
+          const stmt = sql.substring(lastEnd, pos + 1).trim()
+          lastEnd = pos + 1
+
+          if (stmt) {
+            // 检查去掉注释后是否有实际SQL内容
+            let hasActualSql = false
+            let k = 0
+            while (k < stmt.length) {
+              // 跳过注释
+              if (stmt[k] === '-' && stmt[k + 1] === '-' && k + 1 < stmt.length) {
+                while (k < stmt.length && stmt[k] !== '\n') k++
+                continue
+              }
+              if (stmt[k] === '#') {
+                while (k < stmt.length && stmt[k] !== '\n') k++
+                continue
+              }
+              if (stmt[k] === '/' && stmt[k + 1] === '*' && k + 1 < stmt.length) {
+                k += 2
+                while (k < stmt.length - 1 && !(stmt[k] === '*' && stmt[k + 1] === '/')) k++
+                k += 2
+                continue
+              }
+              // 跳过字符串
+              if (stmt[k] === "'") {
+                k++
+                while (k < stmt.length) {
+                  if (stmt[k] === "'" && stmt[k + 1] === "'" && k + 1 < stmt.length) {
+                    k += 2
+                    continue
+                  }
+                  if (stmt[k] === '\\' && k + 1 < stmt.length) {
+                    k += 2
+                    continue
+                  }
+                  if (stmt[k] === "'") { k++; break }
+                  k++
+                }
+                continue
+              }
+              if (stmt[k] === '"') {
+                k++
+                while (k < stmt.length) {
+                  if (stmt[k] === '"' && stmt[k + 1] === '"' && k + 1 < stmt.length) {
+                    k += 2
+                    continue
+                  }
+                  if (stmt[k] === '\\' && k + 1 < stmt.length) {
+                    k += 2
+                    continue
+                  }
+                  if (stmt[k] === '"') { k++; break }
+                  k++
+                }
+                continue
+              }
+              // 如果有非空格非分号的字符，说明有实际SQL
+              if (stmt[k] !== ' ' && stmt[k] !== '\n' && stmt[k] !== '\r' && stmt[k] !== '\t' && stmt[k] !== ';') {
+                hasActualSql = true
+                break
+              }
+              k++
+            }
+            if (hasActualSql) {
+              statements.push(stmt)
+            }
+          }
+        }
+
+        // 处理最后一段没有分号的内容
+        if (lastEnd < sql.length) {
+          const lastStmt = sql.substring(lastEnd).trim()
+          if (lastStmt) {
+            let hasActualSql = false
+            let k = 0
+            while (k < lastStmt.length) {
+              if (lastStmt[k] === '-' && lastStmt[k + 1] === '-' && k + 1 < lastStmt.length) {
+                while (k < lastStmt.length && lastStmt[k] !== '\n') k++
+                continue
+              }
+              if (lastStmt[k] === '#') {
+                while (k < lastStmt.length && lastStmt[k] !== '\n') k++
+                continue
+              }
+              if (lastStmt[k] === '/' && lastStmt[k + 1] === '*' && k + 1 < lastStmt.length) {
+                k += 2
+                while (k < lastStmt.length - 1 && !(lastStmt[k] === '*' && lastStmt[k + 1] === '/')) k++
+                k += 2
+                continue
+              }
+              if (lastStmt[k] !== ' ' && lastStmt[k] !== '\n' && lastStmt[k] !== '\r' && lastStmt[k] !== '\t') {
+                hasActualSql = true
+                break
+              }
+              k++
+            }
+            if (hasActualSql) {
+              statements.push(lastStmt)
+            }
+          }
+        }
+
+        return statements
+      },
+
+      // 执行多条SQL语句
+      executeMultipleSql: async (sqlStatements) => {
+        const results: SqlResultItem[] = []
+        const connectionId = get().activeConnectionId
+
+        for (const stmt of sqlStatements) {
+          const trimmedStmt = stmt.trim()
+          if (!trimmedStmt) continue
+
+          const resultItem: SqlResultItem = {
+            id: generateId(),
+            sql: trimmedStmt,
+            result: { success: false, executionTime: 0 },
+            status: 'executing',
+          }
+          results.push(resultItem)
+
+          try {
+            const result = await get().executeQuery(trimmedStmt)
+            resultItem.result = result
+            resultItem.status = result.success ? 'success' : 'error'
+
+            // 添加到历史记录
+            get().addQueryHistory({
+              connectionId: connectionId || '',
+              database: get().activeDatabase || '',
+              sql: trimmedStmt,
+              executionTime: result.executionTime,
+              rowCount: result.rowCount,
+              error: result.error,
+            })
+          } catch (e) {
+            resultItem.result = {
+              success: false,
+              error: e instanceof Error ? e.message : 'Unknown error',
+              executionTime: 0,
+            }
+            resultItem.status = 'error'
+          }
+        }
+
+        return results
+      },
+
       // ============ 元数据缓存 ============
       cacheDatabases: (connectionId, databases) => {
         set((state) => ({
@@ -638,9 +928,20 @@ export const useDbStore = create<DbState & DbActions>()(
         const sql = sqlOverride || tab.sql
         if (!sql.trim()) return null
 
-        const result = await get().executeQuery(sql)
-        get().updateTabResult(tab.id, result)
-        return result
+        // 解析多条SQL语句
+        const statements = get().parseMultipleSql(sql)
+
+        if (statements.length > 1) {
+          // 多条SQL：执行所有并更新results数组
+          const results = await get().executeMultipleSql(statements)
+          get().updateTabResults(tab.id, results)
+          return results[0]?.result || null
+        } else {
+          // 单条SQL：执行并更新result
+          const result = await get().executeQuery(sql)
+          get().updateTabResult(tab.id, result)
+          return result
+        }
       },
 
       // ============ 历史管理 ============
@@ -702,11 +1003,12 @@ export const useDbStore = create<DbState & DbActions>()(
 
       toggleNodeExpand: (nodeId) => {
         set((state) => {
-          const newExpanded = new Set(state.expandedNodes)
-          if (newExpanded.has(nodeId)) {
-            newExpanded.delete(nodeId)
+          const newExpanded = [...state.expandedNodes]
+          const index = newExpanded.indexOf(nodeId)
+          if (index >= 0) {
+            newExpanded.splice(index, 1)
           } else {
-            newExpanded.add(nodeId)
+            newExpanded.push(nodeId)
           }
           return { expandedNodes: newExpanded }
         })
@@ -714,11 +1016,12 @@ export const useDbStore = create<DbState & DbActions>()(
 
       setNodeExpanded: (nodeId, expanded) => {
         set((state) => {
-          const newExpanded = new Set(state.expandedNodes)
-          if (expanded) {
-            newExpanded.add(nodeId)
-          } else {
-            newExpanded.delete(nodeId)
+          const newExpanded = [...state.expandedNodes]
+          const index = newExpanded.indexOf(nodeId)
+          if (expanded && index < 0) {
+            newExpanded.push(nodeId)
+          } else if (!expanded && index >= 0) {
+            newExpanded.splice(index, 1)
           }
           return { expandedNodes: newExpanded }
         })
@@ -740,6 +1043,7 @@ export const useDbStore = create<DbState & DbActions>()(
         })),
         savedQueries: state.savedQueries,
         sidebarWidth: state.sidebarWidth,
+        expandedNodes: state.expandedNodes, // 持久化展开节点
       }),
     }
   )

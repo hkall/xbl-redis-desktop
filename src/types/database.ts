@@ -190,6 +190,14 @@ export interface TableTab {
 // 统一标签页类型
 export type TabType = 'query' | 'table' | 'procedure' | 'trigger'
 
+// 单个SQL执行结果
+export interface SqlResultItem {
+  id: string
+  sql: string
+  result: QueryResult
+  status: 'success' | 'error' | 'executing'
+}
+
 export interface UnifiedTab {
   id: string
   type: TabType
@@ -197,7 +205,9 @@ export interface UnifiedTab {
   createdAt: number
   // SQL 查询相关
   sql?: string
-  result?: QueryResult
+  result?: QueryResult  // 单条SQL结果（兼容旧版本）
+  results?: SqlResultItem[]  // 多条SQL结果
+  activeResultId?: string  // 当前显示的结果ID
   isModified?: boolean
   // 表/视图/存储过程/触发器相关
   itemType?: 'TABLE' | 'VIEW'

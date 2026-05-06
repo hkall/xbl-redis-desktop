@@ -37,9 +37,10 @@ import {
   Search,
   FileText,
   Clipboard,
+  Upload,
 } from 'lucide-react'
 import { useDbStore } from '@/store/dbStore'
-import { QueryResult, UnifiedTab, TableInfo, ColumnInfo } from '@/types/database'
+import { QueryResult, UnifiedTab, TableInfo, ColumnInfo, SqlResultItem } from '@/types/database'
 import { useTranslation } from '@/store/i18nStore'
 import TableDetail from './TableDetail'
 import ProcedureDetail from './ProcedureDetail'
@@ -588,12 +589,33 @@ function SqlEditor({
   )
 }
 
-// 检测id列
+// 检测id列（扩展检测规则）
 function detectIdColumn(columns: string[]): number | null {
-  const idNames = ['id', 'ID', 'Id', '_id', 'uid', 'UID', 'pk', 'PK', 'primary_key']
+  const idNames = ['id', 'ID', 'Id', '_id', 'uid', 'UID', 'pk', 'PK', 'primary_key', 'key', 'KEY', 'uuid', 'UUID', 'sid', 'SID']
   for (let i = 0; i < columns.length; i++) {
-    if (idNames.includes(columns[i].toLowerCase()) || idNames.includes(columns[i])) return i
+    const col = columns[i].toLowerCase()
+    // 精确匹配
+    if (idNames.includes(col)) return i
+    // 包含id的后缀匹配（如 user_id, order_id）
+    if (col.endsWith('_id') || col.endsWith('id') && col.length > 2) return i
   }
+  return null
+}
+
+// 从SQL提取表名
+function extractTableNameFromSql(sql: string): string | null {
+  // 匹配 SELECT ... FROM table
+  const fromMatch = sql.match(/FROM\s+`?(\w+)`?\s*(?:WHERE|ORDER|GROUP|LIMIT|;|$)/i)
+  if (fromMatch) return fromMatch[1]
+  // 匹配 UPDATE table SET
+  const updateMatch = sql.match(/UPDATE\s+`?(\w+)`?\s+SET/i)
+  if (updateMatch) return updateMatch[1]
+  // 匹配 INSERT INTO table
+  const insertMatch = sql.match(/INSERT\s+INTO\s+`?(\w+)`?/i)
+  if (insertMatch) return insertMatch[1]
+  // 匹配 DELETE FROM table
+  const deleteMatch = sql.match(/DELETE\s+FROM\s+`?(\w+)`?/i)
+  if (deleteMatch) return deleteMatch[1]
   return null
 }
 
@@ -618,6 +640,8 @@ function DataGrid({
   database,
   tableName,
   onRefresh,
+  sourceSql,  // 原始SQL，用于提取表名
+  availableTables, // 可用表列表，用于快速选择
 }: {
   result: QueryResult | null | undefined
   loading: boolean
@@ -625,8 +649,26 @@ function DataGrid({
   database: string | null
   tableName?: string
   onRefresh?: () => void
+  sourceSql?: string
+  availableTables?: string[]
 }) {
   const { t } = useTranslation()
+  const columns = result?.columns || []
+  const data = result?.data || []
+
+  // 自动推断表名和主键（DBeaver风格）
+  const inferredTableName = tableName || (sourceSql ? extractTableNameFromSql(sourceSql) : null)
+  const inferredIdCol = detectIdColumn(columns)
+
+  // 编辑状态 - 简化流程，自动启用编辑
+  const [editTableName, setEditTableName] = useState(inferredTableName || '')
+  const [selectedIdColumn, setSelectedIdColumn] = useState<number | null>(inferredIdCol)
+  const [editingCell, setEditingCell] = useState<{ rowIndex: number; colIndex: number } | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const [pendingChanges, setPendingChanges] = useState<Array<{ rowIndex: number; colIndex: number; newValue: any }>>([])
+  const [showTableSelector, setShowTableSelector] = useState(false)
+
+  // 其他状态
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(100)
   const [sortColumns, setSortColumns] = useState<SortCondition[]>([])
@@ -634,17 +676,8 @@ function DataGrid({
   const [resizingColumn, setResizingColumn] = useState<number | null>(null)
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
-  const [editTableName, setEditTableName] = useState(tableName || '')
-  const [editConfirmed, setEditConfirmed] = useState(!!tableName)
-  const [editingCell, setEditingCell] = useState<{ rowIndex: number; colIndex: number } | null>(null)
-  const [editValue, setEditValue] = useState('')
-  const [pendingChanges, setPendingChanges] = useState<Array<{ rowIndex: number; colIndex: number; newValue: any }>>([])
   const startXRef = useRef(0)
   const startWidthRef = useRef(0)
-
-  // 手动选择主键列
-  const [selectedIdColumn, setSelectedIdColumn] = useState<number | null>(null)
-  const [showEditSetupDialog, setShowEditSetupDialog] = useState(false)
 
   // 篮选状态
   const [filters, setFilters] = useState<FilterCondition[]>([])
@@ -665,18 +698,18 @@ function DataGrid({
   const gridRef = useRef<HTMLDivElement>(null)
   const contextMenuCellRef = useRef<{ rowIndex: number; colIndex: number } | null>(null)
 
-  // 重置编辑设置当结果变化
+  // 列头右键菜单状态
+  const [columnContextMenu, setColumnContextMenu] = useState<{ x: number; y: number; colIndex: number } | null>(null)
+
+  // 当结果变化时自动推断表名和主键
   useEffect(() => {
-    if (tableName) {
-      setEditTableName(tableName)
-      setEditConfirmed(true)
-      setSelectedIdColumn(null)
-    } else {
-      setEditTableName('')
-      setEditConfirmed(false)
-      setSelectedIdColumn(null)
-    }
-  }, [tableName, result?.columns])
+    // 表名：优先传入的tableName，其次从SQL推断
+    const newTableName = tableName || (sourceSql ? extractTableNameFromSql(sourceSql) : null)
+    setEditTableName(newTableName || '')
+    // 主键：自动检测
+    const newIdCol = detectIdColumn(columns)
+    setSelectedIdColumn(newIdCol)
+  }, [tableName, sourceSql, columns])
 
   // 右键菜单处理
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -703,7 +736,7 @@ function DataGrid({
   // 保存所有更改 — 弹出SQL确认对话框
   const showSaveConfirmation = () => {
     if (!database || pendingChanges.length === 0) return
-    const effectiveTable = tableName || (editConfirmed ? editTableName : null)
+    const effectiveTable = tableName || editTableName
     if (!effectiveTable) return
 
     // 使用手动选择或自动检测的主键列
@@ -722,7 +755,7 @@ function DataGrid({
   const executeSaveChanges = async () => {
     setShowSaveConfirm(false)
     if (!database || pendingChanges.length === 0) return
-    const effectiveTable = tableName || (editConfirmed ? editTableName : null)
+    const effectiveTable = tableName || editTableName
     if (!effectiveTable) return
 
     // 使用手动选择或自动检测的主键列
@@ -777,7 +810,7 @@ function DataGrid({
       return
     }
 
-    const effectiveTable = tableName || (editConfirmed ? editTableName : null)
+    const effectiveTable = tableName || editTableName
     if (!effectiveTable) return
 
     if (!confirm(t('database.confirmDeleteRowsMsg', { count: selectedRows.size }))) return
@@ -802,7 +835,7 @@ function DataGrid({
 
   // 编辑相关
   const startEdit = (rowIndex: number, colIndex: number) => {
-    const effectiveTable = tableName || (editConfirmed ? editTableName : null)
+    const effectiveTable = tableName || editTableName
     if (!effectiveTable) return
     const value = sortedData[rowIndex]?.[colIndex]
     setEditValue(value === null ? '' : String(value))
@@ -812,10 +845,8 @@ function DataGrid({
   const confirmEdit = () => {
     if (!editingCell) return
     const newValue = editValue === '' ? null : editValue
-
     // 更新本地数据
     sortedData[editingCell.rowIndex][editingCell.colIndex] = newValue
-
     // 添加到待保存列表
     setPendingChanges(prev => [...prev, { ...editingCell, newValue }])
     setEditingCell(null)
@@ -830,6 +861,18 @@ function DataGrid({
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') { e.preventDefault(); confirmEdit() }
     else if (e.key === 'Escape') { e.preventDefault(); cancelEdit() }
+    else if (e.key === 'Tab') {
+      e.preventDefault()
+      confirmEdit()
+      const visibleCols = columns.map((_, i) => i).filter(i => !hiddenColumns.has(i))
+      if (editingCell && visibleCols.length > 0) {
+        const currentIdx = visibleCols.indexOf(editingCell.colIndex)
+        const nextIdx = e.shiftKey ? currentIdx - 1 : currentIdx + 1
+        if (nextIdx >= 0 && nextIdx < visibleCols.length) {
+          startEdit(editingCell.rowIndex, visibleCols[nextIdx])
+        }
+      }
+    }
   }
 
   // 键盘导航
@@ -996,6 +1039,50 @@ function DataGrid({
       }
     }
     setPage(1)
+  }
+
+  // 列头右键菜单处理
+  const handleColumnContextMenu = (e: React.MouseEvent, colIndex: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const x = Math.min(e.clientX, window.innerWidth - 180)
+    const y = Math.min(e.clientY, window.innerHeight - 250)
+    setColumnContextMenu({ x, y, colIndex })
+  }
+
+  const closeColumnContextMenu = () => setColumnContextMenu(null)
+
+  // 列头右键菜单操作
+  const sortColumnAsc = () => {
+    if (!columnContextMenu) return
+    setSortColumns([{ column: columnContextMenu.colIndex, direction: 'asc' }])
+    setPage(1)
+    closeColumnContextMenu()
+  }
+
+  const sortColumnDesc = () => {
+    if (!columnContextMenu) return
+    setSortColumns([{ column: columnContextMenu.colIndex, direction: 'desc' }])
+    setPage(1)
+    closeColumnContextMenu()
+  }
+
+  const clearSort = () => {
+    setSortColumns([])
+    setPage(1)
+    closeColumnContextMenu()
+  }
+
+  const hideColumn = () => {
+    if (!columnContextMenu) return
+    setHiddenColumns(prev => new Set(prev).add(columnContextMenu.colIndex))
+    closeColumnContextMenu()
+  }
+
+  const autoFitThisColumn = () => {
+    if (!columnContextMenu) return
+    autoFitColumnWidth(columnContextMenu.colIndex)
+    closeColumnContextMenu()
   }
 
   // 获取排序后的数据
@@ -1169,54 +1256,18 @@ function DataGrid({
   if (!result.success) return <div className="flex-1 flex flex-col items-center justify-center p-4"><AlertCircle className="w-8 h-8 text-red-500 mb-2" /><p className="text-red-500 text-sm text-center">{result.error}</p></div>
   if (!result.data || result.data.length === 0) return <div className="flex-1 flex flex-col items-center justify-center"><CheckCircle className="w-8 h-8 text-green-500 mb-2" /><p className="text-gray-500 dark:text-gray-400 text-sm">{result.affectedRows !== undefined ? t('database.rowsAffectedMsg', { count: result.affectedRows }) : result.rowCount === 0 ? t('database.querySuccessNoData') : t('database.querySuccessful')}</p></div>
 
-  const columns = result.columns || []
   const sortedData = getSortedData()
   const totalPages = Math.ceil(sortedData.length / pageSize)
   const startIndex = (page - 1) * pageSize
   const pageData = sortedData.slice(startIndex, startIndex + pageSize)
   // 使用自动检测或手动选择的主键列
   const effectiveIdCol = selectedIdColumn !== null ? selectedIdColumn : detectIdColumn(columns)
-  const effectiveTable = tableName || (editConfirmed ? editTableName : null)
+  const effectiveTable = tableName || editTableName
   const canEdit = database && effectiveIdCol !== null && effectiveTable
   const hasChanges = pendingChanges.length > 0
 
   return (
     <div className="flex-1 flex flex-col min-h-0" onContextMenu={handleContextMenu}>
-      {/* 编辑状态栏 */}
-      {database && (
-        <div className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 border-b ${canEdit ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-          {canEdit ? (
-            <>
-              <Pencil className="w-3.5 h-3.5 text-green-500 dark:text-green-400" />
-              <span className="text-xs text-green-600 dark:text-green-400 font-medium">{t('database.editModeEnabled')}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">|</span>
-              <span className="text-xs text-gray-600 dark:text-gray-300">{t('database.table')}: {effectiveTable}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">|</span>
-              <span className="text-xs text-gray-600 dark:text-gray-300">{t('database.keyColumn')}: {columns[effectiveIdCol!]}</span>
-              {hasChanges && (
-                <>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">|</span>
-                  <span className="text-xs text-orange-500 dark:text-orange-400 font-medium">{pendingChanges.length} {t('database.pendingChanges')}</span>
-                  <button onClick={showSaveConfirmation} className="ml-2 px-2 py-0.5 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors">{t('common.save')} (Ctrl+S)</button>
-                  <button onClick={() => { setPendingChanges([]); onRefresh?.() }} className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 rounded transition-colors">{t('common.cancel')}</button>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <Info className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
-              <span className="text-xs text-gray-500 dark:text-gray-400">{t('database.clickToEnableEdit')}</span>
-              <button
-                onClick={() => setShowEditSetupDialog(true)}
-                className="ml-2 px-2 py-0.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
-              >
-                {t('database.setupEdit')}
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
       {/* 篮选状态栏 */}
       {filters.length > 0 && (
         <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
@@ -1249,7 +1300,7 @@ function DataGrid({
                 const sortIndex = sortColumns.findIndex(s => s.column === i)
                 const hasFilter = filters.some(f => f.column === i)
                 return (
-                  <th key={i} onClick={e => handleColumnClick(i, e)} style={{ width: columnWidths[i] || 150 }} className="relative px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 border-b-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                  <th key={i} onClick={e => handleColumnClick(i, e)} onContextMenu={e => handleColumnContextMenu(e, i)} style={{ width: columnWidths[i] || 150 }} className="relative px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 border-b-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 group">
                     <div className="flex items-center gap-1">
                       <span className="truncate text-gray-700 dark:text-gray-200">{col}</span>
                       {/* 排序指示器 */}
@@ -1340,9 +1391,23 @@ function DataGrid({
                     const isFindMatch = findMatches.some(m => m.rowIndex === actualIndex && m.colIndex === colIndex)
                     const isCurrentMatch = currentMatchIndex >= 0 && findMatches[currentMatchIndex]?.rowIndex === actualIndex && findMatches[currentMatchIndex]?.colIndex === colIndex
                     return (
-                      <td key={colIndex} style={{ width: columnWidths[colIndex] || 150 }} onDoubleClick={() => canEdit && startEdit(actualIndex, colIndex)} onClick={() => setFocusedCell({ rowIndex: actualIndex, colIndex })} onContextMenu={() => { contextMenuCellRef.current = { rowIndex: actualIndex, colIndex } }} className={`px-3 py-1.5 text-sm font-mono relative ${isChanged ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${isCurrentMatch ? 'ring-2 ring-orange-500 dark:ring-orange-400' : isFindMatch ? 'bg-yellow-100 dark:bg-yellow-900/30' : ''} ${isFocused && !isEditing ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}`}>
+                      <td
+                        key={colIndex}
+                        style={{ width: columnWidths[colIndex] || 150 }}
+                        onDoubleClick={() => canEdit && startEdit(actualIndex, colIndex)}
+                        onClick={() => setFocusedCell({ rowIndex: actualIndex, colIndex })}
+                        onContextMenu={() => { contextMenuCellRef.current = { rowIndex: actualIndex, colIndex } }}
+                        className={`px-3 py-1.5 text-sm font-mono relative ${isChanged ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${isCurrentMatch ? 'ring-2 ring-orange-500 dark:ring-orange-400' : isFindMatch ? 'bg-yellow-100 dark:bg-yellow-900/30' : ''} ${isFocused && !isEditing ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}`}
+                      >
                         {isEditing ? (
-                          <input value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={() => setTimeout(cancelEdit, 150)} autoFocus className="absolute inset-0 px-3 py-1.5 text-sm font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-b-2 border-blue-500 focus:outline-none z-10" />
+                          <input
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            onKeyDown={handleEditKeyDown}
+                            onBlur={() => setTimeout(cancelEdit, 150)}
+                            autoFocus
+                            className="absolute inset-0 px-3 py-1.5 text-sm font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-b-2 border-blue-500 focus:outline-none z-10"
+                          />
                         ) : (
                           <CellContent value={cell} />
                         )}
@@ -1416,18 +1481,38 @@ function DataGrid({
               </>
             )}
           </div>
+          {/* Save/Cancel buttons - only shown when there are pending changes */}
+          {hasChanges && (
+            <>
+              <button
+                onClick={showSaveConfirmation}
+                className="flex items-center gap-1 px-2 py-1 rounded bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium transition-colors"
+                title="Ctrl+S"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {pendingChanges.length}
+              </button>
+              <button
+                onClick={() => { setPendingChanges([]); onRefresh?.() }}
+                className="p-1 rounded text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                title={t('common.cancel')}
+              >
+                <XCircle className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
           {/* Export dropdown */}
           <div className="relative">
-            <button onClick={() => setShowExportMenu(!showExportMenu)} className={`p-1 rounded ${showExportMenu ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`} title={t('common.export')}>
-              <Download className="w-3.5 h-3.5" />
+            <button onClick={() => setShowExportMenu(!showExportMenu)} className={`p-1 rounded ${showExportMenu ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`} title={t('database.exportData')}>
+              <Upload className="w-3.5 h-3.5" />
             </button>
             {showExportMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
                 <div className="absolute right-0 bottom-full mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 z-20 min-w-[120px]">
-                  <button onClick={() => { handleExport('csv'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{t('database.exportCsv')}</button>
-                  <button onClick={() => { handleExport('json'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{t('database.exportJson')}</button>
-                  <button onClick={() => { handleExport('sql'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{t('database.exportSql')}</button>
+                  <button onClick={() => { handleExport('csv'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5" />{t('database.exportCsv')}</button>
+                  <button onClick={() => { handleExport('json'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5" />{t('database.exportJson')}</button>
+                  <button onClick={() => { handleExport('sql'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileCode className="w-3.5 h-3.5" />{t('database.exportSql')}</button>
                 </div>
               </>
             )}
@@ -1450,7 +1535,7 @@ function DataGrid({
                 {canEdit && (
                   <button onClick={() => { const c = contextMenuCellRef.current!; setEditValue(''); setEditingCell({ rowIndex: c.rowIndex, colIndex: c.colIndex }); setContextMenu(null) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><XCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.setNull')}</button>
                 )}
-                <button onClick={() => { const c = contextMenuCellRef.current!; const row = sortedData[c.rowIndex]; const effectiveTable = tableName || (editConfirmed ? editTableName : null); if (effectiveTable) { const vals = row.map(v => v === null || v === undefined ? 'NULL' : typeof v === 'number' || !isNaN(Number(v)) ? String(v) : `'${String(v).replace(/'/g, "''")}'`); const sql = `INSERT INTO \`${effectiveTable}\` (${columns.map(col => `\`${col}\``).join(', ')}) VALUES (${vals.join(', ')});`; navigator.clipboard.writeText(sql) } setContextMenu(null) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.copyAsInsert')}</button>
+                <button onClick={() => { const c = contextMenuCellRef.current!; const row = sortedData[c.rowIndex]; const effectiveTable = tableName || editTableName; if (effectiveTable) { const vals = row.map(v => v === null || v === undefined ? 'NULL' : typeof v === 'number' || !isNaN(Number(v)) ? String(v) : `'${String(v).replace(/'/g, "''")}'`); const sql = `INSERT INTO \`${effectiveTable}\` (${columns.map(col => `\`${col}\``).join(', ')}) VALUES (${vals.join(', ')});`; navigator.clipboard.writeText(sql) } setContextMenu(null) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.copyAsInsert')}</button>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
               </>
             )}
@@ -1463,6 +1548,45 @@ function DataGrid({
                 <button onClick={deleteSelectedRows} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 className="w-4 h-4" />{t('database.deleteSelectedRows')}</button>
               </>
             )}
+          </div>
+        </>
+      )}
+
+      {/* 列头右键菜单 */}
+      {columnContextMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={closeColumnContextMenu} />
+          <div
+            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-[140px]"
+            style={{ left: columnContextMenu.x, top: columnContextMenu.y }}
+          >
+            <button onClick={sortColumnAsc} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <ArrowUp className="w-4 h-4" />
+              {t('database.sortAsc')}
+            </button>
+            <button onClick={sortColumnDesc} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <ArrowDown className="w-4 h-4" />
+              {t('database.sortDesc')}
+            </button>
+            {sortColumns.length > 0 && (
+              <button onClick={clearSort} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <X className="w-4 h-4" />
+                {t('database.sortNone')}
+              </button>
+            )}
+            <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
+            <button onClick={hideColumn} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Eye className="w-4 h-4" />
+              {t('database.hideColumn')}
+            </button>
+            <button onClick={autoFitThisColumn} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Columns className="w-4 h-4" />
+              {t('database.autoFitWidth')}
+            </button>
+            <button onClick={resetAllColumnWidths} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <RefreshCw className="w-4 h-4" />
+              {t('database.resetAllWidths')}
+            </button>
           </div>
         </>
       )}
@@ -1482,64 +1606,6 @@ function DataGrid({
             <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
               <button onClick={() => setShowSaveConfirm(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">{t('common.cancel')}</button>
               <button onClick={executeSaveChanges} className="px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded transition-colors">{t('common.save')}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 编辑设置弹窗 */}
-      {showEditSetupDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('database.setupEdit')}</h3>
-              <button onClick={() => setShowEditSetupDialog(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"><X className="w-4 h-4" /></button>
-            </div>
-            <div className="p-4 space-y-4">
-              {/* 表名输入 */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('database.tableName')}</label>
-                <input
-                  type="text"
-                  value={editTableName}
-                  onChange={(e) => setEditTableName(e.target.value)}
-                  placeholder={t('database.enterTableName')}
-                  className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                />
-              </div>
-              {/* 主键列选择 */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('database.keyColumn')}</label>
-                <select
-                  value={selectedIdColumn !== null ? selectedIdColumn : (detectIdColumn(columns) !== null ? detectIdColumn(columns)! : '')}
-                  onChange={(e) => setSelectedIdColumn(e.target.value === '' ? null : Number(e.target.value))}
-                  className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                >
-                  {detectIdColumn(columns) === null && (
-                    <option value="">-- {t('database.selectKeyColumn')} --</option>
-                  )}
-                  {columns.map((col, i) => (
-                    <option key={i} value={i}>{col}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('database.keyColumnHint')}</p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-              <button onClick={() => setShowEditSetupDialog(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">{t('common.cancel')}</button>
-              <button
-                onClick={() => {
-                  if (editTableName.trim() && (selectedIdColumn !== null || detectIdColumn(columns) !== null)) {
-                    setEditConfirmed(true)
-                    setShowEditSetupDialog(false)
-                  } else {
-                    alert(t('database.editSetupRequired'))
-                  }
-                }}
-                className="px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded transition-colors"
-              >
-                {t('common.confirm')}
-              </button>
             </div>
           </div>
         </div>
@@ -1573,7 +1639,11 @@ function exportToJson(columns: string[], data: any[][], filename: string) {
 
 function exportToSqlInsert(columns: string[], data: any[][], tableName: string, filename: string) {
   const sqls = data.map(row => {
-    const vals = row.map(v => v === null || v === undefined ? 'NULL' : typeof v === 'number' || !isNaN(Number(v)) ? String(v) : `'${String(v).replace(/'/g, "''")}'`)
+    const vals = row.map(v => {
+      if (v === null || v === undefined) return 'NULL'
+      if (typeof v === 'number') return String(v)
+      return `'${String(v).replace(/'/g, "''")}'`
+    })
     return `INSERT INTO \`${tableName}\` (${columns.map(c => `\`${c}\``).join(', ')}) VALUES (${vals.join(', ')});`
   })
   const blob = new Blob([sqls.join('\n')], { type: 'text/plain;charset=utf-8;' })
@@ -1661,12 +1731,50 @@ export default function DbWorkspace() {
 // UnifiedTabs
 function UnifiedTabs({ tabs, activeTabId, onSelect, onClose, onCreate }: { tabs: UnifiedTab[]; activeTabId: string | null; onSelect: (id: string) => void; onClose: (id: string) => void; onCreate: () => void }) {
   const { t } = useTranslation()
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: string; tabIndex: number } | null>(null)
+
   const getIcon = (type: string) => type === 'table' ? <Table className="w-4 h-4 text-orange-500 dark:text-orange-400" /> : type === 'procedure' ? <FileCode className="w-4 h-4 text-green-500 dark:text-green-400" /> : type === 'trigger' ? <Bolt className="w-4 h-4 text-yellow-500 dark:text-yellow-400" /> : <FileCode className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+
+  const handleContextMenu = (e: React.MouseEvent, tabId: string, tabIndex: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const x = Math.min(e.clientX, window.innerWidth - 160)
+    const y = Math.min(e.clientY, window.innerHeight - 200)
+    setContextMenu({ x, y, tabId, tabIndex })
+  }
+
+  const closeContextMenu = () => setContextMenu(null)
+
+  // 关闭其他标签页
+  const closeOtherTabs = () => {
+    if (!contextMenu) return
+    tabs.filter(t => t.id !== contextMenu.tabId).forEach(t => onClose(t.id))
+    closeContextMenu()
+  }
+
+  // 关闭右侧标签页
+  const closeRightTabs = () => {
+    if (!contextMenu) return
+    tabs.slice(contextMenu.tabIndex + 1).forEach(t => onClose(t.id))
+    closeContextMenu()
+  }
+
+  // 关闭所有标签页
+  const closeAllTabs = () => {
+    tabs.forEach(t => onClose(t.id))
+    closeContextMenu()
+  }
+
   return (
     <div className="flex items-center bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
       <div className="flex-1 flex items-center overflow-x-auto">
-        {tabs.map(tab => (
-          <div key={tab.id} className={`group flex items-center gap-2 px-3 py-2 border-r border-gray-200 dark:border-gray-700 cursor-pointer min-w-[100px] max-w-[180px] ${activeTabId === tab.id ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`} onClick={() => onSelect(tab.id)}>
+        {tabs.map((tab, index) => (
+          <div
+            key={tab.id}
+            className={`group flex items-center gap-2 px-3 py-2 border-r border-gray-200 dark:border-gray-700 cursor-pointer min-w-[100px] max-w-[180px] ${activeTabId === tab.id ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            onClick={() => onSelect(tab.id)}
+            onContextMenu={(e) => handleContextMenu(e, tab.id, index)}
+          >
             {getIcon(tab.type)}
             <span className="text-sm truncate">{tab.name}</span>
             {tab.type === 'query' && tab.isModified && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />}
@@ -1675,6 +1783,45 @@ function UnifiedTabs({ tabs, activeTabId, onSelect, onClose, onCreate }: { tabs:
         ))}
       </div>
       <button onClick={onCreate} className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" title={t('database.newQueryTitle')}><Plus className="w-4 h-4" /></button>
+
+      {/* 右键菜单 */}
+      {contextMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={closeContextMenu} />
+          <div
+            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-[140px]"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+          >
+            <button
+              onClick={() => { onClose(contextMenu.tabId); closeContextMenu() }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <X className="w-4 h-4" />
+              {t('database.closeTab')}
+            </button>
+            <button
+              onClick={closeOtherTabs}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {t('database.closeOtherTabs')}
+            </button>
+            <button
+              onClick={closeRightTabs}
+              disabled={contextMenu.tabIndex >= tabs.length - 1}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t('database.closeRightTabs')}
+            </button>
+            <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
+            <button
+              onClick={closeAllTabs}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+            >
+              {t('database.closeAllTabs')}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -1698,11 +1845,16 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
   executing: boolean
   t: (key: string, params?: any) => string
 }) {
-  const { getQueryHistory, addSavedQuery } = useDbStore()
+  const { getQueryHistory, addSavedQuery, setActiveResult, clearTabResults, getCachedTables } = useDbStore()
   const [showHistory, setShowHistory] = useState(false)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [queryName, setQueryName] = useState('')
   const history = getQueryHistory(100).filter(h => h.connectionId === activeConnectionId).slice(0, 20)
+
+  // 获取可用表列表（用于编辑时选择表名）
+  const availableTables = activeConnectionId && activeDatabase
+    ? (getCachedTables(activeConnectionId, activeDatabase) || []).map(t => t.name)
+    : []
 
   const handleSaveQuery = () => { if (queryName.trim() && activeTab?.sql?.trim()) { addSavedQuery(queryName.trim(), activeTab.sql); setShowSaveDialog(false); setQueryName('') } }
 
@@ -1711,6 +1863,21 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [activeTab?.sql, activeTab?.name])
+
+  // 获取当前显示的结果
+  const getCurrentResult = (): QueryResult | undefined => {
+    if (!activeTab) return undefined
+    if (activeTab.results && activeTab.results.length > 0) {
+      const activeResult = activeTab.results.find(r => r.id === activeTab.activeResultId)
+      return activeResult?.result
+    }
+    return activeTab.result
+  }
+
+  const currentResult = getCurrentResult()
+
+  // 多SQL结果数量
+  const resultCount = activeTab?.results?.length || (activeTab?.result ? 1 : 0)
 
   return (
     <>
@@ -1778,8 +1945,8 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
       <div className="flex-1 min-h-0 flex flex-col">
         <div style={showResult ? { height: editorHeight } : undefined} className={`${showResult ? 'min-h-[150px]' : 'flex-1'} overflow-hidden relative`}>
           <SqlEditor sql={activeTab?.sql || ''} onChange={sql => activeTab?.id && updateTabSql(activeTab.id, sql)} onExecute={handleExecute} onFormat={() => activeTab?.id && updateTabSql(activeTab.id, formatSql(activeTab.sql || ''))} executing={executing} connectionId={activeConnectionId || ''} database={activeDatabase} />
-          {!showResult && activeTab?.result && (
-            <button onClick={() => setShowResult(true)} className="absolute bottom-3 right-3 flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"><ChevronUp className="w-3.5 h-3.5" />{t('database.viewResult')}</button>
+          {!showResult && resultCount > 0 && (
+            <button onClick={() => setShowResult(true)} className="absolute bottom-3 right-3 flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"><ChevronUp className="w-3.5 h-3.5" />{t('database.viewResult')} {resultCount > 1 && <span className="text-blue-500">({resultCount})</span>}</button>
           )}
         </div>
 
@@ -1788,11 +1955,50 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
             <ResizableDivider onResize={handleEditorResize} />
             <div className="flex-1 min-h-[100px] flex flex-col">
               <div className="flex-shrink-0 flex items-center justify-between px-3 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                <span className="text-xs text-gray-500 dark:text-gray-400">{t('database.queryResult')}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{t('database.queryResult')}</span>
+                  {/* 多SQL结果标签页 */}
+                  {activeTab?.results && activeTab.results.length > 1 && (
+                    <div className="flex items-center gap-1 ml-2">
+                      {activeTab.results.map((resultItem, index) => (
+                        <button
+                          key={resultItem.id}
+                          onClick={() => setActiveResult(activeTab!.id, resultItem.id)}
+                          className={`flex items-center gap-1 px-2 py-0.5 text-xs rounded transition-colors ${
+                            activeTab.activeResultId === resultItem.id
+                              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          <span className="font-medium">#{index + 1}</span>
+                          {resultItem.status === 'success' && <CheckCircle className="w-3 h-3 text-green-500" />}
+                          {resultItem.status === 'error' && <AlertCircle className="w-3 h-3 text-red-500" />}
+                          {resultItem.status === 'executing' && <Loader2 className="w-3 h-3 animate-spin text-blue-500" />}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => activeTab?.id && clearTabResults(activeTab.id)}
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+                        title={t('common.clear')}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <button onClick={() => setShowResult(false)} className="p-0.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><ChevronDown className="w-3.5 h-3.5" /></button>
               </div>
-              <DataGrid result={activeTab?.result} loading={executing} connectionId={activeConnectionId} database={activeDatabase} tableName={activeTab?.itemName} onRefresh={handleExecute} />
-              <ExecutionInfo result={activeTab?.result} />
+              <DataGrid
+                result={currentResult}
+                loading={executing}
+                connectionId={activeConnectionId}
+                database={activeDatabase}
+                tableName={activeTab?.itemName}
+                onRefresh={handleExecute}
+                sourceSql={activeTab?.sql}
+                availableTables={availableTables}
+              />
+              <ExecutionInfo result={currentResult} />
             </div>
           </>
         )}

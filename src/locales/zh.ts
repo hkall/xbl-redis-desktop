@@ -672,6 +672,17 @@ export default {
     copyCreateStatement: '复制创建语句',
     triggerTiming: '触发时机:',
     relatedTable: '关联表:',
+    procedureRestoreSuccess: '已恢复原始存储过程',
+    procedureRestoreFailed: '恢复原始存储过程失败',
+    multiResultTab: '多条SQL结果',
+    resultIndex: '结果 #{index}',
+    closeTab: '关闭',
+    closeOtherTabs: '关闭其他',
+    closeRightTabs: '关闭右侧',
+    closeAllTabs: '关闭所有',
+    hideColumn: '隐藏列',
+    autoFitWidth: '自动调整宽度',
+    resetAllWidths: '重置所有列宽',
 
     // 工作区
     noMatchingResults: '无匹配结果',
@@ -710,9 +721,15 @@ export default {
     multiSort: '多列排序',
     sortPriority: '排序优先级',
     shiftClickMultiSort: 'Shift+点击添加排序',
-    autoFitWidth: '自动调整宽度',
-    resetAllWidths: '重置所有列宽',
     lockColumn: '锁定列',
+
+    // 导入导出
+    importData: '导入数据',
+    importFileEmpty: '导入文件为空或格式不正确',
+    importFileInvalid: '导入文件格式无效',
+    importPreviewMsg: '即将向表 {table} 导入 {count} 行数据',
+    importCsv: '导入CSV',
+    importJson: '导入JSON',
 
     // 右键菜单
     newQueryForTable: '为表新建查询',
@@ -744,7 +761,6 @@ export default {
 
     // 快捷操作栏
     quickActions: '快捷操作',
-    importData: '导入数据',
     exportData: '导出数据',
     runSqlFile: '执行SQL文件',
 

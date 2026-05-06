@@ -672,6 +672,17 @@ export default {
     copyCreateStatement: 'Copy create statement',
     triggerTiming: 'Timing:',
     relatedTable: 'Related Table:',
+    procedureRestoreSuccess: 'Original procedure restored',
+    procedureRestoreFailed: 'Failed to restore original procedure',
+    multiResultTab: 'Multiple SQL Results',
+    resultIndex: 'Result #{index}',
+    closeTab: 'Close',
+    closeOtherTabs: 'Close Others',
+    closeRightTabs: 'Close to Right',
+    closeAllTabs: 'Close All',
+    hideColumn: 'Hide Column',
+    autoFitWidth: 'Auto Fit Width',
+    resetAllWidths: 'Reset All Widths',
 
     // Workspace
     noMatchingResults: 'No matching results',
@@ -710,9 +721,15 @@ export default {
     multiSort: 'Multi-column Sort',
     sortPriority: 'Sort Priority',
     shiftClickMultiSort: 'Shift+Click to add sort',
-    autoFitWidth: 'Auto-fit Width',
-    resetAllWidths: 'Reset All Widths',
     lockColumn: 'Lock Column',
+
+    // Import/Export
+    importData: 'Import Data',
+    importFileEmpty: 'Import file is empty or invalid format',
+    importFileInvalid: 'Invalid import file format',
+    importPreviewMsg: 'Importing {count} rows to table {table}',
+    importCsv: 'Import CSV',
+    importJson: 'Import JSON',
 
     // Context Menu
     newQueryForTable: 'New Query for Table',
@@ -743,7 +760,6 @@ export default {
     saveChangesFirst: 'Please save pending changes first',
 
     // Quick Actions Toolbar
-    importData: 'Import Data',
     exportData: 'Export Data',
     runSqlFile: 'Run SQL File',
 

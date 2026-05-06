@@ -594,6 +594,12 @@ export default function DbSidebar() {
     id: '',
     name: '',
   })
+  const [dropTableConfirm, setDropTableConfirm] = useState<{ isOpen: boolean; connectionId: string; database: string; tableName: string }>({
+    isOpen: false,
+    connectionId: '',
+    database: '',
+    tableName: '',
+  })
   const [loadingDatabases, setLoadingDatabases] = useState<string | null>(null)
   const [loadingTables, setLoadingTables] = useState<string | null>(null)
   const [proceduresCache, setProceduresCache] = useState<Record<string, Record<string, any[]>>>({})
@@ -614,7 +620,7 @@ export default function DbSidebar() {
   const activeConnection = connections.find((c) => c.id === activeConnectionId)
 
   // 分类展开状态 - 使用 expandedNodes 存储
-  const isCategoryExpanded = (categoryKey: string) => expandedNodes.has(categoryKey)
+  const isCategoryExpanded = (categoryKey: string) => expandedNodes.includes(categoryKey)
   const toggleCategory = (categoryKey: string) => toggleNodeExpand(categoryKey)
 
   // 右键菜单处理
@@ -695,21 +701,31 @@ export default function DbSidebar() {
     closeContextMenu()
   }
 
-  // 删除表
+  // 删除表 - 显示确认弹窗
   const dropTable = (connectionId: string, database: string, tableName: string) => {
-    if (!confirm(t('database.dropTableConfirm', { name: tableName }))) return
+    setDropTableConfirm({
+      isOpen: true,
+      connectionId,
+      database,
+      tableName,
+    })
+    closeContextMenu()
+  }
+
+  // 确认删除表
+  const handleDropTable = async () => {
+    const { connectionId, database, tableName } = dropTableConfirm
     setActiveDatabase(database)
     const sql = `DROP TABLE \`${tableName}\`;`
     if (window.electronAPI?.dbExecuteQuery) {
-      window.electronAPI.dbExecuteQuery(connectionId, sql, database).then((result: any) => {
-        if (result?.success) {
-          loadTables(connectionId, database)
-        } else {
-          alert(result?.error || t('common.error'))
-        }
-      })
+      const result = await window.electronAPI.dbExecuteQuery(connectionId, sql, database)
+      if (result?.success) {
+        loadTables(connectionId, database)
+      } else {
+        alert(result?.error || t('common.error'))
+      }
     }
-    closeContextMenu()
+    setDropTableConfirm({ isOpen: false, connectionId: '', database: '', tableName: '' })
   }
 
   // 新建表
@@ -727,7 +743,7 @@ export default function DbSidebar() {
   useEffect(() => {
     if (activeConnectionId && activeConnection?.connected) {
       const nodeKey = `conn:${activeConnectionId}`
-      if (!expandedNodes.has(nodeKey)) {
+      if (!expandedNodes.includes(nodeKey)) {
         toggleNodeExpand(nodeKey)
         loadDatabases(activeConnectionId)
       }
@@ -762,7 +778,7 @@ export default function DbSidebar() {
           cacheTables(connectionId, database, result.tables)
           // 默认展开"表"分类
           const tablesKey = `tables:${connectionId}:${database}`
-          if (!expandedNodes.has(tablesKey)) {
+          if (!expandedNodes.includes(tablesKey)) {
             toggleNodeExpand(tablesKey)
           }
         }
@@ -914,7 +930,7 @@ export default function DbSidebar() {
         ) : (
           <div className="space-y-1">
             {connections.map((connection) => {
-              const isConnectionExpanded = expandedNodes.has(`conn:${connection.id}`)
+              const isConnectionExpanded = expandedNodes.includes(`conn:${connection.id}`)
               const databases = getCachedDatabases(connection.id) || []
               const isLoadingDatabases = loadingDatabases === connection.id
 
@@ -956,7 +972,7 @@ export default function DbSidebar() {
 
                       {/* 数据库列表 */}
                       {!isLoadingDatabases && databases.length > 0 && databases.map((db) => {
-                        const isDbExpanded = expandedNodes.has(`db:${connection.id}:${db.name}`)
+                        const isDbExpanded = expandedNodes.includes(`db:${connection.id}:${db.name}`)
                         const dbLoaded = isDatabaseLoaded(connection.id, db.name)
                         const tables = dbLoaded ? (getCachedTables(connection.id, db.name) || []) : []
                         const procedures = dbLoaded ? (proceduresCache[connection.id]?.[db.name] || []) : []
@@ -1271,6 +1287,18 @@ export default function DbSidebar() {
         variant="danger"
         onConfirm={handleDeleteConnection}
         onCancel={() => setDeleteConfirm({ isOpen: false, id: '', name: '' })}
+      />
+
+      {/* 删除表确认 */}
+      <ConfirmDialog
+        isOpen={dropTableConfirm.isOpen}
+        title={t('database.dropTable')}
+        message={t('database.dropTableConfirm', { name: dropTableConfirm.tableName })}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        variant="danger"
+        onConfirm={handleDropTable}
+        onCancel={() => setDropTableConfirm({ isOpen: false, connectionId: '', database: '', tableName: '' })}
       />
 
       {/* 右键菜单 */}

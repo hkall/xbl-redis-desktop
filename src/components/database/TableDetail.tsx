@@ -1006,18 +1006,23 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
     // 判断nullable是否被改变：从nullable变成NOT NULL
     const nullableChangedToNotNull = col.nullable && !isNullable
 
+    // 辅助函数：转义默认值中的单引号
+    const escapeDefaultValue = (val: string): string => {
+      return String(val).replace(/'/g, "''")
+    }
+
     if (col.isNew) {
       sql = `ALTER TABLE \`${table}\` ADD COLUMN \`${newData.name || col.name}\` ${newData.type || col.type}`
       if (!isNullable) sql += ' NOT NULL'
       // NOT NULL 列不能有 DEFAULT NULL
       if (newData.defaultValue !== undefined && newData.defaultValue !== null) {
-        sql += ` DEFAULT '${newData.defaultValue}'`
+        sql += ` DEFAULT '${escapeDefaultValue(newData.defaultValue)}'`
       } else if (!isNullable && newData.defaultValue === undefined) {
         // NOT NULL 且没有设置默认值，不添加 DEFAULT（用户需要手动处理）
       } else if (isNullable && newData.defaultValue === null) {
         sql += ' DEFAULT NULL'
       }
-      if (newData.comment || col.comment) sql += ` COMMENT '${newData.comment || col.comment}'`
+      if (newData.comment || col.comment) sql += ` COMMENT '${escapeDefaultValue(newData.comment || col.comment)}'`
     } else {
       sql = `ALTER TABLE \`${table}\` MODIFY COLUMN \`${newData.name || col.name}\` ${newData.type || col.type}`
       if (!isNullable) sql += ' NOT NULL'
@@ -1030,14 +1035,14 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           }
           // NOT NULL 列不添加 DEFAULT NULL，保持无默认值状态
         } else {
-          sql += ` DEFAULT '${newData.defaultValue}'`
+          sql += ` DEFAULT '${escapeDefaultValue(newData.defaultValue)}'`
         }
       } else if (nullableChangedToNotNull && (col.defaultValue === null || String(col.defaultValue).toUpperCase() === 'NULL')) {
         // 从nullable变为NOT NULL，且原默认值是NULL，则不保留默认值
         // 不添加任何DEFAULT
       } else if (col.defaultValue !== null && col.defaultValue !== undefined && String(col.defaultValue).toUpperCase() !== 'NULL') {
         // 保留原有的非NULL默认值
-        sql += ` DEFAULT '${col.defaultValue}'`
+        sql += ` DEFAULT '${escapeDefaultValue(col.defaultValue)}'`
       } else if (isNullable && (col.defaultValue === null || col.defaultValue === undefined)) {
         // nullable列且无默认值，保持DEFAULT NULL或不设置
         if (col.defaultValue === null) {
@@ -1045,7 +1050,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
         }
       }
       if (col.extra) sql += ` ${col.extra}`
-      if (newData.comment !== undefined ? newData.comment : col.comment) sql += ` COMMENT '${newData.comment !== undefined ? newData.comment : col.comment}'`
+      if (newData.comment !== undefined ? newData.comment : col.comment) sql += ` COMMENT '${escapeDefaultValue(newData.comment !== undefined ? newData.comment : col.comment)}'`
     }
     return sql + ';'
   }

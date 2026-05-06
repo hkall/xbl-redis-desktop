@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   FileCode,
   X,
@@ -48,6 +48,11 @@ export default function ProcedureDetail({ connectionId, database, procedure, onC
   const [isEditing, setIsEditing] = useState(false)
   const [editBody, setEditBody] = useState('')
   const [saving, setSaving] = useState(false)
+
+  // SQL确认弹窗状态
+  const [showSqlConfirm, setShowSqlConfirm] = useState(false)
+  const [pendingSql, setPendingSql] = useState('')
+  const originalBodyRef = useRef<string>('')  // 保存原始body用于恢复
 
   const loadProcedureInfo = async () => {
     setLoading(true)
@@ -120,6 +125,7 @@ export default function ProcedureDetail({ connectionId, database, procedure, onC
 
           setInfo(procedureInfo)
           setEditBody(procedureInfo.body)
+          originalBodyRef.current = procedureInfo.body  // 保存原始body用于恢复
         } else {
           setError(result.error || 'Failed to load procedure info')
         }
@@ -151,34 +157,77 @@ export default function ProcedureDetail({ connectionId, database, procedure, onC
   const cancelEdit = () => {
     setIsEditing(false)
     setEditBody(info?.body || '')
+    setShowSqlConfirm(false)
   }
 
-  const saveEdit = async () => {
+  // 显示SQL确认弹窗
+  const showSaveConfirm = () => {
+    if (!editBody.trim()) return
+    // 构建完整的执行SQL
+    const dropSql = `DROP PROCEDURE IF EXISTS \`${database}\`.\`${procedure}\`;`
+    const fullSql = `${dropSql}\n\n${editBody}`
+    setPendingSql(fullSql)
+    setShowSqlConfirm(true)
+  }
+
+  // 确认执行SQL
+  const confirmExecute = async () => {
     if (!editBody.trim()) return
     setSaving(true)
+    setShowSqlConfirm(false)
     try {
-      // 先删除旧的存储过程，再创建新的
       if (window.electronAPI?.dbExecuteQuery) {
-        // 删除
-        await window.electronAPI.dbExecuteQuery(
+        // 先删除旧的存储过程
+        const dropResult = await window.electronAPI.dbExecuteQuery(
           connectionId,
           `DROP PROCEDURE IF EXISTS \`${database}\`.\`${procedure}\``,
           database
         )
+
+        if (!dropResult.success) {
+          throw new Error(dropResult.error || 'DROP PROCEDURE failed')
+        }
+
         // 创建新的
-        await window.electronAPI.dbExecuteQuery(
+        const createResult = await window.electronAPI.dbExecuteQuery(
           connectionId,
           editBody,
           database
         )
+
+        if (!createResult.success) {
+          // CREATE失败，尝试恢复原始存储过程
+          if (originalBodyRef.current && originalBodyRef.current.trim()) {
+            try {
+              await window.electronAPI.dbExecuteQuery(
+                connectionId,
+                originalBodyRef.current,
+                database
+              )
+              alert(`${t('common.error')}: ${createResult.error}\n\n${t('database.procedureRestoreSuccess')}`)
+            } catch (restoreError) {
+              alert(`${t('common.error')}: ${createResult.error}\n\n${t('database.procedureRestoreFailed')}: ${restoreError instanceof Error ? restoreError.message : 'Unknown error'}`)
+            }
+          } else {
+            alert(`${t('common.error')}: ${createResult.error}`)
+          }
+          return
+        }
+
         setIsEditing(false)
         loadProcedureInfo()
       }
     } catch (e) {
-      alert(e instanceof Error ? e.message : '保存失败')
+      alert(e instanceof Error ? e.message : t('common.error'))
     } finally {
       setSaving(false)
     }
+  }
+
+  // 取消SQL确认弹窗
+  const cancelSqlConfirm = () => {
+    setShowSqlConfirm(false)
+    setPendingSql('')
   }
 
   if (loading) {
@@ -241,7 +290,7 @@ export default function ProcedureDetail({ connectionId, database, procedure, onC
           {isEditing ? (
             <>
               <button
-                onClick={saveEdit}
+                onClick={showSaveConfirm}
                 disabled={saving}
                 className="flex items-center gap-1 px-2 py-1 text-sm bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
               >
@@ -354,6 +403,35 @@ export default function ProcedureDetail({ connectionId, database, procedure, onC
           </pre>
         )}
       </div>
+
+      {/* SQL确认弹窗 */}
+      {showSqlConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('database.confirmSaveChanges')}</h3>
+              <button onClick={cancelSqlConfirm} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('database.confirmSaveChangesHint')}</p>
+              <pre className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap overflow-x-auto">
+                {pendingSql}
+              </pre>
+            </div>
+            <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+              <button onClick={cancelSqlConfirm} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
+                {t('common.cancel')}
+              </button>
+              <button onClick={confirmExecute} disabled={saving} className="flex items-center gap-1 px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50 transition-colors">
+                {saving && <Loader2 className="w-3 h-3 animate-spin" />}
+                {t('common.confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
