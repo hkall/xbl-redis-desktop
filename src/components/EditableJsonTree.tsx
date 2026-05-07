@@ -181,7 +181,7 @@ function EditableJsonTreeNode({
                 >
                   <EditableJsonTreeNode
                     data={entry.value}
-                    keyName={isArray ? undefined : entry.key}
+                    keyName={isArray ? undefined : String(entry.key)}
                     level={level + 1}
                     isArrayItem={isArray}
                     initiallyExpanded={true}

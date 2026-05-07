@@ -18,8 +18,6 @@ import {
   Check,
   Square,
   CheckSquare,
-  Edit2,
-  Save,
 } from 'lucide-react'
 import { useTranslation } from '@/store/i18nStore'
 
@@ -607,9 +605,8 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                       {(page - 1) * pageSize + rowIndex + 1}
                     </td>
                     {/* 数据列 */}
-                    {columns.map((col, colIndex) => {
+                    {columns.map((_, colIndex) => {
                       const value = rowArray[colIndex]
-                      const isPk = primaryKeyColumns.includes(col)
                       const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.colIndex === colIndex
 
                       return (
@@ -626,7 +623,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                               onChange={(e) => setEditValue(e.target.value)}
                               onKeyDown={handleCellKeyDown}
                               onBlur={() => setTimeout(() => cancelCellEdit(), 150)}
-                              placeholder="NULL"
+                              placeholder={t('database.columnDefaultPlaceholder')}
                               autoFocus
                               className="w-full px-0 py-0.5 text-sm text-gray-900 dark:text-gray-100 bg-transparent border-b-2 border-blue-500 focus:outline-none"
                             />
@@ -819,7 +816,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; field: string } | null>(null)
   const [editValue, setEditValue] = useState<string>('')
   const [saving, setSaving] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ type: 'column' | 'index'; index: number | string } | null>(null)
+  const [, setShowDeleteConfirm] = useState<{ type: 'column' | 'index'; index: number | string } | null>(null)
 
   // 未保存修改状态 - 跟踪每个列的修改
   const [columnChanges, setColumnChanges] = useState<Map<number, Partial<any>>>(new Map()) // rowIndex -> changes
@@ -840,7 +837,6 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
   const [nullableChanges, setNullableChanges] = useState<Map<number, boolean>>(new Map()) // rowIndex -> nullable value
 
   // refs
-  const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // 获取显示用的列数据（合并修改）
@@ -1346,11 +1342,11 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                 <th className="w-10 px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">#</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[120px]">{t('common.name')}</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[140px]">{t('common.type')}</th>
-                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Null</th>
-                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Key</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[80px]">Default</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-24">Extra</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[120px]">Comment</th>
+                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.nullHeader')}</th>
+                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.keyHeader')}</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[80px]">{t('database.defaultHeader')}</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-24">{t('database.extraHeader')}</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[120px]">{t('database.commentHeader')}</th>
                 <th className="w-16 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"></th>
               </tr>
             </thead>
@@ -1406,7 +1402,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
                           onKeyDown={handleKeyDown}
-                          placeholder="VARCHAR(255)"
+                          placeholder={t('database.columnTypePlaceholder')}
                           autoFocus
                           className="absolute inset-0 px-2 py-1.5 text-xs font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
@@ -1451,7 +1447,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
                           onKeyDown={handleKeyDown}
-                          placeholder="NULL"
+                          placeholder={t('database.columnDefaultPlaceholder')}
                           autoFocus
                           className="absolute inset-0 px-2 py-1.5 text-xs font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
@@ -1519,8 +1515,8 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
               <tr>
                 <th className="w-10 px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">#</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[150px]">{t('common.name')}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[200px]">Columns</th>
-                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Unique</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[200px]">{t('database.columnsHeader')}</th>
+                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.uniqueHeader')}</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-24">{t('common.type')}</th>
                 <th className="w-16 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"></th>
               </tr>

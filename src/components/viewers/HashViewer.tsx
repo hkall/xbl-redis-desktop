@@ -275,8 +275,8 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
 
           setFields(newFields)
           setTotalCount(result.total || newFields.length)
-          setCursor(result.cursor)
-          setHasMore(result.hasMore)
+          setCursor(result.cursor || '')
+          setHasMore(result.hasMore ?? false)
         }
       } else {
         // Fallback to old method if hscan not available
@@ -321,8 +321,8 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
         }))
 
         setFields(prev => [...prev, ...newFields])
-        setCursor(result.cursor)
-        setHasMore(result.hasMore)
+        setCursor(result.cursor || '')
+        setHasMore(result.hasMore ?? false)
       }
     } catch (error) {
       // Error handled by UI state
@@ -380,7 +380,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
               value: String(val)
             }))
             allFields = [...allFields, ...newFields]
-            currentCursor = result.cursor
+            currentCursor = result.cursor || ''
             hasMoreData = Boolean(result.hasMore)
           } else {
             break

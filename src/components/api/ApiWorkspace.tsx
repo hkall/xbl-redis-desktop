@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Send, Save, X, ChevronDown, Plus, Trash2, Lock, FileJson,
+  Send, Save, X, ChevronDown, Plus, Trash2,
   FormInput, FileCode, XCircle, Clock, HardDrive, Copy, Check,
-  Upload, FileText, Code, Braces, Pencil, GripVertical, Terminal, Settings, ChevronLeft, ChevronRight, MapPin, Paperclip
+  Upload, FileText, Braces, Pencil, Terminal, ChevronLeft, ChevronRight, MapPin, Paperclip
 } from 'lucide-react'
 import { useApiStore } from '@/store/apiStore'
 import { KeyValue, HttpMethod, RequestBody, AuthConfig, RequestFolder, isFolder, SavedRequest, FormField } from '@/store/types'
@@ -189,7 +189,6 @@ export default function ApiWorkspace() {
     // Tab管理
     openTabs,
     activeTabId,
-    openTab,
     closeTab,
     closeAllTabs,
     switchTab,
@@ -1890,7 +1889,7 @@ function BodyEditor({
 
   const bodyTypes: { type: RequestBody['type']; label: string; icon: React.ReactNode }[] = [
     { type: 'none', label: t('api.none'), icon: <X className="w-4 h-4" /> },
-    { type: 'json', label: 'JSON', icon: <Braces className="w-4 h-4" /> },
+    { type: 'json', label: t('api.json'), icon: <Braces className="w-4 h-4" /> },
     { type: 'form-data', label: t('api.formData'), icon: <Upload className="w-4 h-4" /> },
     { type: 'x-www-form-urlencoded', label: t('api.formUrlencoded'), icon: <FormInput className="w-4 h-4" /> },
     { type: 'raw', label: t('api.raw'), icon: <FileCode className="w-4 h-4" /> },
@@ -2255,7 +2254,7 @@ function AuthEditor({
   const { t: translate } = useTranslation()
   const authTypes: { type: AuthConfig['type']; label: string; desc: string }[] = [
     { type: 'none', label: translate('api.noAuth'), desc: translate('api.noAuthDesc') },
-    { type: 'bearer', label: translate('api.bearerAuth'), desc: 'OAuth 2.0 / JWT' },
+    { type: 'bearer', label: translate('api.bearerAuth'), desc: translate('api.bearerAuthDesc') },
     { type: 'basic', label: translate('api.basicAuth'), desc: translate('api.basicAuthDesc') },
     { type: 'api-key', label: translate('api.apiKeyAuth'), desc: translate('api.apiKeyDesc') },
   ]
@@ -2332,7 +2331,7 @@ function AuthEditor({
               type="text"
               value={auth.apiKeyName || ''}
               onChange={(e) => onChange({ ...auth, apiKeyName: e.target.value })}
-              placeholder="X-API-Key"
+              placeholder={translate('api.apiKeyPlaceholderHeader')}
               className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

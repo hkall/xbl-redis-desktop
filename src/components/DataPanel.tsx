@@ -48,7 +48,7 @@ function TTLDisplay({
         readOnly={!editing}
         onClick={() => !editing && onEdit()}
         onChange={(e) => editing && onChange(e.target.value)}
-        placeholder="-1"
+        placeholder={t('redis.ttlPlaceholder')}
         min="-1"
         autoFocus={editing}
         onKeyDown={(e) => {
@@ -104,7 +104,6 @@ export default function DataPanel() {
   const { t } = useTranslation()
   const {
     activeConnectionId,
-    connections,
     selectedKey,
     setSelectedKey,
   } = useRedisStore()
@@ -113,7 +112,7 @@ export default function DataPanel() {
   const [loading, setLoading] = useState(false)
   const [editingTTL, setEditingTTL] = useState(false)
   const [ttlInput, setTtlInput] = useState('')
-  const [savingTTL, setSavingTTL] = useState(false)
+  const [savingTTL] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean
     callback: () => void
@@ -144,6 +143,7 @@ export default function DataPanel() {
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
+    return undefined
   }, [editingTTL, keyInfo])
 
   // activeConnection unused variable removed
@@ -228,22 +228,6 @@ export default function DataPanel() {
     setEditingTTL(false)
     setTtlInput(keyInfo?.ttl.toString() || '')
   }
-
-  // handleClearTTL is defined but not used - comment out for now
-  const handleClearTTL = async () => {
-    if (!activeConnectionId || !selectedKey) return
-
-    try {
-      const result = await window.electronAPI.redisClearTTL(activeConnectionId, selectedKey)
-      if (result.success) {
-        setKeyInfo((prev) => prev ? { ...prev, ttl: -1 } : null)
-        setTtlInput('-1')
-      }
-    } catch (error) {
-    }
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _unusedClearTTL = handleClearTTL
 
   const handleCopyKey = async () => {
     if (!selectedKey) return

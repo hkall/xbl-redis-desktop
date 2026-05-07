@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useEffect } from 'react'
+import { forwardRef, useRef } from 'react'
 
 // 带行号的文本编辑器
 interface CodeEditorProps {

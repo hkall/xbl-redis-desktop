@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import { ChevronRight, ChevronDown, RefreshCw, Trash2, Key, Database, X, Search, Plus, MoreHorizontal, Edit2 } from 'lucide-react'
+import { ChevronRight, ChevronDown, RefreshCw, Trash2, Database, X, Search, Plus, MoreHorizontal, Edit2 } from 'lucide-react'
 import { useRedisStore, RedisDataType } from '@/store/redisStore'
 import { useTranslation } from '@/store/i18nStore'
 import ConfirmDialog from './ConfirmDialog'
@@ -73,7 +73,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               type="text"
               value={keyName}
               onChange={(e) => setKeyName(e.target.value)}
-              placeholder="e.g., user:123"
+              placeholder={t('redis.searchKeysPlaceholder')}
               className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
             />
           </div>
@@ -416,7 +416,7 @@ export default function KeyBrowser() {
 
           if (result.success && result.data) {
             allKeys = allKeys.concat(result.data)
-            cursor = result.cursor
+            cursor = result.cursor || '0'
             iterations++
           } else {
             break
@@ -501,7 +501,7 @@ export default function KeyBrowser() {
 
           if (result.success && result.data) {
             allKeys = allKeys.concat(result.data)
-            cursor = result.cursor
+            cursor = result.cursor || '0'
             iterations++
           } else {
             break

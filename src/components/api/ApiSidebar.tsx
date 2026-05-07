@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Globe, Clock, Folder, FolderOpen, ChevronDown, ChevronRight, Trash2, Plus,
-  Download, Upload, Edit2, X, Send, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, RotateCcw, Archive, Check, Filter
+  Download, Upload, Edit2, X, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, RotateCcw, Archive, Check, Filter
 } from 'lucide-react'
 import { useApiStore } from '@/store/apiStore'
 import { useTranslation } from '@/store/i18nStore'
-import { SavedRequest, HistoryItem, Environment, KeyValue, HttpMethod, RequestFolder, isFolder, isRequest, ApiProject, RecycleBinItem } from '@/store/types'
+import { SavedRequest, HistoryItem, Environment, KeyValue, HttpMethod, RequestFolder, isFolder, isRequest, ApiProject } from '@/store/types'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useToast } from '@/components/common/Toast'
 
@@ -91,15 +91,12 @@ export default function ApiSidebar() {
     clearHistory,
     loadFromStorage,
     saveToStorage,
-    exportProject,
-    importProject,
     importOpenAPI,
     locateRequestId,
     setLocateRequestId,
     recycleBin,
     restoreFromRecycleBin,
     permanentlyDelete,
-    clearExpiredItems,
     clearRecycleBin,
   } = useApiStore()
 
@@ -141,7 +138,6 @@ export default function ApiSidebar() {
   // 移动请求状态
   const [movingRequestId, setMovingRequestId] = useState<string | null>(null)
   const [moveMenuPosition, setMoveMenuPosition] = useState<{ top: number; left: number } | null>(null)
-  const [pendingMovePosition, setPendingMovePosition] = useState<{ top: number; left: number } | null>(null)
 
   // 请求右键菜单状态
   const [requestContextMenu, setRequestContextMenu] = useState<{ id: string; top: number; left: number } | null>(null)
@@ -287,7 +283,7 @@ export default function ApiSidebar() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${project.name}-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `${project.name || t('api.defaultProject')}-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
     setShowImportExport(null)
@@ -400,8 +396,8 @@ export default function ApiSidebar() {
     }
 
     // 尝试作为OpenAPI导入
-    // importMode === 'new' 时传入null表示创建新项目，'merge'时传入目标项目ID
-    const targetId = importMode === 'merge' ? importTargetProjectId : null
+    // importMode === 'new' 时传入undefined表示创建新项目，'merge'时传入目标项目ID
+    const targetId = importMode === 'merge' ? importTargetProjectId ?? undefined : undefined
     if (importOpenAPI(importText, targetId)) {
       showToast(t('common.success'), 'success')
       setShowImportExport(null)
@@ -468,7 +464,7 @@ export default function ApiSidebar() {
           const found = getParentId(childFolders, id)
           if (found !== undefined) return found
         }
-        return undefined
+        return null
       }
       // 检查是否在根目录
       const isInRoot = activeProject?.requestFolders.some(f => f.id === editingFolderId)
@@ -690,26 +686,6 @@ export default function ApiSidebar() {
     return false
   }
 
-  const checkNameExists = (name: string, folderId: string | null, excludeId?: string): boolean => {
-    if (!activeProject) return false
-    if (folderId === null) {
-      for (const r of activeProject.rootRequests) {
-        if (r.id !== excludeId && r.name === name) return true
-      }
-    }
-    const checkFolder = (folders: RequestFolder[]): boolean => {
-      for (const f of folders) {
-        if (f.id === folderId) {
-          return f.children.some(c => isRequest(c) && c.id !== excludeId && c.name === name)
-        }
-        const childFolders = f.children.filter(isFolder) as RequestFolder[]
-        if (checkFolder(childFolders)) return true
-      }
-      return false
-    }
-    return folderId !== null && checkFolder(activeProject.requestFolders)
-  }
-
   // 搜索过滤请求
   const filterRequestsBySearch = (folders: RequestFolder[], requests: SavedRequest[], query: string, filters?: SearchFilters): {
     folders: RequestFolder[]
@@ -777,7 +753,6 @@ export default function ApiSidebar() {
     return { folders: filterFolders(folders), requests: filteredRequests }
   }
 
-  const totalRequests = activeProject ? countRequests(activeProject.requestFolders, activeProject.rootRequests) : 0
   const folderOptions = activeProject ? getFolderOptions(activeProject.requestFolders) : []
 
   // 应用搜索过滤
@@ -999,7 +974,7 @@ export default function ApiSidebar() {
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{project.name}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{project.name || t('api.defaultProject')}</span>
                 )}
                 <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
                   {countRequests(project.requestFolders, project.rootRequests)}
@@ -1010,7 +985,7 @@ export default function ApiSidebar() {
                   onClick={(e) => {
                     e.stopPropagation()
                     setEditingProjectId(project.id)
-                    setEditingProjectName(project.name)
+                    setEditingProjectName(project.name || t('api.defaultProject'))
                   }}
                   className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                   title={t('common.edit')}
@@ -1077,7 +1052,7 @@ export default function ApiSidebar() {
                         >
                           <div className={`w-2 h-2 rounded-full ${project.activeEnvId === env.id ? 'bg-blue-500' : 'bg-gray-300'}`} />
                           <span className={`text-xs flex-1 truncate ${project.activeEnvId === env.id ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
-                            {env.name}
+                            {env.name || t('api.defaultEnvironment')}
                           </span>
                           {env.variables.filter(v => v.enabled && v.key).length > 0 && (
                             <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
@@ -1542,11 +1517,11 @@ export default function ApiSidebar() {
       )}
 
       {/* Confirm Dialogs */}
-      <ConfirmDialog isOpen={!!confirmDeleteEnv} title={t('api.deleteEnvironment')} message={t('api.deleteEnvironmentConfirm', { name: activeProject?.environments.find(e => e.id === confirmDeleteEnv)?.name })} confirmText={t('common.delete')} cancelText={t('common.cancel')} variant="danger" onConfirm={() => { if (confirmDeleteEnv) deleteEnvironment(confirmDeleteEnv); setConfirmDeleteEnv(null) }} onCancel={() => setConfirmDeleteEnv(null)} />
+      <ConfirmDialog isOpen={!!confirmDeleteEnv} title={t('api.deleteEnvironment')} message={t('api.deleteEnvironmentConfirm', { name: activeProject?.environments.find(e => e.id === confirmDeleteEnv)?.name || '' })} confirmText={t('common.delete')} cancelText={t('common.cancel')} variant="danger" onConfirm={() => { if (confirmDeleteEnv) deleteEnvironment(confirmDeleteEnv); setConfirmDeleteEnv(null) }} onCancel={() => setConfirmDeleteEnv(null)} />
       <ConfirmDialog
         isOpen={!!confirmDeleteFolder}
         title={t('api.deleteFolder')}
-        message={t('api.deleteFolderConfirm', { name: findFolderById(activeProject?.requestFolders || [], confirmDeleteFolder || '')?.name })}
+        message={t('api.deleteFolderConfirm', { name: findFolderById(activeProject?.requestFolders || [], confirmDeleteFolder || '')?.name || '' })}
         confirmText={t('common.delete')}
         cancelText={t('common.cancel')}
         variant="danger"
@@ -1563,14 +1538,14 @@ export default function ApiSidebar() {
         onConfirm={() => { if (confirmDeleteRequest) deleteSavedRequest(confirmDeleteRequest); setConfirmDeleteRequest(null) }}
         onCancel={() => setConfirmDeleteRequest(null)}
       />
-      <ConfirmDialog isOpen={!!confirmDeleteProject} title={t('api.deleteProject')} message={t('api.deleteProjectConfirm', { name: projects.find(p => p.id === confirmDeleteProject)?.name })} confirmText={t('common.delete')} cancelText={t('common.cancel')} variant="danger" onConfirm={() => { if (confirmDeleteProject) { deleteProject(confirmDeleteProject); if (activeProjectId === confirmDeleteProject && projects.length > 1) { switchProject(projects.find(p => p.id !== confirmDeleteProject)?.id || '') } } setConfirmDeleteProject(null) }} onCancel={() => setConfirmDeleteProject(null)} />
+      <ConfirmDialog isOpen={!!confirmDeleteProject} title={t('api.deleteProject')} message={t('api.deleteProjectConfirm', { name: projects.find(p => p.id === confirmDeleteProject)?.name || '' })} confirmText={t('common.delete')} cancelText={t('common.cancel')} variant="danger" onConfirm={() => { if (confirmDeleteProject) { deleteProject(confirmDeleteProject); if (activeProjectId === confirmDeleteProject && projects.length > 1) { switchProject(projects.find(p => p.id !== confirmDeleteProject)?.id || '') } } setConfirmDeleteProject(null) }} onCancel={() => setConfirmDeleteProject(null)} />
       <ConfirmDialog isOpen={confirmClearHistory} title={t('api.clearHistory')} message={t('api.clearHistoryConfirm')} confirmText={t('api.clear')} cancelText={t('common.cancel')} variant="danger" onConfirm={() => { clearHistory(); setConfirmClearHistory(false) }} onCancel={() => setConfirmClearHistory(false)} />
 
       {/* Recycle Bin Confirm Dialogs */}
       <ConfirmDialog
         isOpen={!!confirmRestoreItem}
         title={t('api.restoreItem')}
-        message={t('api.restoreItemConfirm', { name: recycleBin.find(i => i.id === confirmRestoreItem)?.name })}
+        message={t('api.restoreItemConfirm', { name: recycleBin.find(i => i.id === confirmRestoreItem)?.name || '' })}
         confirmText={t('api.restore')}
         cancelText={t('common.cancel')}
         variant="info"
@@ -1590,7 +1565,7 @@ export default function ApiSidebar() {
       <ConfirmDialog
         isOpen={!!confirmPermanentDeleteItem}
         title={t('api.permanentDelete')}
-        message={t('api.permanentDeleteConfirm', { name: recycleBin.find(i => i.id === confirmPermanentDeleteItem)?.name })}
+        message={t('api.permanentDeleteConfirm', { name: recycleBin.find(i => i.id === confirmPermanentDeleteItem)?.name || '' })}
         confirmText={t('common.delete')}
         cancelText={t('common.cancel')}
         variant="danger"
@@ -1643,7 +1618,7 @@ export default function ApiSidebar() {
                       >
                         <Briefcase className={`w-4 h-4 ${selectedExportProjectId === project.id ? 'text-blue-500' : 'text-gray-400'}`} />
                         <span className={`text-sm font-medium flex-1 ${selectedExportProjectId === project.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                          {project.name}
+                          {project.name || t('api.defaultProject')}
                         </span>
                         <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
                           {countRequests(project.requestFolders, project.rootRequests)}
@@ -1878,7 +1853,7 @@ function RequestTree({
 function EnvironmentModal({ environment, isNew, onClose, onSave }: { environment: Environment; isNew: boolean; onClose: () => void; onSave: (env: Environment) => void }) {
   const { showToast } = useToast()
   const { t } = useTranslation()
-  const [name, setName] = useState(environment.name)
+  const [name, setName] = useState(environment.name || t('api.defaultEnvironment'))
   const [variables, setVariables] = useState<KeyValue[]>(environment.variables)
 
   return (

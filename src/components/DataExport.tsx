@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Download, FileJson, FileText, Database, RefreshCw, CheckCircle2, X, FileSpreadsheet, CheckSquare, Square, Archive, DownloadCloud } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Download, RefreshCw, CheckCircle2, X, CheckSquare, Square } from 'lucide-react'
 import { customStringify } from '@/utils/formatter'
 import { useRedisStore } from '@/store/redisStore'
 import { useTranslation } from '@/store/i18nStore'
@@ -72,7 +72,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
         const result = await window.electronAPI.redisScan(connectionId, searchPattern, 1000, cursor)
         if (result.success && result.data) {
           allScannedKeys.push(...result.data)
-          cursor = result.cursor
+          cursor = result.cursor || '0'
         }
       } while (cursor !== '0')
 
@@ -202,7 +202,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
    * 包括 Java 序列化对象的特殊处理
    */
   const prettifyExportData = async (keyInfo: KeyInfo, rawData: any, encoding?: string): Promise<any> => {
-    const { type, name } = keyInfo
+    const { type } = keyInfo
 
     // 处理 Java 序列化对象
     if (encoding === 'java-binary' && Array.isArray(rawData)) {
@@ -482,7 +482,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
             lines.push(`Value: ${value.data}`)
           } else if (Array.isArray(value.data)) {
             lines.push('Value:')
-            value.data.forEach((item, i) => {
+            value.data.forEach((item: any, i: number) => {
               lines.push(`  [${i}]: ${customStringify(item, 2)}`)
             })
           } else if (typeof value.data === 'object' && value.data !== null) {
@@ -583,7 +583,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
         lines.push(`Value: ${value.data}`)
       } else if (Array.isArray(value.data)) {
         lines.push('Value:')
-        value.data.forEach((item, i) => {
+        value.data.forEach((item: any, i: number) => {
           lines.push(`  [${i}]: ${customStringify(item, 2)}`)
         })
       } else if (typeof value.data === 'object' && value.data !== null) {
@@ -638,7 +638,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
               type="text"
               value={searchPattern}
               onChange={(e) => setSearchPattern(e.target.value)}
-              placeholder="* (e.g., user:*, cache:*)"
+              placeholder={t('redis.patternPlaceholder')}
               className="flex-1 min-w-0 px-2 py-1 text-xs bg-transparent text-gray-900 dark:text-white focus:outline-none"
             />
             <button

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { ChevronDown, Save } from 'lucide-react'
 import {
   deserializeData,
-  formatDataForDisplay as formatDeserializedData,
   getDeserializationOptions,
   isLikelyBinary,
 } from '@/utils/deserializer'
@@ -32,7 +31,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
   const [saving, setSaving] = useState<boolean>(false)
   const [format, setFormat] = useState<string>('auto')
   const [showFormatMenu, setShowFormatMenu] = useState<boolean>(false)
-  const [deserializationError, setDeserializationError] = useState<string | null>(null)
+  const [, setDeserializationError] = useState<string | null>(null)
   const [javaByteArray, setJavaByteArray] = useState<number[] | null>(null)
 
   useEffect(() => {
@@ -174,7 +173,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
     }
   }, [value, javaByteArray, format])
 
-  const { displayValue, error, isJavaBinary } = displayResult
+  const { displayValue, error } = displayResult
 
   if (loading) {
     return (

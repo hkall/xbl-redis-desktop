@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Bolt,
   X,
@@ -223,7 +223,7 @@ export default function TriggerDetail({ connectionId, database, trigger, onClose
             )}
             {info.definer && (
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Definer:</span>
+                <span className="text-gray-500 dark:text-gray-400">{t('database.definer')}:</span>
                 <span className="text-gray-700 dark:text-gray-300 font-mono">{info.definer}</span>
               </div>
             )}

@@ -9,8 +9,6 @@ import {
   DatabaseInfo,
   TableInfo,
   ColumnInfo,
-  IndexInfo,
-  TableStructure,
   DATABASE_CONFIGS,
   UnifiedTab,
   SqlResultItem,
@@ -926,7 +924,7 @@ export const useDbStore = create<DbState & DbActions>()(
         const tab = get().getActiveTab()
         if (!tab) return null
         const sql = sqlOverride || tab.sql
-        if (!sql.trim()) return null
+        if (!sql?.trim()) return null
 
         // 解析多条SQL语句
         const statements = get().parseMultipleSql(sql)

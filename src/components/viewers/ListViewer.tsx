@@ -85,7 +85,7 @@ function EditModal({ isOpen, type, index, initialValue, onClose, onSave }: EditM
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-            {type === 'add' ? t('redis.addListItem') : t('redis.editListItem', { index })}
+            {type === 'add' ? t('redis.addListItem') : t('redis.editListItem', { index: index ?? 0 })}
           </h3>
           <button
             onClick={onClose}
@@ -415,7 +415,7 @@ export default function ListViewer({ connectionId, keyName }: ListViewerProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {paginatedItems.map((item, idx) => {
+                  {paginatedItems.map((item, _idx) => {
                     const actualIndex = items.indexOf(item)
                     return (
                       <tr key={`${item}-${actualIndex}`} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">

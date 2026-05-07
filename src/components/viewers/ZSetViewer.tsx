@@ -25,7 +25,7 @@ interface EditModalProps {
   onSave: (member: string, score: number, originalMember?: string) => void
 }
 
-function EditModal({ isOpen, type, rank, initialMember, initialScore, onClose, onSave }: EditModalProps) {
+function EditModal({ isOpen, type, rank: _rank, initialMember, initialScore, onClose, onSave }: EditModalProps) {
   const { t } = useTranslation()
   const [member, setMember] = useState('')
   const [score, setScore] = useState(0)

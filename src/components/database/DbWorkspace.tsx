@@ -23,9 +23,6 @@ import {
   Hash,
   ArrowUp,
   ArrowDown,
-  ChevronsUp,
-  ChevronsDown,
-  Info,
   Key,
   Bolt,
   Download,
@@ -40,7 +37,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { useDbStore } from '@/store/dbStore'
-import { QueryResult, UnifiedTab, TableInfo, ColumnInfo, SqlResultItem } from '@/types/database'
+import { QueryResult, UnifiedTab } from '@/types/database'
 import { useTranslation } from '@/store/i18nStore'
 import TableDetail from './TableDetail'
 import ProcedureDetail from './ProcedureDetail'
@@ -641,7 +638,6 @@ function DataGrid({
   tableName,
   onRefresh,
   sourceSql,  // 原始SQL，用于提取表名
-  availableTables, // 可用表列表，用于快速选择
 }: {
   result: QueryResult | null | undefined
   loading: boolean
@@ -650,11 +646,9 @@ function DataGrid({
   tableName?: string
   onRefresh?: () => void
   sourceSql?: string
-  availableTables?: string[]
 }) {
   const { t } = useTranslation()
   const columns = result?.columns || []
-  const data = result?.data || []
 
   // 自动推断表名和主键（DBeaver风格）
   const inferredTableName = tableName || (sourceSql ? extractTableNameFromSql(sourceSql) : null)
@@ -666,7 +660,6 @@ function DataGrid({
   const [editingCell, setEditingCell] = useState<{ rowIndex: number; colIndex: number } | null>(null)
   const [editValue, setEditValue] = useState('')
   const [pendingChanges, setPendingChanges] = useState<Array<{ rowIndex: number; colIndex: number; newValue: any }>>([])
-  const [showTableSelector, setShowTableSelector] = useState(false)
 
   // 其他状态
   const [page, setPage] = useState(1)
@@ -768,7 +761,7 @@ function DataGrid({
         const colName = columns[change.colIndex]
         const sql = `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${String(change.newValue).replace(/'/g, "''")}'`} WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`}`
 
-        const res = await window.electronAPI?.dbExecuteQuery(connectionId, sql, database)
+        const res = await window.electronAPI?.dbExecuteQuery?.(connectionId, sql, database)
         if (!res?.success) {
           alert(`${t('common.error')}: ${res?.error}`)
           return
@@ -820,7 +813,7 @@ function DataGrid({
         const idValue = sortedData[rowIndex][effectiveIdCol]
         const sql = `DELETE FROM \`${effectiveTable}\` WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`}`
 
-        const res = await window.electronAPI?.dbExecuteQuery(connectionId, sql, database)
+        const res = await window.electronAPI?.dbExecuteQuery?.(connectionId, sql, database)
         if (!res?.success) {
           alert(`${t('common.error')}: ${res?.error}`)
           return
@@ -1704,7 +1697,6 @@ export default function DbWorkspace() {
 
   const handleEditorResize = useCallback((delta: number) => setEditorHeight(prev => Math.max(150, Math.min(800, prev + delta))), [])
   const handleExecute = useCallback(async (sqlOverride?: string) => { setShowResult(true); return executeCurrentTab(sqlOverride) }, [executeCurrentTab])
-  const handleExecuteClick = useCallback(() => handleExecute(), [handleExecute])
 
   useEffect(() => { if (activeConnectionId && tabs.length === 0) createQueryTab() }, [activeConnectionId])
 
@@ -1845,16 +1837,11 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
   executing: boolean
   t: (key: string, params?: any) => string
 }) {
-  const { getQueryHistory, addSavedQuery, setActiveResult, clearTabResults, getCachedTables } = useDbStore()
+  const { getQueryHistory, addSavedQuery, setActiveResult, clearTabResults } = useDbStore()
   const [showHistory, setShowHistory] = useState(false)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [queryName, setQueryName] = useState('')
   const history = getQueryHistory(100).filter(h => h.connectionId === activeConnectionId).slice(0, 20)
-
-  // 获取可用表列表（用于编辑时选择表名）
-  const availableTables = activeConnectionId && activeDatabase
-    ? (getCachedTables(activeConnectionId, activeDatabase) || []).map(t => t.name)
-    : []
 
   const handleSaveQuery = () => { if (queryName.trim() && activeTab?.sql?.trim()) { addSavedQuery(queryName.trim(), activeTab.sql); setShowSaveDialog(false); setQueryName('') } }
 
@@ -1996,7 +1983,6 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
                 tableName={activeTab?.itemName}
                 onRefresh={handleExecute}
                 sourceSql={activeTab?.sql}
-                availableTables={availableTables}
               />
               <ExecutionInfo result={currentResult} />
             </div>

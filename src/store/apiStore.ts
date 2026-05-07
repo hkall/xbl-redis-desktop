@@ -19,15 +19,15 @@ const createDefaultRequest = (): SavedRequest => ({
 const createDefaultEnvironments = (): Environment[] => [
   {
     id: 'env-default',
-    name: '默认环境',
+    name: '',
     variables: [
-      { key: 'baseUrl', value: 'http://localhost:8080', enabled: true, description: 'API基础URL' },
+      { key: 'baseUrl', value: 'http://localhost:8080', enabled: true, description: '' },
     ],
   },
 ]
 
 // 创建默认项目
-const createDefaultProject = (name: string = '默认项目'): ApiProject => {
+const createDefaultProject = (name: string = ''): ApiProject => {
   const id = crypto.randomUUID()
   return {
     id,
@@ -711,10 +711,10 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
   moveRequest: (id, folderId) => {
     const state = get()
     const project = state.getActiveProject()
-    if (!project) return
+    if (!project) return false
 
     const request = findRequest(project.requestFolders, project.rootRequests, id)
-    if (!request) return
+    if (!request) return false
 
     // 检查目标目录是否存在同名请求
     const checkNameExists = (name: string, targetFolderId: string | null): boolean => {
@@ -990,12 +990,9 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
       // 提取环境变量
       const environments: Environment[] = [{
         id: 'env-default',
-        name: '默认环境',
-        variables: baseUrl ? [{ key: 'baseUrl', value: baseUrl, enabled: true, description: 'API基础URL' }] : [],
+        name: '',
+        variables: baseUrl ? [{ key: 'baseUrl', value: baseUrl, enabled: true, description: '' }] : [],
       }]
-
-      // 获取components/schemas用于解析引用
-      const schemas = data.components?.schemas || data.definitions || {}
 
       // 解析schema引用
       const resolveRef = (ref: string): any => {
@@ -1062,7 +1059,7 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
             if (!['get', 'post', 'put', 'delete', 'patch', 'head', 'options'].includes(method.toLowerCase())) continue
 
             const op = operation as any
-            const tagName = op.tags?.[0] || '默认'
+            const tagName = op.tags?.[0] || 'Default'
             const requestName = op.summary || op.operationId || `${method.toUpperCase()} ${path}`
 
             // 解析参数

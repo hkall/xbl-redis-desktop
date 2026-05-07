@@ -679,7 +679,7 @@ function AddConnectionForm({
               value={connection.name}
               onChange={(e) => onChange({ ...connection, name: e.target.value })}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="My Redis Server"
+              placeholder={t('redis.connectionNamePlaceholder')}
               required
             />
           </div>
@@ -692,7 +692,7 @@ function AddConnectionForm({
               value={connection.host}
               onChange={(e) => onChange({ ...connection, host: e.target.value })}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="localhost"
+              placeholder={t('redis.hostPlaceholder')}
               required
             />
           </div>
@@ -705,7 +705,7 @@ function AddConnectionForm({
               value={connection.port}
               onChange={(e) => onChange({ ...connection, port: parseInt(e.target.value) || 6379 })}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="6379"
+              placeholder={t('redis.portPlaceholder')}
               min="1"
               max="65535"
               required
@@ -730,7 +730,7 @@ function AddConnectionForm({
                 }
               }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="0"
+              placeholder={t('redis.dbPlaceholder')}
               min="0"
             />
           </div>
@@ -743,7 +743,7 @@ function AddConnectionForm({
               value={connection.password}
               onChange={(e) => onChange({ ...connection, password: e.target.value })}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="••••••••"
+              placeholder={t('redis.passwordPlaceholder')}
             />
           </div>
         </div>

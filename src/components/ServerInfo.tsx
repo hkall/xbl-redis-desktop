@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { RefreshCw, Database, Zap, Circle, CheckCircle, AlertTriangle, Activity, Clock, Shield, Code, Server, TrendingUp, Hash, Command, Timer, Ban, HardDrive, Save, FileBox } from 'lucide-react'
+import { RefreshCw, Database, Zap, Circle, CheckCircle, AlertTriangle, Activity, Clock, Shield, Code, TrendingUp, Hash, Command, Timer, Ban, HardDrive, Save, FileBox } from 'lucide-react'
 import { useRedisStore } from '@/store/redisStore'
 import { useTranslation } from '@/store/i18nStore'
 
 interface ServerInfoProps {
   connectionId: string | null
-  fullMode?: boolean
-}
-
-interface ServerData {
-  section: string
-  data: Record<string, string>
 }
 
 interface MetricConfig {
@@ -50,34 +44,7 @@ const CORE_METRICS: Record<string, MetricConfig> = {
   rdb_last_save_time: { nameKey: 'lastSave', icon: Save, category: 'stats', format: 'timeago' },
 }
 
-const CATEGORY_COLORS = {
-  performance: {
-    bg: 'bg-green-50 dark:bg-green-900/20',
-    border: 'border-green-200 dark:border-green-700',
-    text: 'text-green-700 dark:text-green-400',
-    icon: 'text-green-600 dark:text-green-400',
-  },
-  memory: {
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
-    border: 'border-blue-200 dark:border-blue-700',
-    text: 'text-blue-700 dark:text-blue-400',
-    icon: 'text-blue-600 dark:text-blue-400',
-  },
-  server: {
-    bg: 'bg-purple-50 dark:bg-purple-900/20',
-    border: 'border-purple-200 dark:border-purple-700',
-    text: 'text-purple-700 dark:text-purple-400',
-    icon: 'text-purple-600 dark:text-purple-400',
-  },
-  stats: {
-    bg: 'bg-amber-50 dark:bg-amber-900/20',
-    border: 'border-amber-200 dark:border-amber-700',
-    text: 'text-amber-700 dark:text-amber-400',
-    icon: 'text-amber-600 dark:text-amber-400',
-  },
-}
-
-export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) {
+export default function ServerInfo({ connectionId }: ServerInfoProps) {
   const { t } = useTranslation()
   const { connections } = useRedisStore()
   const [loading, setLoading] = useState(false)
@@ -131,8 +98,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
     }
   }
 
-  const formatValue = (key: string, value: string, formatType?: string) => {
-    const num = parseFloat(value)
+  const formatValue = (_key: string, value: string, formatType?: string) => {
 
     if (formatType === 'bytes') {
       const bytes = parseInt(value) || 0
@@ -242,7 +208,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
     return serverInfo[key] || '0'
   }
 
-  const getCategoryIcon = (icon?: any, category?: string) => {
+  const getCategoryIcon = (icon?: any) => {
     if (icon) return icon
     return Circle
   }
@@ -345,7 +311,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'performance')
                   .map(([key, config]) => {
-                    const Icon = getCategoryIcon(config.icon, config.category)
+                    const Icon = getCategoryIcon(config.icon)
                     const value = getMetricValue(key, config)
                     const status = getMetricStatus(key, value)
                     const formatted = formatValue(key, value, config.format ?? undefined)
@@ -375,7 +341,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'memory')
                   .map(([key, config]) => {
-                    const Icon = getCategoryIcon(config.icon, config.category)
+                    const Icon = getCategoryIcon(config.icon)
                     const value = serverInfo[key] || '0'
                     const status = getMetricStatus(key, value)
                     const formatted = formatValue(key, value, config.format ?? undefined)
@@ -409,7 +375,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'server')
                   .map(([key, config]) => {
-                    const Icon = getCategoryIcon(config.icon, config.category)
+                    const Icon = getCategoryIcon(config.icon)
                     const value = serverInfo[key] || '0'
                     const formatted = formatValue(key, value, config.format ?? undefined)
 
@@ -438,7 +404,7 @@ export default function ServerInfo({ connectionId, fullMode }: ServerInfoProps) 
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'stats')
                   .map(([key, config]) => {
-                    const Icon = getCategoryIcon(config.icon, config.category)
+                    const Icon = getCategoryIcon(config.icon)
                     const value = getMetricValue(key, config)
                     const formatted = formatValue(key, value, config.format ?? undefined)
 

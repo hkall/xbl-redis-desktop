@@ -16,7 +16,7 @@ import { useRedisStore } from './store/redisStore'
 import { useApiStore } from './store/apiStore'
 import { useDbStore } from './store/dbStore'
 import { ToolType } from './store/types'
-import { Terminal, Server, List, Download, X, Sun, Moon } from 'lucide-react'
+import { Terminal, Server, List, Download, X } from 'lucide-react'
 
 type PanelType = 'keys' | 'command' | 'server' | 'batch' | 'export'
 type ViewMode = 'split' | 'full' // split = 两栏, full = 占满右侧区域
@@ -90,7 +90,7 @@ function ResizableDivider({
 }
 
 export default function App() {
-  const { activeConnectionId, connections, selectedKey, setSelectedKey, loadConfig } = useRedisStore()
+  const { activeConnectionId, setSelectedKey, loadConfig } = useRedisStore()
   const { loadFromStorage: loadApiData } = useApiStore()
   const { loadFromStorage: loadDbData } = useDbStore()
   const [darkMode, setDarkMode] = useState(() => {
@@ -102,10 +102,6 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('split')
   const [keysPanelPercent, setKeysPanelPercent] = useState(35) // Default 35% width for keys panel
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const activeConnection = activeConnectionId
-    ? connections.find((c) => c.id === activeConnectionId)
-    : null
 
   // Handle keys panel resize with percentage
   const handleKeysPanelResize = useCallback((delta: number) => {
@@ -156,20 +152,14 @@ export default function App() {
     setDarkMode(!darkMode)
   }
 
-  const handlePanelChange = (panel: PanelType) => {
-    setSelectedPanel(panel)
-  }
-
   const getPanelComponent = () => {
-    const panelConfig = PANEL_CONFIG[selectedPanel]
-
     switch (selectedPanel) {
       case 'keys':
         return <KeyBrowser />
       case 'command':
         return <CommandLine connectionId={activeConnectionId} />
       case 'server':
-        return <ServerInfo connectionId={activeConnectionId} fullMode />
+        return <ServerInfo connectionId={activeConnectionId} />
       case 'batch':
         return <BatchOperations connectionId={activeConnectionId} />
       case 'export':

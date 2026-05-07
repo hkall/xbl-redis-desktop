@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Terminal, Send, ChevronUp, ChevronDown, X, Trash2 } from 'lucide-react'
+import { Terminal, Send, X, Trash2 } from 'lucide-react'
 import { useTranslation } from '@/store/i18nStore'
 import ConfirmDialog from './ConfirmDialog'
 

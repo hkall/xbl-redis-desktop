@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Trash2, Clock, RefreshCw, X, Database, CheckCircle2, CheckSquare, Square, ToggleLeft, ToggleRight, AlertCircle, Layers } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Trash2, Clock, RefreshCw, CheckCircle2, CheckSquare, Square, AlertCircle } from 'lucide-react'
 import { useRedisStore } from '@/store/redisStore'
 import { useTranslation } from '@/store/i18nStore'
 
@@ -23,12 +23,12 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
   const [allScanned, setAllScanned] = useState(false)
   const [loading, setLoading] = useState(false)
   const [searchPattern, setSearchPattern] = useState('*')
-  const [operationMode, setOperationMode] = useState<'delete' | 'ttl'>('delete')
+  const [operationMode] = useState<'delete' | 'ttl'>('delete')
   const [ttlValue, setTtlValue] = useState('')
   const [selectAll, setSelectAll] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState({ current: 0, total: 0 })
-  const [results, setResults] = useState<{ success: number; failed: number; errors: string[] }>({ success: 0, failed: 0, errors: [] })
+  const [, setResults] = useState<{ success: number; failed: number; errors: string[] }>({ success: 0, failed: 0, errors: [] })
 
   // Toast notification state
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({ show: false, message: '', type: 'success' })
@@ -79,7 +79,7 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
 
       if (result.success && result.data) {
         const newKeyNames = result.data
-        scanCursorRef.current = result.cursor
+        scanCursorRef.current = result.cursor || '0'
 
         // Get key info for each key in this batch
         const keyInfos = await Promise.all(
@@ -219,7 +219,7 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
     await loadKeys(true)
 
     // Show toast notification
-    const finalResults = { success: 0, failed: 0, errors: [] }
+    const finalResults: { success: number; failed: number; errors: string[] } = { success: 0, failed: 0, errors: [] }
     // Re-count results from state
     setResults(prev => {
       finalResults.success = prev.success + 1
@@ -308,10 +308,6 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
     }
   }
 
-  const clearResults = () => {
-    setResults({ success: 0, failed: 0, errors: [] })
-  }
-
   if (!connectionId) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-800">
@@ -331,7 +327,7 @@ export default function BatchOperations({ connectionId }: BatchOperationsProps) 
               type="text"
               value={searchPattern}
               onChange={(e) => setSearchPattern(e.target.value)}
-              placeholder="* (e.g., user:*, cache:*)"
+              placeholder={t('redis.patternPlaceholder')}
               className="flex-1 min-w-0 px-2 py-1 text-xs bg-transparent text-gray-900 dark:text-white focus:outline-none"
             />
             <button

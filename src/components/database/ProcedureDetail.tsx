@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   FileCode,
   X,
@@ -350,14 +350,14 @@ export default function ProcedureDetail({ connectionId, database, procedure, onC
             {info.definer && (
               <div className="flex items-center gap-2 text-sm">
                 <User className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-500 dark:text-gray-400">Definer:</span>
+                <span className="text-gray-500 dark:text-gray-400">{t('database.definer')}:</span>
                 <span className="text-gray-700 dark:text-gray-300 font-mono">{info.definer}</span>
               </div>
             )}
             {info.securityType && (
               <div className="flex items-center gap-2 text-sm">
                 <Database className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-500 dark:text-gray-400">Security:</span>
+                <span className="text-gray-500 dark:text-gray-400">{t('database.securityType')}:</span>
                 <span className="text-gray-700 dark:text-gray-300">{info.securityType}</span>
               </div>
             )}

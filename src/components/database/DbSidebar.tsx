@@ -6,7 +6,6 @@ import {
   RefreshCw,
   Plus,
   MoreHorizontal,
-  Server,
   Table,
   Eye,
   FileCode,
@@ -18,16 +17,11 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  Settings,
-  Play,
   Star,
   FolderOpen,
   Bolt,
-  Info,
   FileText,
   Clipboard,
-  ArrowDownToLine,
-  ArrowUpFromLine,
   Search,
   Terminal,
 } from 'lucide-react'
@@ -37,8 +31,6 @@ import {
   DbConnection,
   DatabaseType,
   DATABASE_CONFIGS,
-  TableInfo,
-  DatabaseInfo,
 } from '@/types/database'
 import ConfirmDialog from '../ConfirmDialog'
 
@@ -177,7 +169,7 @@ function ConnectionDialog({
                   type="text"
                   value={form.host}
                   onChange={(e) => setForm({ ...form, host: e.target.value })}
-                  placeholder="localhost"
+                  placeholder={t('database.hostPlaceholderDb')}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
@@ -247,7 +239,7 @@ function ConnectionDialog({
                 onChange={(e) => setForm({ ...form, charset: e.target.value })}
                 className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
-                <option value="utf8mb4">utf8mb4 (推荐)</option>
+                <option value="utf8mb4">utf8mb4 ({t('database.charsetRecommended')})</option>
                 <option value="utf8">utf8</option>
                 <option value="gbk">gbk</option>
                 <option value="gb2312">gb2312</option>
@@ -485,80 +477,6 @@ function ConnectionItem({
   )
 }
 
-// 树节点组件
-function TreeNode({
-  name,
-  icon: Icon,
-  nodeId,
-  expanded,
-  loading,
-  children,
-  onClick,
-  onToggle,
-  rightElement,
-  level = 0,
-}: {
-  name: string
-  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>
-  nodeId: string
-  expanded?: boolean
-  loading?: boolean
-  children?: React.ReactNode
-  onClick?: () => void
-  onToggle?: () => void
-  rightElement?: React.ReactNode
-  level?: number
-}) {
-  const hasChildren = Boolean(children)
-
-  return (
-    <div>
-      <div
-        className="flex items-center gap-1 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group"
-        style={{ paddingLeft: `${8 + level * 16}px` }}
-        onClick={onClick}
-      >
-        {/* 展开/折叠按钮 */}
-        {hasChildren ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggle?.()
-            }}
-            className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            {loading ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : expanded ? (
-              <ChevronDown className="w-3 h-3" />
-            ) : (
-              <ChevronRight className="w-3 h-3" />
-            )}
-          </button>
-        ) : (
-          <span className="w-4" />
-        )}
-
-        {/* 图标 */}
-        <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-
-        {/* 名称 */}
-        <span className="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">
-          {name}
-        </span>
-
-        {/* 右侧元素 */}
-        {rightElement}
-      </div>
-
-      {/* 子节点 */}
-      {hasChildren && expanded && (
-        <div>{children}</div>
-      )}
-    </div>
-  )
-}
-
 export default function DbSidebar() {
   const { t } = useTranslation()
   const {
@@ -678,7 +596,7 @@ export default function DbSidebar() {
   }
 
   // 为表新建查询
-  const newQueryForTable = (connectionId: string, database: string, tableName: string) => {
+  const newQueryForTable = (_connectionId: string, database: string, tableName: string) => {
     setActiveDatabase(database)
     const sql = `SELECT * FROM \`${tableName}\` LIMIT 100;`
     createQueryTab(`Query - ${tableName}`, sql)
@@ -729,7 +647,7 @@ export default function DbSidebar() {
   }
 
   // 新建表
-  const newTableForDatabase = (connectionId: string, database: string) => {
+  const newTableForDatabase = (_connectionId: string, database: string) => {
     setActiveDatabase(database)
     const sql = `CREATE TABLE \`new_table\` (\n  \`id\` INT NOT NULL AUTO_INCREMENT,\n  \`name\` VARCHAR(255) NOT NULL,\n  \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (\`id\`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
     createQueryTab('New Table', sql)
@@ -791,8 +709,8 @@ export default function DbSidebar() {
           setProceduresCache(prev => ({
             ...prev,
             [connectionId]: {
-              ...(prev[connectionId] || {}),
-              [database]: procResult.procedures
+              ...((prev[connectionId] as Record<string, any[]>) || {}),
+              [database]: procResult.procedures || []
             }
           }))
         }
@@ -805,8 +723,8 @@ export default function DbSidebar() {
           setTriggersCache(prev => ({
             ...prev,
             [connectionId]: {
-              ...(prev[connectionId] || {}),
-              [database]: triggerResult.triggers
+              ...((prev[connectionId] as Record<string, any[]>) || {}),
+              [database]: triggerResult.triggers || []
             }
           }))
         }
@@ -822,15 +740,6 @@ export default function DbSidebar() {
   // 检查是否已加载某个数据库的详情
   const isDatabaseLoaded = (connectionId: string, database: string) => {
     return loadedDatabases.has(`${connectionId}:${database}`)
-  }
-
-  // 处理连接节点展开
-  const handleConnectionExpand = (connectionId: string) => {
-    toggleNodeExpand(`conn:${connectionId}`)
-    const connection = connections.find((c) => c.id === connectionId)
-    if (connection?.connected) {
-      loadDatabases(connectionId)
-    }
   }
 
   // 处理保存连接
@@ -853,9 +762,6 @@ export default function DbSidebar() {
     deleteConnection(deleteConfirm.id)
     setDeleteConfirm({ isOpen: false, id: '', name: '' })
   }
-
-  // 获取缓存的数据库
-  const databases = activeConnectionId ? getCachedDatabases(activeConnectionId) : undefined
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800">
