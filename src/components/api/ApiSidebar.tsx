@@ -270,7 +270,7 @@ export default function ApiSidebar() {
       exportedAt: new Date().toISOString(),
       project: {
         id: project.id,
-        name: project.name,
+        name: project.name || t('api.defaultProject'),
         description: project.description,
         requestFolders: project.requestFolders,
         rootRequests: project.rootRequests,
@@ -956,7 +956,8 @@ export default function ApiSidebar() {
                     onChange={(e) => setEditingProjectName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        updateProject(project.id, { name: editingProjectName.trim() })
+                        const newName = editingProjectName.trim() || t('api.defaultProject')
+                        updateProject(project.id, { name: newName })
                         setEditingProjectId(null)
                       }
                       if (e.key === 'Escape') {
@@ -964,9 +965,8 @@ export default function ApiSidebar() {
                       }
                     }}
                     onBlur={() => {
-                      if (editingProjectName.trim()) {
-                        updateProject(project.id, { name: editingProjectName.trim() })
-                      }
+                      const newName = editingProjectName.trim() || t('api.defaultProject')
+                      updateProject(project.id, { name: newName })
                       setEditingProjectId(null)
                     }}
                     className="flex-1 min-w-0 px-2 py-0.5 bg-white dark:bg-gray-700 border border-blue-400 rounded text-sm focus:outline-none"
