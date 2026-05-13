@@ -4,7 +4,7 @@ import { ToolType, TOOL_CONFIGS } from '@/store/types'
 import { useI18n, Language, LANGUAGE_CONFIG } from '@/store/i18nStore'
 import { useTranslation } from '@/store/i18nStore'
 
-const APP_VERSION = '1.2.0'
+const APP_VERSION = '1.3.0'
 
 interface ToolbarProps {
   activeTool: ToolType
