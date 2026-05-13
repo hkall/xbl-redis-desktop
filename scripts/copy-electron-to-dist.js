@@ -64,11 +64,16 @@ function copyNodeModules() {
   }
 }
 
-// Copy all files from electron directory to dist, excluding ts files
+// Copy all files from electron directory to dist, excluding ts files and index.html
 function copyElectronFiles() {
   const files = fs.readdirSync(electronDir);
 
   for (const file of files) {
+    // Skip index.html - we want to keep the vite-generated one
+    if (file === 'index.html') {
+      continue;
+    }
+
     const srcPath = path.join(electronDir, file);
     const destPath = path.join(distDir, file);
     const stat = fs.statSync(srcPath);

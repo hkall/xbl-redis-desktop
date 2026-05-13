@@ -827,7 +827,7 @@ export default function ApiWorkspace() {
               onClick={() => scroll('left')}
               className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-gray-100 dark:from-gray-800 to-transparent z-10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4 text-gray-500" />
+              <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
             </button>
           )}
 
@@ -848,7 +848,7 @@ export default function ApiWorkspace() {
                 <div
                   key={tabId}
                   data-tab-id={tabId}
-                  className={`group flex items-center h-full px-3 border-r border-gray-200 dark:border-gray-700 cursor-pointer transition-colors flex-shrink-0 select-none ${
+                  className={`group flex items-center h-full px-2 border-r border-gray-200 dark:border-gray-700 cursor-pointer transition-colors flex-shrink-0 select-none ${
                     isActive
                       ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
                       : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800/50'
@@ -862,12 +862,12 @@ export default function ApiWorkspace() {
                   )}
 
                   {/* 方法标签 */}
-                  <span className={`text-xs font-semibold mr-2 ${METHOD_TAB_COLORS[tabRequest.method]}`}>
+                  <span className={`text-[11px] font-semibold mr-1.5 ${METHOD_TAB_COLORS[tabRequest.method]}`}>
                     {tabRequest.method}
                   </span>
 
                   {/* 名称 */}
-                  <span className="text-xs truncate max-w-[100px]">
+                  <span className="text-[11px] truncate max-w-[100px]">
                     {tabRequest.name || t('api.unnamed')}
                   </span>
 
@@ -877,7 +877,7 @@ export default function ApiWorkspace() {
                       e.stopPropagation()
                       closeTab(tabId)
                     }}
-                    className="ml-2 p-0.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="ml-1.5 p-0.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     title={t('common.close')}
                   >
                     <X className="w-3 h-3" />
@@ -893,7 +893,7 @@ export default function ApiWorkspace() {
               onClick={() => scroll('right')}
               className="absolute right-10 top-0 bottom-0 w-6 bg-gradient-to-l from-gray-100 dark:from-gray-800 to-transparent z-10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
-              <ChevronRight className="w-4 h-4 text-gray-500" />
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
             </button>
           )}
 
@@ -914,19 +914,19 @@ export default function ApiWorkspace() {
                 showToast(t('api.tabLimitReached'), 'error')
               }
             }}
-            className="flex-shrink-0 px-2 h-full text-gray-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors"
+            className="flex-shrink-0 px-1.5 h-full text-gray-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors"
             title={t('api.newRequest')}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
           </button>
           {/* 关闭所有按钮 */}
           {openTabs.length > 0 && (
             <button
               onClick={() => closeAllTabs()}
-              className="flex-shrink-0 px-2 h-full text-gray-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors"
+              className="flex-shrink-0 px-1.5 h-full text-gray-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors"
               title={t('api.closeAllTabs')}
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -973,7 +973,7 @@ export default function ApiWorkspace() {
           style={{ width: `${requestPanelPercent}%` }}
         >
           {/* Request Name */}
-          <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
+          <div className="flex-shrink-0 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
             {editingRequestName ? (
               <input
                 type="text"
@@ -1006,18 +1006,18 @@ export default function ApiWorkspace() {
                   }
                   setEditingRequestName(false)
                 }}
-                className="w-full px-2 py-1 text-sm font-medium bg-gray-100 dark:bg-gray-800 border border-blue-500 rounded outline-none transition-all duration-200"
+                className="w-full px-2 py-1 text-[13px] font-medium bg-gray-100 dark:bg-gray-800 border border-blue-500 rounded outline-none transition-all duration-200"
                 autoFocus
               />
             ) : (
               <div
-                className="flex items-center gap-2 cursor-pointer group py-0.5"
+                className="flex items-center gap-1.5 cursor-pointer group py-0.5"
                 onClick={() => {
                   setRequestNameInput(currentRequest?.name || '')
                   setEditingRequestName(true)
                 }}
               >
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate flex-1">
+                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300 truncate flex-1">
                   {currentRequest?.name || t('api.unnamedRequest')}
                 </span>
                 {currentRequest?.id && (
@@ -1026,7 +1026,7 @@ export default function ApiWorkspace() {
                       e.stopPropagation()
                       setLocateRequestId(currentRequest.id)
                     }}
-                    className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-opacity opacity-0 group-hover:opacity-100"
+                    className="p-0.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-opacity opacity-0 group-hover:opacity-100"
                     title={t('api.locateInSidebar')}
                   >
                     <MapPin className="w-3.5 h-3.5" />
@@ -1038,13 +1038,13 @@ export default function ApiWorkspace() {
           </div>
 
           {/* Request Bar */}
-          <div className="flex-shrink-0 px-3 py-2.5 bg-gray-100 dark:bg-gray-800/50">
-            <div className="flex items-center gap-2">
+          <div className="flex-shrink-0 px-2 py-2 bg-gray-100 dark:bg-gray-800/50">
+            <div className="flex items-center gap-1.5">
               {/* Method Selector */}
               <div className="relative">
                 <button
                   onClick={() => setShowMethodDropdown(!showMethodDropdown)}
-                  className={`select-none px-3 py-1.5 rounded-lg text-white text-sm font-semibold min-w-[80px] flex items-center justify-between transition-all duration-200 ${METHOD_COLORS[currentRequest.method].bg}`}
+                  className={`select-none px-2 py-1.5 rounded-md text-white text-[13px] font-semibold min-w-[80px] flex items-center justify-between transition-all duration-200 ${METHOD_COLORS[currentRequest.method].bg}`}
                 >
                   <span>{currentRequest.method}</span>
                   <ChevronDown className="w-3.5 h-3.5 ml-1" />
@@ -1052,7 +1052,7 @@ export default function ApiWorkspace() {
                 {showMethodDropdown && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowMethodDropdown(false)} />
-                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[100px] py-1 select-none">
+                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl z-20 overflow-hidden min-w-[100px] py-1 select-none">
                       {HTTP_METHODS.map((method) => (
                         <button
                           key={method}
@@ -1060,7 +1060,7 @@ export default function ApiWorkspace() {
                             updateCurrentRequest({ method })
                             setShowMethodDropdown(false)
                           }}
-                          className={`w-full px-3 py-1.5 text-left text-sm font-medium transition-colors ${
+                          className={`w-full px-2 py-1.5 text-left text-[13px] font-medium transition-colors ${
                             method === currentRequest.method
                               ? `${getStatusBg(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(method) ? method === 'GET' ? 200 : method === 'POST' ? 201 : method === 'DELETE' ? 204 : 200 : 200)} ${METHOD_COLORS[method].text}`
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -1081,7 +1081,7 @@ export default function ApiWorkspace() {
                 onChange={(url) => updateCurrentRequest({ url })}
                 placeholder={t('api.enterUrl')}
                 variables={activeVariables}
-                className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
 
@@ -1089,7 +1089,7 @@ export default function ApiWorkspace() {
             {loading ? (
               <button
                 onClick={handleCancel}
-                className="select-none px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-200"
+                className="select-none px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[13px] font-semibold rounded-md flex items-center gap-1.5 transition-all duration-200"
               >
                 <XCircle className="w-3.5 h-3.5" />
                 <span>{t('common.cancel')}</span>
@@ -1099,7 +1099,7 @@ export default function ApiWorkspace() {
                 <button
                   onClick={handleSend}
                   disabled={!currentRequest.url}
-                  className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-200 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-[13px] font-semibold rounded-md flex items-center gap-1.5 transition-all duration-200 disabled:cursor-not-allowed"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>{t('api.send')}</span>
@@ -1108,7 +1108,7 @@ export default function ApiWorkspace() {
                 <div className="relative">
                   <button
                     onClick={() => setShowTimeoutDropdown(!showTimeoutDropdown)}
-                    className="select-none px-2 py-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all flex items-center gap-1 text-xs"
+                    className="select-none px-1.5 py-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all flex items-center gap-1 text-[11px]"
                     title={t('api.timeoutSettings')}
                   >
                     <Clock className="w-3.5 h-3.5" />
@@ -1117,7 +1117,7 @@ export default function ApiWorkspace() {
                   {showTimeoutDropdown && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setShowTimeoutDropdown(false)} />
-                      <div className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[120px] py-1 select-none">
+                      <div className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl z-20 overflow-hidden min-w-[120px] py-1 select-none">
                         {[5000, 10000, 30000, 60000, 120000, 300000].map((ms) => (
                           <button
                             key={ms}
@@ -1125,7 +1125,7 @@ export default function ApiWorkspace() {
                               updateCurrentRequest({ timeout: ms })
                               setShowTimeoutDropdown(false)
                             }}
-                            className={`w-full px-3 py-1.5 text-left text-sm transition-colors ${
+                            className={`w-full px-2 py-1.5 text-left text-[13px] transition-colors ${
                               (currentRequest.timeout || 30000) === ms
                                 ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -1148,19 +1148,19 @@ export default function ApiWorkspace() {
                 setSaveFolderId(null)
                 setShowSaveModal(true)
               }}
-              className="p-1.5 text-gray-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+              className="p-1 text-gray-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-all"
               title={t('api.saveRequest')}
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-3.5 h-3.5" />
             </button>
 
             {/* Generate Code Button */}
             <button
               onClick={() => setShowCodeModal(true)}
-              className="p-1.5 text-gray-500 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all"
+              className="p-1 text-gray-500 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-md transition-all"
               title={t('api.generateCode')}
             >
-              <Terminal className="w-4 h-4" />
+              <Terminal className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -1177,7 +1177,7 @@ export default function ApiWorkspace() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                className={`relative px-2 py-1.5 text-[13px] font-medium transition-all duration-200 ${
                   activeTab === tab.id
                     ? 'text-blue-600 dark:text-blue-400'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -1185,7 +1185,7 @@ export default function ApiWorkspace() {
               >
                 <span>{tab.label}</span>
                 {'count' in tab && tab.count > 0 && (
-                  <span className="ml-1 px-1 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded-full">
+                  <span className="ml-1 px-1 py-0.5 text-[11px] bg-gray-200 dark:bg-gray-700 rounded-full">
                     {tab.count}
                   </span>
                 )}
@@ -1241,20 +1241,20 @@ export default function ApiWorkspace() {
           >
             {/* Header - 固定高度 */}
             <div
-              className="h-[45px] flex-shrink-0 px-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 select-none"
+              className="flex items-center gap-1.5 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none"
               onClick={() => setSentRequestOpen(!sentRequestOpen)}
             >
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${sentRequestOpen ? 'rotate-180' : ''}`} />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('api.actualRequestSent')}</span>
+              <span className="text-[13px] font-medium text-gray-600 dark:text-gray-400">{t('api.actualRequestSent')}</span>
             </div>
             {/* 拖拽条 */}
             {sentRequestOpen && <VerticalResizableDivider onResize={handleSentRequestResize} />}
             {/* Content */}
             {sentRequestOpen && (
               <div className="flex-1 min-h-0 overflow-auto bg-white/50 dark:bg-gray-800/20">
-                <div className="px-3 py-2 space-y-2 text-xs">
+                <div className="px-2 py-1.5 space-y-1.5 text-[11px]">
                   {/* Request Line */}
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     <span className={`px-1.5 py-0.5 rounded font-bold select-none flex-shrink-0 ${getMethodColor(sentRequest.method)}`}>
                       {sentRequest.method}
                     </span>
@@ -1262,11 +1262,11 @@ export default function ApiWorkspace() {
                   </div>
 
                   {/* Request Headers */}
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-1.5">
                     <div className="text-gray-500 dark:text-gray-400 mb-1 select-none">{t('api.headersLabel')}</div>
                     {Object.keys(sentRequest.headers).length > 0 ? (
                       Object.entries(sentRequest.headers).map(([key, value]) => (
-                        <div key={key} className="flex gap-2 py-0.5 min-w-0">
+                        <div key={key} className="flex gap-1.5 py-0.5 min-w-0">
                           <span className="text-gray-600 dark:text-gray-400 font-medium flex-shrink-0">{key}:</span>
                           <span className="text-gray-800 dark:text-gray-300 truncate" title={value as string}>{value as string}</span>
                         </div>
@@ -1278,7 +1278,7 @@ export default function ApiWorkspace() {
 
                   {/* Request Body */}
                   {sentRequest.body && (
-                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-1.5">
                       <div className="text-gray-500 dark:text-gray-400 mb-1 select-none">{t('api.bodyLabel')}</div>
                       <pre className="text-gray-800 dark:text-gray-300 whitespace-pre-wrap break-words overflow-auto max-h-32">
                         {sentRequest.body}
@@ -1313,34 +1313,34 @@ export default function ApiWorkspace() {
       {/* Save Modal */}
       {showSaveModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowSaveModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <div className="bg-white dark:bg-gray-800 rounded-md shadow-xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">
                 {currentRequest?.id && findRequestById(currentRequest.id) ? t('api.updateRequest') : t('api.saveRequest')}
               </h3>
               <button onClick={() => setShowSaveModal(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="p-4 space-y-3">
+            <div className="p-3 space-y-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.requestName')}</label>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.requestName')}</label>
                 <input
                   type="text"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
                   placeholder={t('api.enterRequestName')}
-                  className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleSave()}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.saveLocation')}</label>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">{t('api.saveLocation')}</label>
                 <select
                   value={saveFolderId || ''}
                   onChange={(e) => setSaveFolderId(e.target.value || null)}
-                  className="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  className="w-full px-2 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
                   {folderOptions.map(opt => (
                     <option key={opt.id || 'root'} value={opt.id || ''}>
@@ -1350,16 +1350,16 @@ export default function ApiWorkspace() {
                 </select>
               </div>
             </div>
-            <div className="px-4 py-3 bg-gray-100 dark:bg-gray-800/50 flex justify-end gap-2">
+            <div className="px-2 py-1.5 bg-gray-100 dark:bg-gray-800/50 flex justify-end gap-1.5">
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-2 py-1.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={handleSave}
-                className="px-3 py-1.5 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                className="px-2 py-1.5 text-[13px] font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
               >
                 {currentRequest?.id && findRequestById(currentRequest.id) ? t('common.update') : t('common.save')}
               </button>
@@ -1371,22 +1371,22 @@ export default function ApiWorkspace() {
       {/* Code Generation Modal */}
       {showCodeModal && currentRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCodeModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('api.generateCode')}</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">{t('api.generateCode')}</h3>
               <button onClick={() => setShowCodeModal(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Target Selector */}
-            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2">
+            <div className="px-2 py-1.5 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-1.5">
                 {(['curl', 'fetch', 'axios', 'javascript'] as CodeTarget[]).map((target) => (
                   <button
                     key={target}
                     onClick={() => setCodeTarget(target)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`px-2 py-1.5 rounded-md text-[13px] font-medium transition-all ${
                       codeTarget === target
                         ? 'bg-purple-500 text-white shadow-md'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -1399,28 +1399,28 @@ export default function ApiWorkspace() {
             </div>
 
             {/* Code Preview */}
-            <div className="p-4 max-h-[400px] overflow-auto">
-              <pre className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-4 rounded-lg text-sm font-mono whitespace-pre-wrap overflow-auto">
+            <div className="p-3 max-h-[400px] overflow-auto">
+              <pre className="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-3 rounded-md text-[13px] font-mono whitespace-pre-wrap overflow-auto">
                 {generateCode(currentRequest, codeTarget)}
               </pre>
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-3 bg-gray-100 dark:bg-gray-800/50 flex justify-end gap-2">
+            <div className="px-2 py-1.5 bg-gray-100 dark:bg-gray-800/50 flex justify-end gap-1.5">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(generateCode(currentRequest, codeTarget))
                   setCodeCopied(true)
                   setTimeout(() => setCodeCopied(false), 2000)
                 }}
-                className="px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                className="px-2 py-1.5 text-[13px] font-medium flex items-center gap-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-md transition-colors"
               >
                 {codeCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {codeCopied ? t('redis.copied') : t('api.copyCode')}
               </button>
               <button
                 onClick={() => setShowCodeModal(false)}
-                className="px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+                className="px-2 py-1.5 text-[13px] font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors"
               >
                 {t('common.close')}
               </button>
@@ -1587,7 +1587,7 @@ function VariableInput({
     return () => document.removeEventListener('focusin', handleFocusIn)
   }, [])
 
-  const inputClass = className || 'w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
+  const inputClass = className || 'w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all'
 
   const parts = parseVariables(value)
   const hasVariables = parts.some(p => p.isVar)
@@ -1618,7 +1618,7 @@ function VariableInput({
       {/* 变量高亮显示层 - 失去焦点时覆盖显示 */}
       {showHighlight && (
         <div
-          className={`${inputClass} cursor-text min-h-[34px] flex items-center flex-wrap gap-0.5 relative z-10`}
+          className={`${inputClass} cursor-text min-h-[32px] flex items-center flex-wrap gap-0.5 relative z-10`}
           onClick={() => inputRef.current?.focus()}
           onMouseLeave={handleVarLeave}
         >
@@ -1626,14 +1626,14 @@ function VariableInput({
             part.isVar ? (
               <span
                 key={index}
-                className="text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-1 rounded cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors text-sm"
+                className="text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-1 rounded cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors text-[13px]"
                 onMouseEnter={(e) => handleVarHover(part.varKey!, e.currentTarget)}
                 onMouseLeave={handleVarLeave}
               >
                 {part.text}
               </span>
             ) : (
-              <span key={index} className="text-sm text-gray-900 dark:text-gray-100">{part.text}</span>
+              <span key={index} className="text-[13px] text-gray-900 dark:text-gray-100">{part.text}</span>
             )
           ))}
         </div>
@@ -1642,14 +1642,14 @@ function VariableInput({
       {/* 悬浮提示 */}
       {hoveredVar && createPortal(
         <div
-          className="fixed z-[100] bg-gray-800 dark:bg-gray-700 text-white text-xs px-3 py-2 rounded-lg shadow-xl max-w-[300px] overflow-hidden border border-gray-600 dark:border-gray-600"
+          className="fixed z-[100] bg-gray-800 dark:bg-gray-700 text-white text-[11px] px-2 py-1.5 rounded-md shadow-xl max-w-[300px] overflow-hidden border border-gray-600 dark:border-gray-600"
           style={{
             top: hoveredVar.rect.top - 36,
             left: hoveredVar.rect.left + hoveredVar.rect.width / 2,
             transform: 'translateX(-50%)'
           }}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="text-blue-300 font-mono">{`{{${hoveredVar.key}}}`}</span>
             <span className="text-gray-500">→</span>
             <span className="text-green-300 font-mono truncate">{hoveredVar.value || t('api.empty')}</span>
@@ -1661,23 +1661,23 @@ function VariableInput({
       {showDropdown && variables.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-20 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[160px] max-h-48 overflow-y-auto"
+          className="absolute z-20 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 min-w-[160px] max-h-48 overflow-y-auto"
         >
-          <div className="px-2 py-1 text-xs text-gray-400 border-b border-gray-100 dark:border-gray-700">
+          <div className="px-1.5 py-1 text-[11px] text-gray-400 border-b border-gray-100 dark:border-gray-700">
             {t('api.environmentVariables')}
           </div>
           {variables.map((v, index) => (
             <button
               key={v.key}
               onClick={() => selectVariable(v.key)}
-              className={`w-full px-3 py-1.5 text-left text-sm flex items-center justify-between transition-colors ${
+              className={`w-full px-2 py-1.5 text-left text-[13px] flex items-center justify-between transition-colors ${
                 index === selectedIndex
                   ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
               <code className="font-mono">{v.key}</code>
-              <span className="text-xs text-gray-400 truncate max-w-[100px]" title={v.value}>{v.value}</span>
+              <span className="text-[11px] text-gray-400 truncate max-w-[100px]" title={v.value}>{v.value}</span>
             </button>
           ))}
         </div>
@@ -1726,7 +1726,7 @@ function KeyValueEditor({
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable table */}
-      <div className="flex-1 overflow-auto min-h-0 px-3 pt-2">
+      <div className="flex-1 overflow-auto min-h-0 px-2 pt-1.5">
         {/* Table Header */}
         <div className="sticky top-0 z-10 flex items-center h-9 px-1 mb-1 bg-white dark:bg-gray-900 select-none">
           <div className="w-[40px] flex-shrink-0" />
@@ -1740,14 +1740,14 @@ function KeyValueEditor({
         {/* Table Body */}
         {data.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-gray-400 dark:text-gray-500">
-            <div className="text-sm">{t('api.noParams')}</div>
+            <div className="text-[13px]">{t('api.noParams')}</div>
           </div>
         ) : (
           <div className="space-y-1">
             {data.map((item, index) => (
               <div
                 key={index}
-                className={`group flex items-center h-11 px-1 rounded-lg transition-all ${
+                className={`group flex items-center h-11 px-1 rounded-md transition-all ${
                   !item.enabled
                     ? 'opacity-40'
                     : 'hover:bg-gray-50 dark:hover:bg-white/[0.04]'
@@ -1776,7 +1776,7 @@ function KeyValueEditor({
                     onKeyDown={(e) => e.key === 'Enter' && item.key && addRow()}
                     placeholder={keyPlaceholder}
                     spellCheck={false}
-                    className="w-full px-3 py-1.5 text-sm font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
+                    className="w-full px-2 py-1.5 text-[13px] font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
                     title={item.key}
                     list={suggestions.length > 0 ? `kv-suggestions-${keyPlaceholder}` : undefined}
                   />
@@ -1790,7 +1790,7 @@ function KeyValueEditor({
                     onKeyDown={(e) => e.key === 'Enter' && addRow()}
                     placeholder={valuePlaceholder}
                     variables={variables}
-                    className="w-full px-3 py-1.5 text-sm font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
+                    className="w-full px-2 py-1.5 text-[13px] font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
                     title={item.value}
                   />
                 </div>
@@ -1812,12 +1812,12 @@ function KeyValueEditor({
       </div>
 
       {/* Add Button */}
-      <div className="flex-shrink-0 h-11 px-5 flex items-center border-t border-gray-100 dark:border-gray-800">
+      <div className="flex-shrink-0 h-11 px-4 flex items-center border-t border-gray-100 dark:border-gray-800">
         <button
           onClick={addRow}
-          className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 text-[13px] text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 px-2 py-1.5 rounded-md transition-colors"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           {t('api.addParam')}
         </button>
       </div>
@@ -1846,7 +1846,7 @@ function TypeSelect({
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:border-gray-300 dark:hover:border-gray-600 transition-all min-w-[56px] justify-between"
+        className="flex items-center gap-1 px-1.5 py-1 text-[11px] rounded-md border border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:border-gray-300 dark:hover:border-gray-600 transition-all min-w-[56px] justify-between"
       >
         <span className={type === 'file' ? 'text-orange-500' : 'text-gray-600 dark:text-gray-400'}>
           {type === 'file' ? t('api.file') : t('api.text')}
@@ -1856,16 +1856,16 @@ function TypeSelect({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden py-1 min-w-[72px]">
+          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20 overflow-hidden py-1 min-w-[72px]">
             <button
               onClick={() => { onChange('text'); setOpen(false) }}
-              className={`w-full px-3 py-1.5 text-xs text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'text' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
+              className={`w-full px-2 py-1.5 text-[11px] text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'text' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
             >
               {t('api.text')}
             </button>
             <button
               onClick={() => { onChange('file'); setOpen(false) }}
-              className={`w-full px-3 py-1.5 text-xs text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'file' ? 'text-orange-500 bg-orange-50 dark:bg-orange-900/20' : ''}`}
+              className={`w-full px-2 py-1.5 text-[11px] text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${type === 'file' ? 'text-orange-500 bg-orange-50 dark:bg-orange-900/20' : ''}`}
             >
               {t('api.file')}
             </button>
@@ -1888,12 +1888,12 @@ function BodyEditor({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const bodyTypes: { type: RequestBody['type']; label: string; icon: React.ReactNode }[] = [
-    { type: 'none', label: t('api.none'), icon: <X className="w-4 h-4" /> },
-    { type: 'json', label: t('api.json'), icon: <Braces className="w-4 h-4" /> },
-    { type: 'form-data', label: t('api.formData'), icon: <Upload className="w-4 h-4" /> },
-    { type: 'x-www-form-urlencoded', label: t('api.formUrlencoded'), icon: <FormInput className="w-4 h-4" /> },
-    { type: 'raw', label: t('api.raw'), icon: <FileCode className="w-4 h-4" /> },
-    { type: 'binary', label: t('api.binary'), icon: <FileText className="w-4 h-4" /> },
+    { type: 'none', label: t('api.none'), icon: <X className="w-3.5 h-3.5" /> },
+    { type: 'json', label: t('api.json'), icon: <Braces className="w-3.5 h-3.5" /> },
+    { type: 'form-data', label: t('api.formData'), icon: <Upload className="w-3.5 h-3.5" /> },
+    { type: 'x-www-form-urlencoded', label: t('api.formUrlencoded'), icon: <FormInput className="w-3.5 h-3.5" /> },
+    { type: 'raw', label: t('api.raw'), icon: <FileCode className="w-3.5 h-3.5" /> },
+    { type: 'binary', label: t('api.binary'), icon: <FileText className="w-3.5 h-3.5" /> },
   ]
 
   const rawTypes: RequestBody['rawType'][] = ['text', 'xml', 'html', 'javascript']
@@ -1983,7 +1983,7 @@ function BodyEditor({
   return (
     <div className="h-full flex flex-col">
       {/* Type Selector */}
-      <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex-shrink-0 px-3 py-1.5 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-1 flex-wrap select-none">
           {bodyTypes.map((t) => (
             <button
@@ -1994,7 +1994,7 @@ function BodyEditor({
                   ensureFormData()
                 }
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[13px] font-medium transition-all duration-200 ${
                 body.type === t.type
                   ? 'bg-blue-500 text-white shadow-md'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -2009,14 +2009,14 @@ function BodyEditor({
 
       {/* Raw Type Selector */}
       {body.type === 'raw' && (
-        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 select-none">
-          <span className="text-xs text-gray-500">{t('api.format')}:</span>
+        <div className="flex-shrink-0 px-3 py-1.5 border-b border-gray-200 dark:border-gray-700 flex items-center gap-1.5 select-none">
+          <span className="text-[11px] text-gray-500">{t('api.format')}:</span>
           <div className="flex items-center gap-1">
             {rawTypes.map((rt) => (
               <button
                 key={rt}
                 onClick={() => onChange({ ...body, rawType: rt })}
-                className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${
                   (body.rawType || 'text') === rt
                     ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                     : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -2036,7 +2036,7 @@ function BodyEditor({
             value={body.content}
             onChange={(e) => onChange({ ...body, content: e.target.value })}
             placeholder={body.type === 'json' ? '{\n  "key": "value"\n}' : t('api.bodyContent')}
-            className="w-full h-full px-4 py-3 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-mono text-sm border-0 resize-none focus:outline-none"
+            className="w-full h-full px-2 py-1.5 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-mono text-[13px] border-0 resize-none focus:outline-none"
             spellCheck={false}
           />
         </div>
@@ -2046,7 +2046,7 @@ function BodyEditor({
       {(body.type === 'form-data' || body.type === 'x-www-form-urlencoded') && (
         <>
           {/* Scrollable table */}
-          <div className="flex-1 overflow-auto min-h-0 px-3 pt-2">
+          <div className="flex-1 overflow-auto min-h-0 px-2 pt-1.5">
             {/* Table Header */}
             <div className="sticky top-0 z-10 flex items-center h-9 px-1 mb-1 bg-white dark:bg-gray-900 select-none">
               <div className="w-[40px] flex-shrink-0" />
@@ -2063,14 +2063,14 @@ function BodyEditor({
             {/* Table Body */}
             {totalCount === 0 ? (
               <div className="flex flex-col items-center justify-center h-32 text-gray-400 dark:text-gray-500">
-                <div className="text-sm">{t('api.noFormFields')}</div>
+                <div className="text-[13px]">{t('api.noFormFields')}</div>
               </div>
             ) : (
               <div className="space-y-1">
                 {formData.map((field, index) => (
                   <div
                     key={index}
-                    className={`group flex items-center h-11 px-1 rounded-lg transition-all ${
+                    className={`group flex items-center h-11 px-1 rounded-md transition-all ${
                       !field.enabled
                         ? 'opacity-40'
                         : 'hover:bg-gray-50 dark:hover:bg-white/[0.04]'
@@ -2099,7 +2099,7 @@ function BodyEditor({
                         onKeyDown={(e) => e.key === 'Enter' && field.key && addFormField()}
                         placeholder={t('api.fieldName')}
                         spellCheck={false}
-                        className="w-full px-3 py-1.5 text-sm font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
+                        className="w-full px-2 py-1.5 text-[13px] font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
                         title={field.key}
                       />
                     </div>
@@ -2128,7 +2128,7 @@ function BodyEditor({
                           onKeyDown={(e) => e.key === 'Enter' && addFormField()}
                           placeholder={t('common.value')}
                           spellCheck={false}
-                          className="w-full px-3 py-1.5 text-sm font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
+                          className="w-full px-2 py-1.5 text-[13px] font-mono bg-transparent hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-blue-400 dark:focus:border-blue-500 focus:outline-none rounded-md text-gray-800 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 transition-all"
                           title={field.value}
                         />
                       ) : (
@@ -2141,7 +2141,7 @@ function BodyEditor({
                           />
                           <button
                             onClick={() => document.getElementById(`file-${index}`)?.click()}
-                            className="flex-1 text-left px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all truncate"
+                            className="flex-1 text-left px-2 py-1.5 text-[13px] rounded-md hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all truncate"
                             title={field.fileName}
                           >
                             {field.fileName ? (
@@ -2185,12 +2185,12 @@ function BodyEditor({
           </div>
 
           {/* Add Button */}
-          <div className="flex-shrink-0 h-11 px-5 flex items-center border-t border-gray-100 dark:border-gray-800">
+          <div className="flex-shrink-0 h-11 px-4 flex items-center border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={addFormField}
-              className="flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-[13px] text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 px-2 py-1.5 rounded-md transition-colors"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               {t('api.addField')}
             </button>
           </div>
@@ -2208,15 +2208,15 @@ function BodyEditor({
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-6 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl flex items-center gap-3 text-lg font-medium transition-all shadow-lg hover:shadow-xl"
+            className="px-5 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center gap-1.5 text-[13px] font-medium transition-all shadow-lg hover:shadow-xl"
           >
-            <Upload className="w-6 h-6" />
+            <Upload className="w-4 h-4" />
             {t('api.selectFile')}
           </button>
           {body.binaryFile && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-              <FileText className="w-4 h-4 text-blue-500" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{body.binaryFile.name}</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-md">
+              <FileText className="w-3.5 h-3.5 text-blue-500" />
+              <span className="text-[13px] text-gray-700 dark:text-gray-300">{body.binaryFile.name}</span>
               <button
                 onClick={() => onChange({ ...body, binaryFile: undefined })}
                 className="p-1 text-gray-400 hover:text-red-500 rounded"
@@ -2233,7 +2233,7 @@ function BodyEditor({
         <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
           <div className="text-center">
             <FileCode className="w-10 h-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">{t('api.noBody')}</p>
+            <p className="text-[13px]">{t('api.noBody')}</p>
           </div>
         </div>
       )}
@@ -2260,21 +2260,21 @@ function AuthEditor({
   ]
 
   return (
-    <div className="p-3">
+    <div className="p-2">
       {/* Type Selector */}
-      <div className="grid grid-cols-2 gap-1.5 mb-4 select-none">
+      <div className="grid grid-cols-2 gap-1.5 mb-3 select-none">
         {authTypes.map((t) => (
           <button
             key={t.type}
             onClick={() => onChange({ type: t.type })}
-            className={`p-2.5 rounded-lg text-left transition-all duration-200 ${
+            className={`p-2 rounded-md text-left transition-all duration-200 ${
               auth.type === t.type
                 ? 'bg-blue-500 text-white shadow-md'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
-            <div className="font-medium text-sm">{t.label}</div>
-            <div className={`text-xs mt-0.5 ${auth.type === t.type ? 'text-blue-100' : 'text-gray-500'}`}>
+            <div className="font-medium text-[13px]">{t.label}</div>
+            <div className={`text-[11px] mt-0.5 ${auth.type === t.type ? 'text-blue-100' : 'text-gray-500'}`}>
               {t.desc}
             </div>
           </button>
@@ -2283,76 +2283,76 @@ function AuthEditor({
 
       {/* Auth Fields */}
       {auth.type === 'bearer' && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.tokenLabel')}</label>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.tokenLabel')}</label>
             <VariableInput
               value={auth.token || ''}
               onChange={(token) => onChange({ ...auth, token })}
               placeholder={translate('api.enterBearerToken')}
               variables={variables}
-              className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
       )}
 
       {auth.type === 'basic' && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('database.username')}</label>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('database.username')}</label>
             <VariableInput
               value={auth.username || ''}
               onChange={(username) => onChange({ ...auth, username })}
               placeholder={translate('database.username')}
               variables={variables}
-              className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('database.password')}</label>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('database.password')}</label>
             <VariableInput
               value={auth.password || ''}
               onChange={(password) => onChange({ ...auth, password })}
               placeholder={translate('database.password')}
               variables={variables}
               type="password"
-              className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
       )}
 
       {auth.type === 'api-key' && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.keyLabel')}</label>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.keyLabel')}</label>
             <input
               type="text"
               value={auth.apiKeyName || ''}
               onChange={(e) => onChange({ ...auth, apiKeyName: e.target.value })}
               placeholder={translate('api.apiKeyPlaceholderHeader')}
-              className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.valueLabel')}</label>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.valueLabel')}</label>
             <VariableInput
               value={auth.apiKeyValue || ''}
               onChange={(apiKeyValue) => onChange({ ...auth, apiKeyValue })}
               placeholder={translate('api.apiKeyPlaceholder')}
               variables={variables}
-              className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.addTo')}</label>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">{translate('api.addTo')}</label>
             <div className="flex gap-1.5 select-none">
               {['header', 'query'].map((loc) => (
                 <button
                   key={loc}
                   onClick={() => onChange({ ...auth, apiKeyLocation: loc as 'header' | 'query' })}
-                  className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex-1 py-1.5 rounded-md text-[13px] font-medium transition-all ${
                     (auth.apiKeyLocation || 'header') === loc
                       ? 'bg-blue-500 text-white'
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -2479,11 +2479,11 @@ function ResponsePanel({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
+      <div className="flex-shrink-0 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 select-none">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('api.responseLabel')}</span>
+          <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">{t('api.responseLabel')}</span>
           {response && (
-            <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-1.5 text-[11px]">
               {/* 状态码 */}
               <span className={`font-bold ${getStatusColor(response.status)}`}>
                 {response.status} {response.statusText}
@@ -2497,7 +2497,7 @@ function ResponsePanel({
               <span className={`flex items-center gap-1 ${getSizeColor(response.size)}`} title={getSizeWarning(response.size) || ''}>
                 <HardDrive className="w-3 h-3" />
                 {formatSize(response.size)}
-                {response.size >= 100 * 1024 && <span className="text-xs opacity-70">⚠</span>}
+                {response.size >= 100 * 1024 && <span className="text-[11px] opacity-70">⚠</span>}
               </span>
               {/* 响应类型 */}
               {responseTypeIcon(getResponseType(response.headers))}
@@ -2512,17 +2512,17 @@ function ResponsePanel({
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
               <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-gray-500 text-sm">{t('api.sendingRequest')}</p>
+              <p className="text-gray-500 text-[13px]">{t('api.sendingRequest')}</p>
             </div>
           </div>
         ) : error ? (
-          <div className="p-3">
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="flex items-start gap-2">
-                <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="p-2">
+            <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <div className="flex items-start gap-1.5">
+                <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-red-700 dark:text-red-400">{t('api.requestFailed')}</p>
-                  <p className="text-sm text-red-600 dark:text-red-300 mt-0.5">{error}</p>
+                  <p className="text-[13px] font-semibold text-red-700 dark:text-red-400">{t('api.requestFailed')}</p>
+                  <p className="text-[13px] text-red-600 dark:text-red-300 mt-0.5">{error}</p>
                 </div>
               </div>
             </div>
@@ -2534,7 +2534,7 @@ function ResponsePanel({
               <div className="flex items-center">
                 <button
                   onClick={() => setActiveTab('body')}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`px-2 py-1.5 text-[13px] font-medium transition-colors ${
                     activeTab === 'body'
                       ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -2544,7 +2544,7 @@ function ResponsePanel({
                 </button>
                 <button
                   onClick={() => setActiveTab('headers')}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`px-2 py-1.5 text-[13px] font-medium transition-colors ${
                     activeTab === 'headers'
                       ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -2555,7 +2555,7 @@ function ResponsePanel({
                 {activeTab === 'body' && (
                   <button
                     onClick={onCopy}
-                    className="ml-auto mr-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
+                    className="ml-auto mr-1.5 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
                     title={t('api.copyResponse')}
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -2568,11 +2568,11 @@ function ResponsePanel({
             {activeTab === 'body' ? (
               needsChunkedRender ? (
                 <div className="flex flex-col h-full">
-                  <div className="px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <div className="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
                     <span>⚠</span>
                     <span>{t('api.largeResponseHint')}</span>
                   </div>
-                  <pre className="flex-1 p-3 text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
+                  <pre className="flex-1 p-2 text-[13px] font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
                     {(() => {
                       const formatted = formatJson(response.body)
                       const chunked = getChunkedContent(formatted)
@@ -2583,13 +2583,13 @@ function ResponsePanel({
                     const formatted = formatJson(response.body)
                     const chunked = getChunkedContent(formatted)
                     return chunked.remaining > 0 && (
-                      <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="px-2 py-1.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
                           {t('api.linesRemaining', { count: chunked.remaining })}
                         </span>
                         <button
                           onClick={() => setVisibleLines(prev => prev + CHUNK_LINES)}
-                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded flex items-center gap-1"
+                          className="px-1.5 py-0.5 text-[11px] bg-blue-500 hover:bg-blue-600 text-white rounded flex items-center gap-0.5"
                         >
                           <span>{t('api.loadMore')}</span>
                         </button>
@@ -2598,24 +2598,24 @@ function ResponsePanel({
                   })()}
                 </div>
               ) : (
-                <pre className="p-3 text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
+                <pre className="p-2 text-[13px] font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto">
                   {formatJson(response.body)}
                 </pre>
               )
             ) : (
-              <div className="p-3">
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-2">
+                <div className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                   {Object.entries(response.headers).map(([key, value], index) => (
                     <div
                       key={key}
-                      className={`flex items-center py-1.5 px-3 ${
+                      className={`flex items-center py-1 px-2 ${
                         index !== 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
                       }`}
                     >
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-32 flex-shrink-0 truncate" title={key}>
+                      <span className="text-[13px] font-medium text-gray-600 dark:text-gray-400 w-32 flex-shrink-0 truncate" title={key}>
                         {key}
                       </span>
-                      <span className="text-sm text-gray-800 dark:text-gray-200 truncate" title={value as string}>
+                      <span className="text-[13px] text-gray-800 dark:text-gray-200 truncate" title={value as string}>
                         {value as string}
                       </span>
                     </div>
@@ -2628,8 +2628,8 @@ function ResponsePanel({
           <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
             <div className="text-center">
               <Send className="w-8 h-8 mx-auto mb-2 opacity-20" />
-              <p className="text-sm">{t('api.viewResponseAfterSend')}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('api.ctrlEnterHint')}</p>
+              <p className="text-[13px]">{t('api.viewResponseAfterSend')}</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">{t('api.ctrlEnterHint')}</p>
             </div>
           </div>
         )}

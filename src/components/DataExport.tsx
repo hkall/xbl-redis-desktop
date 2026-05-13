@@ -622,7 +622,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
   if (!connectionId) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-800">
-        <p className="text-gray-400 dark:text-gray-500 text-sm">{t('redis.pleaseConnectExport')}</p>
+        <p className="text-gray-400 dark:text-gray-500 text-[13px]">{t('redis.pleaseConnectExport')}</p>
       </div>
     )
   }
@@ -630,58 +630,58 @@ export default function DataExport({ connectionId }: DataExportProps) {
   return (
     <div className="w-full h-full flex flex-col bg-white dark:bg-gray-800">
       {/* Pattern Input */}
-      <div className="flex-shrink-0 px-3 py-2 border-b border-black/10 dark:border-white/10">
-        <div className="flex items-center gap-3">
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('redis.pattern')}:</label>
+      <div className="flex-shrink-0 px-2 py-1.5 border-b border-black/10 dark:border-white/10">
+        <div className="flex items-center gap-1.5">
+          <label className="text-[11px] font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('redis.pattern')}:</label>
           <div className="w-48 flex items-center bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">
             <input
               type="text"
               value={searchPattern}
               onChange={(e) => setSearchPattern(e.target.value)}
               placeholder={t('redis.patternPlaceholder')}
-              className="flex-1 min-w-0 px-2 py-1 text-xs bg-transparent text-gray-900 dark:text-white focus:outline-none"
+              className="flex-1 min-w-0 px-2 py-1 text-[11px] bg-transparent text-gray-900 dark:text-white focus:outline-none"
             />
             <button
               onClick={loadKeys}
               disabled={loading}
-              className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
               title={t('toolbar.refreshKeys')}
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Select All */}
-      <div className="flex-shrink-0 h-10 px-3 border-b border-black/10 dark:border-white/10 flex items-center justify-between opacity-80">
+      <div className="flex-shrink-0 h-10 px-2 border-b border-black/10 dark:border-white/10 flex items-center justify-between opacity-80">
         <button
           onClick={handleSelectAll}
-          className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           {selectAll ? (
-            <CheckSquare className="w-4 h-4 text-green-500 shrink-0" />
+            <CheckSquare className="w-3.5 h-3.5 text-green-500 shrink-0" />
           ) : (
-            <Square className="w-4 h-4 shrink-0" />
+            <Square className="w-3.5 h-3.5 shrink-0" />
           )}
           {selectAll ? 'Deselect All' : 'Select All'}
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
             {getSelectedCount()} selected
           </span>
-          <span className="text-xs text-gray-400">/</span>
-          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          <span className="text-[11px] text-gray-400">/</span>
+          <span className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
             {keys.length} keys
           </span>
 
           {/* Export Format & Action Buttons */}
-          <div className="flex items-center gap-3 ml-2">
+          <div className="flex items-center gap-2 ml-1.5">
             {/* Export Mode Tabs */}
             <div className="flex items-center border-b border-gray-300 dark:border-gray-600">
               <button
                 onClick={() => setExportMode('single')}
-                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                className={`px-2 py-1 text-[11px] font-medium transition-colors border-b-2 -mb-px ${
                   exportMode === 'single'
                     ? 'text-blue-600 dark:text-blue-400 border-blue-500'
                     : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
@@ -691,7 +691,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
               </button>
               <button
                 onClick={() => setExportMode('archive')}
-                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                className={`px-2 py-1 text-[11px] font-medium transition-colors border-b-2 -mb-px ${
                   exportMode === 'archive'
                     ? 'text-purple-600 dark:text-purple-400 border-purple-500'
                     : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
@@ -705,7 +705,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
             <div className="flex items-center border-b border-gray-300 dark:border-gray-600">
               <button
                 onClick={() => setExportFormat('json')}
-                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                className={`px-2 py-1 text-[11px] font-medium transition-colors border-b-2 -mb-px ${
                   exportFormat === 'json'
                     ? 'text-green-600 dark:text-green-400 border-green-500'
                     : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
@@ -715,7 +715,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
               </button>
               <button
                 onClick={() => setExportFormat('csv')}
-                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                className={`px-2 py-1 text-[11px] font-medium transition-colors border-b-2 -mb-px ${
                   exportFormat === 'csv'
                     ? 'text-green-600 dark:text-green-400 border-green-500'
                     : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
@@ -725,7 +725,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
               </button>
               <button
                 onClick={() => setExportFormat('txt')}
-                className={`px-3 py-1 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                className={`px-2 py-1 text-[11px] font-medium transition-colors border-b-2 -mb-px ${
                   exportFormat === 'txt'
                     ? 'text-green-600 dark:text-green-400 border-green-500'
                     : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
@@ -739,7 +739,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
             <button
               onClick={handleExport}
               disabled={getSelectedCount() === 0 || exporting}
-              className="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded transition-colors bg-red-500 hover:bg-red-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded transition-colors bg-red-500 hover:bg-red-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {exporting ? (
                 <RefreshCw className="w-3 h-3 animate-spin shrink-0" />
@@ -752,18 +752,18 @@ export default function DataExport({ connectionId }: DataExportProps) {
       </div>
 
       {/* Key List */}
-      <div className="px-3 overflow-hidden flex-1 min-h-0 flex flex-col">
+      <div className="px-2 overflow-hidden flex-1 min-h-0 flex flex-col">
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-400 text-sm min-h-[200px]">
-            <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+          <div className="flex items-center justify-center py-20 text-gray-400 text-[13px] min-h-[200px]">
+            <RefreshCw className="w-4 h-4 animate-spin mr-1.5" />
             Loading...
           </div>
         ) : visibleKeys.length === 0 ? (
-          <div className="flex items-center justify-center py-20 text-gray-400 text-sm min-h-[200px]">
+          <div className="flex items-center justify-center py-20 text-gray-400 text-[13px] min-h-[200px]">
             No keys found matching pattern "{searchPattern}"
           </div>
         ) : (
-          <div className="flex flex-col border border-transparent rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 201.5px)' }}>
+          <div className="flex flex-col border border-transparent rounded-md overflow-hidden" style={{ height: 'calc(100vh - 201.5px)' }}>
             {/* Fixed Header */}
             <div className="flex-shrink-0 bg-gray-50 dark:bg-gray-800 border-b border-black/10 dark:border-white/10">
               <table className="w-full" style={{ tableLayout: 'fixed' }}>
@@ -774,9 +774,9 @@ export default function DataExport({ connectionId }: DataExportProps) {
                 </colgroup>
                 <thead>
                   <tr>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400"></th>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">{t('redis.keyHeader')}</th>
-                    <th className="text-left py-2 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400">{t('common.type')}</th>
+                    <th className="text-left py-1.5 px-2 text-[11px] font-semibold text-gray-600 dark:text-gray-400"></th>
+                    <th className="text-left py-1.5 px-2 text-[11px] font-semibold text-gray-600 dark:text-gray-400">{t('redis.keyHeader')}</th>
+                    <th className="text-left py-1.5 px-2 text-[11px] font-semibold text-gray-600 dark:text-gray-400">{t('common.type')}</th>
                   </tr>
                 </thead>
               </table>
@@ -813,21 +813,21 @@ export default function DataExport({ connectionId }: DataExportProps) {
                         key.checked ? 'bg-green-50 dark:bg-green-900/20' : ''
                       }`}
                     >
-                      <td className="py-2 px-2">
+                      <td className="py-1.5 px-2">
                         <input
                           type="checkbox"
                           checked={key.checked}
                           readOnly
-                          className="w-4 h-4 accent-green-500 cursor-pointer shrink-0"
+                          className="w-3.5 h-3.5 accent-green-500 cursor-pointer shrink-0"
                         />
                       </td>
-                      <td className="py-2 px-2">
-                        <div className="text-xs font-medium text-gray-900 dark:text-white truncate" title={key.name}>
+                      <td className="py-1.5 px-2">
+                        <div className="text-[11px] font-medium text-gray-900 dark:text-white truncate" title={key.name}>
                           {key.name}
                         </div>
                       </td>
-                      <td className="py-2 px-2">
-                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium inline-block ${
+                      <td className="py-1.5 px-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium inline-block ${
                           key.type === 'string'
                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                             : key.type === 'hash'
@@ -848,11 +848,11 @@ export default function DataExport({ connectionId }: DataExportProps) {
             </div>
 
             {/* Load More Button */}
-            <div className="flex-shrink-0 px-3 py-0 bg-gray-50 dark:bg-gray-900/10 border-t border-black/10 dark:border-white/10 h-8 flex items-center">
+            <div className="flex-shrink-0 px-2 py-0 bg-gray-50 dark:bg-gray-900/10 border-t border-black/10 dark:border-white/10 h-8 flex items-center">
               <button
                 onClick={handleLoadMore}
                 disabled={allKeysLoaded || loadingMoreRef.current}
-                className="w-full h-6 text-xs text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-transparent dark:hover:bg-transparent disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors flex items-center justify-center"
+                className="w-full h-6 text-[11px] text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-transparent dark:hover:bg-transparent disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors flex items-center justify-center"
               >
                 {loadingMoreRef.current ? 'Loading...' : allKeysLoaded ? `All loaded (${keys.length})` : `Load More (${visibleKeys.length}/${keys.length})`}
               </button>
@@ -862,18 +862,18 @@ export default function DataExport({ connectionId }: DataExportProps) {
       </div>
 
       {/* Action Bar */}
-      <div className="flex-shrink-0 h-[52px] px-3 border-t border-black/10 dark:border-white/10 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
+      <div className="flex-shrink-0 h-[52px] px-2 border-t border-black/10 dark:border-white/10 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
         {exporting && (
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-            <RefreshCw className="w-4 h-4 animate-spin" />
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-400">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
             <span>{t('redis.exportingProgress', { current: exportResults?.exported || 0, total: getSelectedCount() })}</span>
           </div>
         )}
         {!exporting && exportResults && (
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-1.5 text-[11px]">
             {exportResults.exported > 0 ? (
               <>
-                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                 <span className="text-green-600 dark:text-green-400">
                   {t('redis.exportedCount', { count: exportResults.exported })}
                 </span>
@@ -892,7 +892,7 @@ export default function DataExport({ connectionId }: DataExportProps) {
           </div>
         )}
         {!exporting && !exportResults && (
-          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
             <span>{keys.length} total keys</span>
             {allKeysLoaded && <span className="flex items-center gap-1">✓ All loaded</span>}
           </div>

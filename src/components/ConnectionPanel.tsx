@@ -238,14 +238,14 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
 
   return (
     <div className="w-full h-full bg-white dark:bg-gray-800 flex flex-col overflow-hidden">
-      <div className="px-3 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
+      <div className="px-2 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center justify-between gap-1.5">
+        <div className="flex items-center gap-1 min-w-0">
           <Database className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white flex-shrink-0">
+          <span className="text-[13px] font-medium text-gray-900 dark:text-white flex-shrink-0">
             {t('redis.connections')}
           </span>
           {activeConnection?.connected && (
-            <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 min-w-0">
+            <span className="flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400 min-w-0">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></div>
               <span className="truncate" title={activeConnection.name}>
                 {activeConnection.name}
@@ -253,7 +253,7 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={() => {
               setEditingConnection(null)
@@ -267,7 +267,7 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
               })
               setShowAddForm(true)
             }}
-            className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-medium text-xs py-1 px-2.5 rounded-md transition-colors flex-shrink-0 whitespace-nowrap"
+            className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-medium text-[11px] py-1 px-2 rounded-md transition-colors flex-shrink-0 whitespace-nowrap"
             title={t('toolbar.newConnection')}
           >
             <Link className="w-3 h-3" />
@@ -311,7 +311,7 @@ export default function ConnectionPanel({ selectedPanel, onPanelChange }: { sele
             <button
               key={id}
               onClick={() => onPanelChange(id as PanelType)}
-              className={`flex flex-col items-center justify-center rounded-lg transition-all duration-200 py-1 ${
+              className={`flex flex-col items-center justify-center rounded-md transition-all duration-200 py-1 ${
                 selectedPanel === id
                   ? id === 'keys'
                     ? 'bg-red-500 text-white shadow-md'
@@ -412,14 +412,14 @@ function ConnectionItem({
   return (
     <div
       onClick={() => useRedisStore.getState().setActiveConnection(connection.id)}
-      className={`p-3 rounded-lg transition-colors cursor-pointer ${
+      className={`p-2 rounded-md transition-colors cursor-pointer ${
         isActive
           ? 'bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700'
           : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
       }`}
     >
-      <div className="flex items-center justify-between mb-1 gap-2">
-        <span className="font-medium text-gray-900 dark:text-white text-sm truncate min-w-0" title={connection.name}>
+      <div className="flex items-center justify-between mb-1 gap-1.5">
+        <span className="font-medium text-gray-900 dark:text-white text-[13px] truncate min-w-0" title={connection.name}>
           {connection.name}
         </span>
         <div className="flex items-center gap-1">
@@ -458,14 +458,14 @@ function ConnectionItem({
 
       {/* Database selector for connected connections */}
       {connection.connected && (
-        <div className="mt-2">
+        <div className="mt-1.5">
           <div className="relative">
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 setShowDbDropdown(!showDbDropdown)
               }}
-              className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors w-full"
+              className="flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors w-full"
             >
               <span>DB: {connection.database}</span>
               <ChevronDown className={`w-3 h-3 transition-transform ${showDbDropdown ? 'rotate-180' : ''}`} />
@@ -496,7 +496,7 @@ function ConnectionItem({
       )}
 
       {!connection.connected && (
-        <div className="flex items-center gap-1 mt-2">
+        <div className="flex items-center gap-1 mt-1.5">
           <StatusIndicator
             connection={connection}
             onConnect={onConnect}
@@ -506,7 +506,7 @@ function ConnectionItem({
       )}
 
       {connection.error && !connection.connected && !connection.connecting && (
-        <div className="mt-2 flex items-start gap-1 text-xs text-red-500">
+        <div className="mt-1.5 flex items-start gap-1 text-[11px] text-red-500">
           <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
           <span className="break-all">{connection.error}</span>
         </div>
@@ -544,7 +544,7 @@ function DatabaseDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="absolute left-0 top-full mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+      className="absolute left-0 top-full mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto"
       style={{ minWidth: '120px' }}
     >
       {databases.map((db) => {
@@ -553,7 +553,7 @@ function DatabaseDropdown({
           <button
             key={db}
             onClick={() => onSelect(db)}
-            className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+            className={`w-full px-2 py-1.5 text-left text-[11px] flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
               db === currentDb
                 ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                 : 'text-gray-700 dark:text-gray-300'
@@ -587,7 +587,7 @@ function StatusIndicator({
     return (
       <button
         disabled
-        className="text-xs text-gray-500 flex items-center gap-1"
+        className="text-[11px] text-gray-500 flex items-center gap-1"
       >
         <Loader2 className="w-3 h-3 animate-spin" />
         {t('redis.connecting')}
@@ -602,7 +602,7 @@ function StatusIndicator({
           e.stopPropagation()
           onDisconnect()
         }}
-        className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 hover:text-green-700 dark:hover:text-green-300"
+        className="text-[11px] text-green-600 dark:text-green-400 flex items-center gap-1 hover:text-green-700 dark:hover:text-green-300"
       >
         <CheckCircle className="w-3 h-3" />
         {t('redis.connected')}
@@ -616,7 +616,7 @@ function StatusIndicator({
         e.stopPropagation()
         onConnect()
       }}
-      className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 hover:text-red-500 dark:hover:text-red-400"
+      className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 hover:text-red-500 dark:hover:text-red-400"
     >
       <XCircle className="w-3 h-3" />
       {t('redis.connect')}
@@ -651,60 +651,60 @@ function AddConnectionForm({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-black/10 dark:border-white/10">
+          <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">
             {isEdit ? t('redis.editConnection') : t('redis.newConnection')}
           </h3>
           <button
             onClick={onCancel}
-            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
             title={t('toolbar.closeBtn')}
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
+        <div className="p-4 space-y-2">
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('redis.connectionName')} *
             </label>
             <input
               type="text"
               value={connection.name}
               onChange={(e) => onChange({ ...connection, name: e.target.value })}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder={t('redis.connectionNamePlaceholder')}
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('redis.host')} *
             </label>
             <input
               type="text"
               value={connection.host}
               onChange={(e) => onChange({ ...connection, host: e.target.value })}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder={t('redis.hostPlaceholder')}
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('redis.port')} *
             </label>
             <input
               type="number"
               value={connection.port}
               onChange={(e) => onChange({ ...connection, port: parseInt(e.target.value) || 6379 })}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder={t('redis.portPlaceholder')}
               min="1"
               max="65535"
@@ -712,7 +712,7 @@ function AddConnectionForm({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('redis.database')}
             </label>
             <input
@@ -729,36 +729,36 @@ function AddConnectionForm({
                   }
                 }
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder={t('redis.dbPlaceholder')}
               min="0"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('redis.passwordOptional')}
             </label>
             <input
               type="password"
               value={connection.password}
               onChange={(e) => onChange({ ...connection, password: e.target.value })}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
               placeholder={t('redis.passwordPlaceholder')}
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-black/10 dark:border-white/10 flex justify-end gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
+        <div className="px-4 py-2 border-t border-black/10 dark:border-white/10 flex justify-end gap-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-xs font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-[11px] font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors"
           >
             {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+            className="px-3 py-1.5 text-[11px] font-medium bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
           >
             {isEdit ? t('common.update') : t('common.add')}
           </button>

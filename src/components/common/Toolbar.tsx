@@ -4,7 +4,7 @@ import { ToolType, TOOL_CONFIGS } from '@/store/types'
 import { useI18n, Language, LANGUAGE_CONFIG } from '@/store/i18nStore'
 import { useTranslation } from '@/store/i18nStore'
 
-const APP_VERSION = '1.2.0'
+const APP_VERSION = '1.3.0'
 
 interface ToolbarProps {
   activeTool: ToolType
@@ -39,7 +39,7 @@ function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         title={t('toolbar.switchLanguage')}
       >
         <Languages className="w-4 h-4" />
@@ -51,7 +51,7 @@ function LanguageSwitcher() {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-20 min-w-[120px]">
+          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-20 min-w-[120px]">
             {(Object.keys(LANGUAGE_CONFIG) as Language[]).map((lang) => (
               <button
                 key={lang}
@@ -59,7 +59,7 @@ function LanguageSwitcher() {
                   setLanguage(lang)
                   setIsOpen(false)
                 }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                className={`w-full flex items-center gap-1.5 px-2 py-1.5 text-[14px] transition-colors ${
                   language === lang
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -232,7 +232,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                 key={toolId}
                 onClick={() => onToolChange(toolId)}
                 className={`
-                  flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[14px] font-medium transition-all duration-200
                   ${isActive
                     ? `${colors.active} text-white shadow-md`
                     : `text-gray-600 dark:text-gray-400 ${colors.hover}`
@@ -247,12 +247,12 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
         </div>
 
         {/* Right side actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Version and Update Check */}
           <button
             onClick={checkForUpdate}
             disabled={checkingUpdate}
-            className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
             title={t('toolbar.checkUpdates')}
           >
             <span className="font-mono">v{APP_VERSION}</span>
@@ -269,7 +269,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
           {/* Theme Toggle */}
           <button
             onClick={onToggleTheme}
-            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             title={darkMode ? t('toolbar.switchToLightMode') : t('toolbar.switchToDarkMode')}
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -285,7 +285,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm">
             <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-[14px] font-semibold text-gray-900 dark:text-white">
                 {downloadComplete ? t('update.downloadComplete') : updateInfo.hasUpdate ? t('update.updateAvailable') : t('update.upToDateTitle')}
               </h3>
               <button
@@ -296,7 +296,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   setDownloadComplete(null)
                   setDownloadError(null)
                 }}
-                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -310,17 +310,17 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   <p className="text-gray-600 dark:text-gray-300 mb-4">
                     {t('update.downloadComplete')}
                   </p>
-                  <div className="flex gap-2 justify-center">
+                  <div className="flex gap-1.5 justify-center">
                     <button
                       onClick={handleOpenFile}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[14px] font-medium rounded-md transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
                       {t('update.openInstaller')}
                     </button>
                     <button
                       onClick={handleOpenFolder}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-[14px] font-medium rounded-md transition-colors"
                     >
                       {t('update.openFolder')}
                     </button>
@@ -334,7 +334,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   <p className="text-red-600 dark:text-red-400 mb-2 font-medium">
                     {t('update.downloadFailed')}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{downloadError}</p>
+                  <p className="text-[14px] text-gray-500 dark:text-gray-400">{downloadError}</p>
                 </>
               ) : downloading ? (
                 <>
@@ -353,7 +353,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                     </div>
                   )}
                   {downloadProgress && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-[14px] text-gray-500 dark:text-gray-400">
                       {downloadProgress.percent}% - {downloadProgress.speed}
                     </p>
                   )}
@@ -366,12 +366,12 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   <p className="text-gray-600 dark:text-gray-300 mb-2">
                     {t('update.newVersionAvailableMsg')}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-4">
                     {t('update.currentLabel')}: <span className="font-mono">v{APP_VERSION}</span> → {t('update.latestLabel')}: <span className="font-mono text-green-600 dark:text-green-400">v{updateInfo.latestVersion}</span>
                   </p>
                   <button
                     onClick={handleDownloadUpdate}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[14px] font-medium rounded-md transition-colors"
                   >
                     <Download className="w-4 h-4" />
                     {t('update.downloadUpdate')}
@@ -385,7 +385,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   <p className="text-gray-600 dark:text-gray-300">
                     {t('update.upToDate')}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-2">
                     <span className="font-mono">v{APP_VERSION}</span>
                   </p>
                 </>

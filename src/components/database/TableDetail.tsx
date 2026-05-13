@@ -418,10 +418,10 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-        <p className="text-red-500 text-sm text-center">{error}</p>
+        <p className="text-red-500 text-[13px] text-center">{error}</p>
         <button
           onClick={loadData}
-          className="mt-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+          className="mt-2 px-3 py-1 text-[13px] bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
         >
           {t('common.refresh')}
         </button>
@@ -432,26 +432,26 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
   return (
     <div className="h-full flex flex-col min-h-0">
       {/* 工具栏 */}
-      <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
+      <div className="flex-shrink-0 flex items-center justify-between px-2 py-1 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-1.5">
           {/* 新增按钮 */}
           <button
             onClick={startAddRow}
             disabled={isAddingRow || editingCell !== null}
-            className="flex items-center gap-1 px-2 py-1 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 px-2 py-1 text-[13px] text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             title={t('database.addRow')}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
           </button>
 
           {/* 删除按钮 */}
           <button
             onClick={deleteSelectedRows}
             disabled={selectedRows.size === 0 || editingCell !== null || isAddingRow || primaryKeyColumns.length === 0}
-            className="flex items-center gap-1 px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 px-2 py-1 text-[13px] text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             title={t('database.deleteSelectedRows')}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
 
           {/* 编辑时的保存/取消按钮 */}
@@ -460,14 +460,14 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
               <button
                 onClick={saveCellEdit}
                 disabled={saving}
-                className="flex items-center gap-1 px-2 py-1 text-sm bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
+                className="flex items-center gap-1 px-2 py-1 text-[13px] bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                 {t('common.save')}
               </button>
               <button
                 onClick={cancelCellEdit}
-                className="flex items-center gap-1 px-2 py-1 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded"
+                className="flex items-center gap-1 px-2 py-1 text-[13px] bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded"
               >
                 <X className="w-3 h-3" />
                 {t('common.cancel')}
@@ -478,15 +478,15 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
           {/* 分隔线 */}
           <div className="h-4 w-px bg-gray-200 dark:bg-gray-700 mx-2" />
 
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-[13px] text-gray-500 dark:text-gray-400">
             {t('database.rows')}: <span className="font-medium text-gray-700 dark:text-gray-300">{total.toLocaleString()}</span>
           </div>
-          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400">
             <span>{t('common.page')}:</span>
             <select
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="px-2 py-0.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-gray-100"
+              className="px-2 py-0.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-[13px] text-gray-900 dark:text-gray-100"
             >
               <option value={50}>50</option>
               <option value={100}>100</option>
@@ -501,14 +501,14 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
               <button
                 onClick={saveAdd}
                 disabled={saving}
-                className="flex items-center gap-1 px-2 py-1 text-sm bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
+                className="flex items-center gap-1 px-2 py-1 text-[13px] bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                 {t('common.save')}
               </button>
               <button
                 onClick={cancelAdd}
-                className="flex items-center gap-1 px-2 py-1 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded"
+                className="flex items-center gap-1 px-2 py-1 text-[13px] bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded"
               >
                 <X className="w-3 h-3" />
                 {t('common.cancel')}
@@ -522,13 +522,13 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
           className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded disabled:opacity-50"
           title={t('common.refresh')}
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* 主键提示 */}
       {primaryKeyColumns.length === 0 && columns.length > 0 && (
-        <div className="flex-shrink-0 px-3 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 text-xs border-b border-yellow-200 dark:border-yellow-800">
+        <div className="flex-shrink-0 px-3 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 text-[11px] border-b border-yellow-200 dark:border-yellow-800">
           <AlertCircle className="w-3 h-3 inline mr-1" />
           {t('database.noPrimaryKeyWarning')}
         </div>
@@ -545,7 +545,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
             <thead className="sticky top-0 z-10">
               <tr>
                 {/* 选择列 */}
-                <th className="w-8 px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 sticky left-0 z-20">
+                <th className="w-8 px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 sticky left-0 z-20">
                   <button
                     onClick={toggleSelectAll}
                     className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -558,7 +558,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                   </button>
                 </th>
                 {/* 行号列 */}
-                <th className="w-10 px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 sticky left-8 z-20">
+                <th className="w-10 px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 sticky left-8 z-20">
                   #
                 </th>
                 {columns.map((col, i) => {
@@ -566,7 +566,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                   return (
                     <th
                       key={i}
-                      className="px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 whitespace-nowrap bg-gray-50 dark:bg-gray-900 min-w-[100px]"
+                      className="px-2 py-1 text-left text-[11px] font-medium text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 whitespace-nowrap bg-gray-50 dark:bg-gray-900 min-w-[100px]"
                     >
                       <div className="flex items-center gap-1">
                         {isPk && <Key className="w-3 h-3 text-yellow-500" />}
@@ -601,7 +601,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                       </button>
                     </td>
                     {/* 行号 */}
-                    <td className="w-10 px-2 py-1.5 text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 sticky left-8">
+                    <td className="w-10 px-2 py-1.5 text-[11px] text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 sticky left-8">
                       {(page - 1) * pageSize + rowIndex + 1}
                     </td>
                     {/* 数据列 */}
@@ -612,7 +612,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                       return (
                         <td
                           key={colIndex}
-                          className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 font-mono whitespace-nowrap max-w-[200px] min-w-[100px] cursor-pointer"
+                          className="px-3 py-1.5 text-[13px] text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 font-mono whitespace-nowrap max-w-[200px] min-w-[100px] cursor-pointer"
                           onDoubleClick={() => handleCellDoubleClick(rowIndex, colIndex)}
                           title={primaryKeyColumns.length > 0 ? t('database.doubleClickToEdit') : undefined}
                         >
@@ -625,7 +625,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                               onBlur={() => setTimeout(() => cancelCellEdit(), 150)}
                               placeholder={t('database.columnDefaultPlaceholder')}
                               autoFocus
-                              className="w-full px-0 py-0.5 text-sm text-gray-900 dark:text-gray-100 bg-transparent border-b-2 border-blue-500 focus:outline-none"
+                              className="w-full px-0 py-0.5 text-[13px] text-gray-900 dark:text-gray-100 bg-transparent border-b-2 border-blue-500 focus:outline-none"
                             />
                           ) : (
                             <span className="truncate block" title={String(value ?? '')}>
@@ -643,9 +643,9 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
               {isAddingRow && (
                 <tr ref={newRowRef} className="bg-green-50 dark:bg-green-900/20">
                   <td className="w-8 px-2 py-1.5 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 sticky left-0">
-                    <span className="text-green-500 text-xs">{t('database.newRowLabel')}</span>
+                    <span className="text-green-500 text-[11px]">{t('database.newRowLabel')}</span>
                   </td>
-                  <td className="w-10 px-2 py-1.5 text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 sticky left-8">
+                  <td className="w-10 px-2 py-1.5 text-[11px] text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 sticky left-8">
                     *
                   </td>
                   {columns.map((col, colIndex) => {
@@ -653,7 +653,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                     return (
                       <td
                         key={colIndex}
-                        className="px-3 py-1.5 text-sm border-b border-gray-100 dark:border-gray-800"
+                        className="px-3 py-1.5 text-[13px] border-b border-gray-100 dark:border-gray-800"
                       >
                         <input
                           ref={colIndex === 0 ? firstInputRef : undefined}
@@ -669,7 +669,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                             }
                           }}
                           placeholder={colInfo?.nullable ? 'NULL' : colInfo?.defaultValue || ''}
-                          className="w-full px-1 py-0.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-transparent border-b border-green-400 dark:border-green-600 focus:outline-none focus:border-green-500"
+                          className="w-full px-1 py-0.5 text-[13px] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-transparent border-b border-green-400 dark:border-green-600 focus:outline-none focus:border-green-500"
                         />
                       </td>
                     )
@@ -683,8 +683,8 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
 
       {/* 分页 */}
       {total > 0 && (
-        <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex-shrink-0 flex items-center justify-between px-2 py-1 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <div className="text-[11px] text-gray-500 dark:text-gray-400">
             {t('common.page')} {page} / {totalPages} ({((page - 1) * pageSize + 1)}-{Math.min(page * pageSize, total)} / {total})
             {selectedRows.size > 0 && (
               <span className="ml-2 text-blue-500">{t('database.selectedRowsCount', { count: selectedRows.size })}</span>
@@ -697,7 +697,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
               className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
               title={t('database.firstPage')}
             >
-              <ChevronFirst className="w-4 h-4" />
+              <ChevronFirst className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -705,7 +705,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
               className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
               title={t('database.prevPage')}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <div className="flex items-center gap-1 mx-1">
               <input
@@ -714,11 +714,11 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
                 onChange={(e) => setJumpPage(e.target.value.replace(/\D/g, ''))}
                 onKeyDown={(e) => e.key === 'Enter' && handleJumpPage()}
                 placeholder={String(page)}
-                className="w-10 px-1 py-0.5 text-center text-xs bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100"
+                className="w-10 px-1 py-0.5 text-center text-[11px] bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100"
               />
               <button
                 onClick={handleJumpPage}
-                className="px-1.5 py-0.5 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                className="px-1.5 py-0.5 text-[11px] text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 {t('database.jumpTo')}
               </button>
@@ -729,7 +729,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
               className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
               title={t('database.nextPage')}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setPage(totalPages)}
@@ -737,7 +737,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
               className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
               title={t('database.lastPage')}
             >
-              <ChevronLast className="w-4 h-4" />
+              <ChevronLast className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -746,21 +746,21 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
       {/* 删除确认对话框 */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-md shadow-lg p-4 max-w-sm">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t('database.confirmDeleteTitle')}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
               {t('database.confirmDeleteRowsMsg', { count: selectedRows.size })}
             </p>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-1.5">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                className="px-3 py-1.5 text-[13px] bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded"
+                className="px-3 py-1.5 text-[13px] bg-red-500 hover:bg-red-600 text-white rounded"
               >
                 {t('common.delete')}
               </button>
@@ -772,23 +772,23 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
       {/* SQL确认弹窗 */}
       {showSqlConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xl mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-md shadow-lg p-4 max-w-xl mx-4">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t('database.confirmSaveChanges')}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('database.confirmSaveChangesHint')}</p>
-            <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre font-mono border border-gray-200 dark:border-gray-700 mb-4">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-3">{t('database.confirmSaveChangesHint')}</p>
+            <pre className="bg-gray-50 dark:bg-gray-900 rounded-md p-3 text-[13px] text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre font-mono border border-gray-200 dark:border-gray-700 mb-4">
               {pendingSql}
             </pre>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-1.5">
               <button
                 onClick={cancelSqlConfirm}
-                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                className="px-3 py-1.5 text-[13px] bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={confirmSqlUpdate}
                 disabled={saving}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
+                className="flex items-center gap-1 px-3 py-1.5 text-[13px] bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
               >
                 {saving && <Loader2 className="w-3 h-3 animate-spin" />}
                 {t('common.confirm')}
@@ -1243,10 +1243,10 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-        <p className="text-red-500 text-sm text-center">{error}</p>
+        <p className="text-red-500 text-[13px] text-center">{error}</p>
         <button
           onClick={loadStructure}
-          className="mt-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+          className="mt-2 px-3 py-1 text-[13px] bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
         >
           {t('common.refresh')}
         </button>
@@ -1257,11 +1257,11 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
   return (
     <div ref={containerRef} className="h-full flex flex-col min-h-0">
       {/* 工具栏 */}
-      <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-        <div className="flex items-center gap-2">
+      <div className="flex-shrink-0 flex items-center justify-between px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveView('columns')}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+            className={`px-3 py-1.5 text-[11px] font-medium rounded transition-colors ${
               activeView === 'columns'
                 ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -1271,7 +1271,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           </button>
           <button
             onClick={() => setActiveView('indexes')}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+            className={`px-3 py-1.5 text-[11px] font-medium rounded transition-colors ${
               activeView === 'indexes'
                 ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -1281,7 +1281,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           </button>
           <button
             onClick={() => setActiveView('ddl')}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+            className={`px-3 py-1.5 text-[11px] font-medium rounded transition-colors ${
               activeView === 'ddl'
                 ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -1296,14 +1296,14 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
               <button
                 onClick={saveAllChanges}
                 disabled={saving}
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 text-[11px] bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50 transition-colors"
               >
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                 {t('common.save')}
               </button>
               <button
                 onClick={cancelAllChanges}
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded transition-colors"
+                className="flex items-center gap-1 px-2 py-1 text-[11px] bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded transition-colors"
               >
                 <X className="w-3 h-3" />
                 {t('common.cancel')}
@@ -1315,7 +1315,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           {activeView === 'columns' && editingCell === null && !hasUnsavedChanges && (
             <button
               onClick={handleAddColumn}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+              className="flex items-center gap-1 px-2 py-1 text-[11px] text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               {t('database.addColumn')}
@@ -1328,7 +1328,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
           title={t('common.refresh')}
         >
-          <RefreshCw className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${saving ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -1339,15 +1339,15 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           <table className="w-full border-collapse">
             <thead className="sticky top-0 bg-gray-100 dark:bg-gray-900 z-10">
               <tr>
-                <th className="w-10 px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">#</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[120px]">{t('common.name')}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[140px]">{t('common.type')}</th>
-                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.nullHeader')}</th>
-                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.keyHeader')}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[80px]">{t('database.defaultHeader')}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-24">{t('database.extraHeader')}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[120px]">{t('database.commentHeader')}</th>
-                <th className="w-16 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"></th>
+                <th className="w-10 px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">#</th>
+                <th className="px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[120px]">{t('common.name')}</th>
+                <th className="px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[140px]">{t('common.type')}</th>
+                <th className="w-14 px-2 py-1 text-center text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.nullHeader')}</th>
+                <th className="w-14 px-2 py-1 text-center text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.keyHeader')}</th>
+                <th className="px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[80px]">{t('database.defaultHeader')}</th>
+                <th className="px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-24">{t('database.extraHeader')}</th>
+                <th className="px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[120px]">{t('database.commentHeader')}</th>
+                <th className="w-16 px-2 py-1 text-center text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"></th>
               </tr>
             </thead>
             <tbody>
@@ -1363,7 +1363,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                         : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                     }`}
                   >
-                    <td className="px-2 py-1.5 text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800">
+                    <td className="px-2 py-1.5 text-[11px] text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800">
                       {isNew ? (
                         <span className="text-green-500 font-medium">*</span>
                       ) : (
@@ -1380,7 +1380,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           onKeyDown={handleKeyDown}
                           placeholder={t('database.columnNamePlaceholder')}
                           autoFocus
-                          className="absolute inset-0 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
+                          className="absolute inset-0 px-2 py-1.5 text-[13px] text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
                       ) : (
                         <div
@@ -1390,7 +1390,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                         >
                           {col.keyType === 'PRI' && <Key className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />}
                           {col.keyType === 'UNI' && <Hash className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
-                          <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{col.name}</span>
+                          <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">{col.name}</span>
                         </div>
                       )}
                     </td>
@@ -1404,7 +1404,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           onKeyDown={handleKeyDown}
                           placeholder={t('database.columnTypePlaceholder')}
                           autoFocus
-                          className="absolute inset-0 px-2 py-1.5 text-xs font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
+                          className="absolute inset-0 px-2 py-1.5 text-[11px] font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
                       ) : (
                         <div
@@ -1412,7 +1412,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           className={`min-h-[28px] cursor-pointer ${hasUnsavedChanges ? 'opacity-50 pointer-events-none' : ''}`}
                           title={hasUnsavedChanges ? t('database.saveChangesFirst') : t('database.doubleClickToEdit')}
                         >
-                          <span className="text-xs font-mono text-gray-600 dark:text-gray-400">{col.type}</span>
+                          <span className="text-[11px] font-mono text-gray-600 dark:text-gray-400">{col.type}</span>
                         </div>
                       )}
                     </td>
@@ -1421,7 +1421,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                       <button
                         onClick={() => toggleNullable(i)}
                         disabled={saving}
-                        className={`text-xs px-1.5 py-0.5 rounded inline-block cursor-pointer hover:opacity-80 transition-opacity ${
+                        className={`text-[11px] px-1.5 py-0.5 rounded inline-block cursor-pointer hover:opacity-80 transition-opacity ${
                           nullableChanges.has(i)
                             ? (nullableChanges.get(i)
                                 ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
@@ -1437,7 +1437,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                     </td>
                     {/* Key */}
                     <td className="px-2 py-1.5 text-center border-b border-gray-100 dark:border-gray-800">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">{col.keyType || '-'}</span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400">{col.keyType || '-'}</span>
                     </td>
                     {/* Default */}
                     <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800 relative">
@@ -1449,7 +1449,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           onKeyDown={handleKeyDown}
                           placeholder={t('database.columnDefaultPlaceholder')}
                           autoFocus
-                          className="absolute inset-0 px-2 py-1.5 text-xs font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
+                          className="absolute inset-0 px-2 py-1.5 text-[11px] font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
                       ) : (
                         <div
@@ -1457,7 +1457,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           className={`min-h-[28px] cursor-pointer ${hasUnsavedChanges ? 'opacity-50 pointer-events-none' : ''}`}
                           title={hasUnsavedChanges ? t('database.saveChangesFirst') : t('database.doubleClickToEdit')}
                         >
-                          <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
+                          <span className="text-[11px] font-mono text-gray-500 dark:text-gray-400">
                             {col.defaultValue !== null ? String(col.defaultValue) : <span className="text-gray-400 italic">NULL</span>}
                           </span>
                         </div>
@@ -1465,7 +1465,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                     </td>
                     {/* Extra */}
                     <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">{col.extra || '-'}</span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400">{col.extra || '-'}</span>
                     </td>
                     {/* Comment */}
                     <td className="px-2 py-1.5 border-b border-gray-100 dark:border-gray-800 relative">
@@ -1477,7 +1477,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           onKeyDown={handleKeyDown}
                           placeholder={t('database.columnCommentPlaceholder')}
                           autoFocus
-                          className="absolute inset-0 px-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
+                          className="absolute inset-0 px-2 py-1.5 text-[11px] text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-0 border-b-2 border-blue-500 focus:outline-none z-10"
                         />
                       ) : (
                         <div
@@ -1485,7 +1485,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                           className={`min-h-[28px] cursor-pointer ${hasUnsavedChanges ? 'opacity-50 pointer-events-none' : ''}`}
                           title={hasUnsavedChanges ? t('database.saveChangesFirst') : t('database.doubleClickToEdit')}
                         >
-                          <span className="text-xs text-gray-500 dark:text-gray-400 truncate" title={col.comment}>{col.comment || '-'}</span>
+                          <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate" title={col.comment}>{col.comment || '-'}</span>
                         </div>
                       )}
                     </td>
@@ -1513,12 +1513,12 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           <table className="w-full border-collapse">
             <thead className="sticky top-0 bg-gray-100 dark:bg-gray-900 z-10">
               <tr>
-                <th className="w-10 px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">#</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[150px]">{t('common.name')}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[200px]">{t('database.columnsHeader')}</th>
-                <th className="w-14 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.uniqueHeader')}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-24">{t('common.type')}</th>
-                <th className="w-16 px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"></th>
+                <th className="w-10 px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">#</th>
+                <th className="px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[150px]">{t('common.name')}</th>
+                <th className="px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[200px]">{t('database.columnsHeader')}</th>
+                <th className="w-14 px-2 py-1 text-center text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('database.uniqueHeader')}</th>
+                <th className="px-2 py-1 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-24">{t('common.type')}</th>
+                <th className="w-16 px-2 py-1 text-center text-[11px] font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"></th>
               </tr>
             </thead>
             <tbody>
@@ -1527,18 +1527,18 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                   key={i}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                 >
-                  <td className="px-2 py-1.5 text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800">{i + 1}</td>
+                  <td className="px-2 py-1.5 text-[11px] text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800">{i + 1}</td>
                   <td className="px-3 py-1.5 border-b border-gray-100 dark:border-gray-800">
                     <div className="flex items-center gap-1.5">
                       {idx.name === 'PRIMARY' && <Key className="w-3.5 h-3.5 text-yellow-500" />}
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{idx.name}</span>
+                      <span className="text-[13px] text-gray-700 dark:text-gray-300">{idx.name}</span>
                     </div>
                   </td>
                   <td className="px-3 py-1.5 border-b border-gray-100 dark:border-gray-800">
-                    <span className="text-xs text-gray-600 dark:text-gray-400">{idx.columns?.join(', ')}</span>
+                    <span className="text-[11px] text-gray-600 dark:text-gray-400">{idx.columns?.join(', ')}</span>
                   </td>
                   <td className="px-2 py-1.5 text-center border-b border-gray-100 dark:border-gray-800">
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                    <span className={`text-[11px] px-1.5 py-0.5 rounded ${
                       idx.unique
                         ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
@@ -1547,7 +1547,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
                     </span>
                   </td>
                   <td className="px-3 py-1.5 border-b border-gray-100 dark:border-gray-800">
-                    <span className="text-xs font-mono text-gray-500 dark:text-gray-400">{idx.type}</span>
+                    <span className="text-[11px] font-mono text-gray-500 dark:text-gray-400">{idx.type}</span>
                   </td>
                   <td className="px-2 py-1.5 text-center border-b border-gray-100 dark:border-gray-800">
                     {idx.name !== 'PRIMARY' && (
@@ -1569,7 +1569,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
         {/* DDL */}
         {activeView === 'ddl' && (
           <div className="p-4">
-            <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre font-mono border border-gray-200 dark:border-gray-700">
+            <pre className="bg-gray-50 dark:bg-gray-900 rounded-md p-4 text-[11px] text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre font-mono border border-gray-200 dark:border-gray-700">
               {createStatement}
             </pre>
           </div>
@@ -1579,23 +1579,23 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
       {/* SQL确认弹窗 */}
       {showSqlConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xl mx-4 max-h-[80vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-md shadow-lg p-4 max-w-xl mx-4 max-h-[80vh] overflow-y-auto">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t('database.confirmSaveChanges')}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('database.confirmSaveChangesHint')}</p>
-            <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre font-mono border border-gray-200 dark:border-gray-700 mb-4">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-3">{t('database.confirmSaveChangesHint')}</p>
+            <pre className="bg-gray-50 dark:bg-gray-900 rounded-md p-3 text-[13px] text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre font-mono border border-gray-200 dark:border-gray-700 mb-4">
               {pendingSqlList.length > 0 ? pendingSqlList.join('\n\n') : pendingSql}
             </pre>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-1.5">
               <button
                 onClick={cancelSqlConfirm}
-                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                className="px-3 py-1.5 text-[13px] bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={confirmSqlExecute}
                 disabled={saving}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
+                className="flex items-center gap-1 px-3 py-1.5 text-[13px] bg-green-500 hover:bg-green-600 text-white rounded disabled:opacity-50"
               >
                 {saving && <Loader2 className="w-3 h-3 animate-spin" />}
                 {t('common.confirm')}
@@ -1654,7 +1654,7 @@ function TableInfoView({ connectionId, database, table }: { connectionId: string
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-        <p className="text-red-500 text-sm text-center">{error}</p>
+        <p className="text-red-500 text-[13px] text-center">{error}</p>
       </div>
     )
   }
@@ -1665,20 +1665,20 @@ function TableInfoView({ connectionId, database, table }: { connectionId: string
       <div className="flex-1 overflow-auto p-3">
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('database.columnsCount')}</div>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
+              <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">{t('database.columnsCount')}</div>
               <div className="text-lg font-semibold text-gray-900 dark:text-white">{info.columns}</div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('database.indexesCount')}</div>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
+              <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">{t('database.indexesCount')}</div>
               <div className="text-lg font-semibold text-gray-900 dark:text-white">{info.indexes}</div>
             </div>
           </div>
 
           {info.createStatement && (
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('database.createTable')}</h3>
-              <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap font-mono">
+              <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">{t('database.createTable')}</h3>
+              <pre className="bg-gray-50 dark:bg-gray-900 rounded-md p-3 text-[11px] text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap font-mono">
                 {info.createStatement}
               </pre>
             </div>
@@ -1702,18 +1702,18 @@ export default function TableDetail({ connectionId, database, table, onClose }: 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800 overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <Table className="w-4 h-4 text-blue-500" />
+      <div className="flex-shrink-0 flex items-center justify-between px-2 py-1 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-1.5">
+          <Table className="w-3.5 h-3.5 text-blue-500" />
           <span className="font-medium text-gray-900 dark:text-white">{table}</span>
-          <span className="text-xs text-gray-400 dark:text-gray-500">{database}</span>
+          <span className="text-[11px] text-gray-400 dark:text-gray-500">{database}</span>
         </div>
         {onClose && (
           <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
@@ -1724,7 +1724,7 @@ export default function TableDetail({ connectionId, database, table, onClose }: 
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+            className={`flex items-center gap-1 px-3 py-1.5 text-[13px] rounded-md transition-colors ${
               activeTab === tab.id
                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                 : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'

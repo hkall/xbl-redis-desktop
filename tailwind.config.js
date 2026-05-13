@@ -7,6 +7,13 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontSize: {
+        'xs': ['11px', { lineHeight: '1.4' }],
+        'sm': ['13px', { lineHeight: '1.45' }],
+        'base': ['14px', { lineHeight: '1.5' }],
+        'lg': ['15px', { lineHeight: '1.5' }],
+        'xl': ['17px', { lineHeight: '1.5' }],
+      },
       colors: {
         primary: {
           50: '#fef2f2',

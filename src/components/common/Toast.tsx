@@ -47,7 +47,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-[200] flex flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-[200] flex flex-col gap-1.5">
       {toasts.map(toast => (
         <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
       ))}
@@ -82,9 +82,9 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
 
   return (
     <div
-      className={`flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium animate-in slide-in-from-right-5 fade-in-0 duration-300 ${bg}`}
+      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl shadow-lg text-white text-[13px] font-medium animate-in slide-in-from-right-5 fade-in-0 duration-300 ${bg}`}
     >
-      <Icon className="w-4 h-4 flex-shrink-0" />
+      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
       <span>{toast.message}</span>
       <button
         onClick={() => onRemove(toast.id)}

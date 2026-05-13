@@ -85,15 +85,15 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">
             {type === 'add' ? t('redis.addField') : t('redis.editField')}
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
             title={t('common.close')}
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -101,7 +101,7 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
         <div className="p-6 space-y-4">
           {/* Field Input */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('redis.field')}
             </label>
             <input
@@ -109,14 +109,14 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
               value={field}
               onChange={(e) => setField(e.target.value)}
               placeholder={t('redis.field')}
-              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-[13px]"
             />
           </div>
 
           {/* Value Editor - fixed height container with internal scroll */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300">
                 {t('redis.value')}
               </label>
               <button
@@ -137,7 +137,7 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
               </button>
             </div>
             <div
-              className="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800/50 overflow-hidden flex flex-col"
+              className="border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-800/50 overflow-hidden flex flex-col"
               style={{ height: '320px' }}
            >
               <CodeEditor
@@ -153,13 +153,13 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-[11px] text-gray-500 dark:text-gray-400">
             {value.length} {t('redis.characters')} · {t('redis.tabIndent')} · {t('redis.ctrlEnterSave')}
           </p>
-          <div className="flex gap-2.5">
+          <div className="flex gap-1.5">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-[11px] font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors"
             >
               {t('redis.cancel')}
             </button>
@@ -170,7 +170,7 @@ function EditModal({ isOpen, type, initialField, initialValue, onClose, onSave }
                 }
               }}
               disabled={!field.trim() || !value}
-              className="px-4 py-2 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-[11px] font-medium bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {type === 'add' ? t('redis.addField') : t('common.update')}
             </button>
@@ -470,7 +470,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
   if (loading && fields.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">{t('common.loading')}</div>
+        <div className="text-gray-500 dark:text-gray-400 text-[13px]">{t('common.loading')}</div>
       </div>
     )
   }
@@ -479,19 +479,19 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
     <div className="flex flex-col h-full min-w-0">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-gray-500 dark:text-gray-400">
             {totalCount} {t('redis.fields')}
           </span>
           {filteredFields.length !== fields.length && filteredFields.length > 0 && (
-            <span className="text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
+            <span className="text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
               {filteredFields.length} {t('redis.filtered')}
             </span>
           )}
         </div>
         <button
           onClick={() => setEditModal({ isOpen: true, type: 'add' })}
-          className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0 font-medium"
+          className="text-[11px] bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded-md transition-colors flex items-center gap-1.5 flex-shrink-0 font-medium"
         >
           <Plus className="w-3 h-3" />
           {t('redis.addField')}
@@ -508,7 +508,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
               placeholder={t('redis.searchFields')}
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full pl-9 pr-2 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-[11px] text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
         </div>
@@ -518,7 +518,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col px-4 pb-4">
         {filteredFields.length === 0 ? (
           <div className="flex-1 overflow-auto">
-            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-[13px]">
               {searchTerm ? t('redis.noMatchingFields') : t('redis.noFieldsFound')}
             </div>
           </div>
@@ -534,9 +534,9 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                 </colgroup>
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="text-left py-2.5 px-2.5 text-xs font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('redis.field')}</th>
-                    <th className="text-left py-2.5 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('redis.value')}</th>
-                    <th className="text-center py-2.5 px-2 text-xs font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('common.actions')}</th>
+                    <th className="text-left py-2.5 px-2.5 text-[11px] font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('redis.field')}</th>
+                    <th className="text-left py-2.5 px-2 text-[11px] font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('redis.value')}</th>
+                    <th className="text-center py-2.5 px-2 text-[11px] font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{t('common.actions')}</th>
                   </tr>
                 </thead>
               </table>
@@ -555,7 +555,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                     <tr key={f.field} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                       <td className="py-2.5 px-2.5">
                         <div
-                          className="font-mono text-xs text-gray-800 dark:text-gray-200 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          className="font-mono text-[11px] text-gray-800 dark:text-gray-200 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                           title={f.field}
                         >
                           {f.field}
@@ -563,7 +563,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                       </td>
                       <td className="py-2.5 px-2">
                         <div
-                          className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          className="font-mono text-[11px] text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                           title={f.value}
                           onClick={() => setEditModal({
                             isOpen: true,
@@ -576,7 +576,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                         </div>
                       </td>
                       <td className="py-2.5 px-2">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => setEditModal({
                               isOpen: true,
@@ -584,14 +584,14 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
                               initialField: f.field,
                               initialValue: f.value,
                             })}
-                            className="p-1 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors rounded"
+                            className="p-1 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors rounded-md"
                             title={t('toolbar.editBtn')}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteField(f.field)}
-                            className="p-1 text-gray-500 hover:text-red-600 dark:hover:text-red-400 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded"
+                            className="p-1 text-gray-500 hover:text-red-600 dark:hover:text-red-400 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-md"
                             title={t('toolbar.deleteBtn')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -607,7 +607,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
               {loadingMore && (
                 <div className="flex items-center justify-center py-3">
                   <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                  <span className="ml-2 text-xs text-gray-400">{t('redis.loadingMore')}</span>
+                  <span className="ml-2 text-[11px] text-gray-400">{t('redis.loadingMore')}</span>
                 </div>
               )}
             </div>
@@ -616,8 +616,8 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
 
         {/* Load More / Pagination Info */}
         {!searchTerm && (
-          <div className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-lg">
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between px-2 py-1.5 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-md">
+            <div className="text-[11px] text-gray-500 dark:text-gray-400">
               {fields.length} {t('redis.ofFields')} {totalCount} {t('redis.fields')}
               {!hasMore && ` · ${t('redis.allLoaded')}`}
             </div>
@@ -625,7 +625,7 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="px-3 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="px-2 py-1 text-[11px] bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 {loadingMore && <Loader2 className="w-3 h-3 animate-spin" />}
                 {t('redis.loadMore')}

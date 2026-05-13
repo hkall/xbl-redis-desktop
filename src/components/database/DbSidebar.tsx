@@ -101,19 +101,19 @@ function ConnectionDialog({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onCancel}>
       <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md"
+        className="bg-white dark:bg-gray-800 rounded-md shadow-2xl w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">
             {connection ? t('database.editConnection') : t('database.newConnection')}
           </h3>
           <button
             onClick={onCancel}
-            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -121,7 +121,7 @@ function ConnectionDialog({
         <div className="p-6 space-y-4">
           {/* 连接名称 */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               {t('database.connectionName')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -129,13 +129,13 @@ function ConnectionDialog({
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder={t('database.connectionName')}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[13px]"
             />
           </div>
 
           {/* 数据库类型 */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               {t('database.dbType')}
             </label>
             <select
@@ -148,7 +148,7 @@ function ConnectionDialog({
                   port: DATABASE_CONFIGS[type].defaultPort,
                 })
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[13px]"
             >
               {Object.entries(DATABASE_CONFIGS).map(([key, config]) => (
                 <option key={key} value={key}>
@@ -160,9 +160,9 @@ function ConnectionDialog({
 
           {/* 主机和端口 */}
           {form.type !== 'sqlite' && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   {t('database.host')}
                 </label>
                 <input
@@ -170,18 +170,18 @@ function ConnectionDialog({
                   value={form.host}
                   onChange={(e) => setForm({ ...form, host: e.target.value })}
                   placeholder={t('database.hostPlaceholderDb')}
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[13px]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   {t('database.port')}
                 </label>
                 <input
                   type="number"
                   value={form.port}
                   onChange={(e) => setForm({ ...form, port: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[13px]"
                 />
               </div>
             </div>
@@ -189,27 +189,27 @@ function ConnectionDialog({
 
           {/* 用户名和密码 */}
           {form.type !== 'sqlite' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   {t('database.username')}
                 </label>
                 <input
                   type="text"
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[13px]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   {t('database.password')}
                 </label>
                 <input
                   type="password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[13px]"
                 />
               </div>
             </div>
@@ -217,27 +217,27 @@ function ConnectionDialog({
 
           {/* 默认数据库 */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               {t('database.defaultDatabase')} <span className="text-gray-400">({t('common.none')})</span>
             </label>
             <input
               type="text"
               value={form.database}
               onChange={(e) => setForm({ ...form, database: e.target.value })}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[13px]"
             />
           </div>
 
           {/* 字符集 */}
           {form.type !== 'sqlite' && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Charset
               </label>
               <select
                 value={form.charset || 'utf8mb4'}
                 onChange={(e) => setForm({ ...form, charset: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[13px]"
               >
                 <option value="utf8mb4">utf8mb4 ({t('database.charsetRecommended')})</option>
                 <option value="utf8">utf8</option>
@@ -252,15 +252,15 @@ function ConnectionDialog({
 
           {/* 测试结果 */}
           {testResult && (
-            <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
+            <div className={`flex items-center gap-1.5 p-3 rounded-md text-[13px] ${
               testResult.success
                 ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                 : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
             }`}>
               {testResult.success ? (
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className="w-3.5 h-3.5" />
               ) : (
-                <XCircle className="w-4 h-4" />
+                <XCircle className="w-3.5 h-3.5" />
               )}
               {testResult.message}
             </div>
@@ -272,26 +272,26 @@ function ConnectionDialog({
           <button
             onClick={handleTest}
             disabled={testing || !form.host}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50"
           >
             {testing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <Zap className="w-4 h-4" />
+              <Zap className="w-3.5 h-3.5" />
             )}
             {t('database.testConnection')}
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
             >
               {t('common.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={!form.name.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-medium rounded-md transition-colors disabled:opacity-50"
             >
               {t('common.save')}
             </button>
@@ -341,7 +341,7 @@ function ConnectionItem({
 
   return (
     <div
-      className={`group flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors ${
+      className={`group flex items-center gap-1.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors ${
         isActive
           ? 'bg-blue-50 dark:bg-blue-900/20'
           : 'hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -371,16 +371,16 @@ function ConnectionItem({
 
       {/* 数据库图标 */}
       <Database
-        className="w-4 h-4 flex-shrink-0"
+        className="w-3.5 h-3.5 flex-shrink-0"
         style={{ color: DB_COLORS[connection.type] }}
       />
 
       {/* 连接名称 */}
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+        <div className="text-[13px] font-medium text-gray-900 dark:text-white truncate">
           {connection.name}
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+        <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
           {connection.host}:{connection.port}
         </div>
       </div>
@@ -396,7 +396,7 @@ function ConnectionItem({
             className="p-1 text-gray-400 hover:text-red-500 transition-colors"
             title={t('redis.disconnect')}
           >
-            <XCircle className="w-4 h-4" />
+            <XCircle className="w-3.5 h-3.5" />
           </button>
         ) : (
           <button
@@ -409,9 +409,9 @@ function ConnectionItem({
             title={t('redis.connect')}
           >
             {connection.connecting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <CheckCircle className="w-4 h-4" />
+              <CheckCircle className="w-3.5 h-3.5" />
             )}
           </button>
         )}
@@ -424,7 +424,7 @@ function ConnectionItem({
             }}
             className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
-            <MoreHorizontal className="w-4 h-4" />
+            <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
 
           {showMenu && (
@@ -433,14 +433,14 @@ function ConnectionItem({
                 className="fixed inset-0 z-10"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-20 min-w-[120px]">
+              <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-20 min-w-[120px]">
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     setShowMenu(false)
                     onEdit()
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                   {t('common.edit')}
@@ -451,7 +451,7 @@ function ConnectionItem({
                     setShowMenu(false)
                     onDuplicate()
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <Copy className="w-3.5 h-3.5" />
                   {t('common.copy')}
@@ -463,7 +463,7 @@ function ConnectionItem({
                     setShowMenu(false)
                     onDelete()
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   {t('common.delete')}
@@ -767,17 +767,17 @@ export default function DbSidebar() {
     <div className="h-full flex flex-col bg-white dark:bg-gray-800">
       {/* Header */}
       <div className="flex-shrink-0 px-3 h-9 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Database className="w-4 h-4 text-orange-500" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white">{t('database.databases')}</span>
+        <div className="flex items-center gap-1.5">
+          <Database className="w-3.5 h-3.5 text-orange-500" />
+          <span className="text-[13px] font-medium text-gray-900 dark:text-white">{t('database.databases')}</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 px-2">
           <button
             onClick={() => createQueryTab('New Query', '')}
             className="p-1.5 text-gray-400 hover:text-green-500 transition-colors"
             title={t('database.newQuery')}
           >
-            <Terminal className="w-4 h-4" />
+            <Terminal className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => {
@@ -787,14 +787,14 @@ export default function DbSidebar() {
             className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"
             title={t('database.newConnection')}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* 全局搜索框 */}
       {connections.some(c => c.connected) && (
-        <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex-shrink-0 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <input
@@ -802,7 +802,7 @@ export default function DbSidebar() {
               placeholder={t('database.searchTables')}
               value={globalSearchText}
               onChange={(e) => setGlobalSearchText(e.target.value)}
-              className="w-full pl-7 pr-2 py-1.5 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500"
+              className="w-full pl-7 pr-2 py-1.5 text-[11px] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-sm focus:outline-none focus:border-blue-500"
             />
             {globalSearchText && (
               <button
@@ -820,16 +820,16 @@ export default function DbSidebar() {
       <div className="flex-1 overflow-y-auto p-2">
         {connections.length === 0 ? (
           <div className="text-center py-8">
-            <Database className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('database.noConnections')}</p>
+            <Database className="w-7 h-7 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-3">{t('database.noConnections')}</p>
             <button
               onClick={() => {
                 setEditingConnection(null)
                 setShowConnectionDialog(true)
               }}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-medium rounded-md transition-colors"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               {t('database.newConnection')}
             </button>
           </div>
@@ -870,9 +870,9 @@ export default function DbSidebar() {
                     <div className="ml-4 mt-1 border-l border-gray-200 dark:border-gray-700 pl-2">
                       {/* 加载中 */}
                       {isLoadingDatabases && (
-                        <div className="flex items-center gap-2 py-2 px-2">
-                          <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                          <span className="text-xs text-gray-500">{t('common.loading')}</span>
+                        <div className="flex items-center gap-1.5 py-1.5 px-2">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+                          <span className="text-[11px] text-gray-500">{t('common.loading')}</span>
                         </div>
                       )}
 
@@ -892,7 +892,7 @@ export default function DbSidebar() {
                           <div key={db.name} className="mt-1">
                             {/* 数据库节点 */}
                             <div
-                              className="flex items-center gap-1 px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group"
+                              className="flex items-center gap-1 px-1.5 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm cursor-pointer group"
                               onClick={() => {
                                 const willExpand = !isDbExpanded
                                 toggleNodeExpand(`db:${connection.id}:${db.name}`)
@@ -909,10 +909,10 @@ export default function DbSidebar() {
                               ) : (
                                 <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                               )}
-                              <FolderOpen className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                              <span className="text-sm text-gray-700 dark:text-gray-300 truncate font-medium">{db.name}</span>
+                              <FolderOpen className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
+                              <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate font-medium">{db.name}</span>
                               {db.tableCount > 0 && (
-                                <span className="text-xs text-gray-400 flex-shrink-0 ml-auto">{db.tableCount}</span>
+                                <span className="text-[11px] text-gray-400 flex-shrink-0 ml-auto">{db.tableCount}</span>
                               )}
                             </div>
 
@@ -921,15 +921,15 @@ export default function DbSidebar() {
                               <div className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">
                                 {/* 加载中 */}
                                 {isLoadingThisDb && !dbLoaded && (
-                                  <div className="flex items-center gap-2 py-2 px-2">
+                                  <div className="flex items-center gap-1.5 py-1.5 px-2">
                                     <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
-                                    <span className="text-xs text-gray-500">{t('common.loading')}</span>
+                                    <span className="text-[11px] text-gray-500">{t('common.loading')}</span>
                                   </div>
                                 )}
 
                                 {/* 表 - 始终显示分类，支持折叠 */}
                                 <div
-                                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                  className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm"
                                   onClick={() => toggleCategory(`tables:${connection.id}:${db.name}`)}
                                 >
                                   {isCategoryExpanded(`tables:${connection.id}:${db.name}`) ? (
@@ -954,13 +954,13 @@ export default function DbSidebar() {
                                         ...prev,
                                         [`${connection.id}:${db.name}`]: e.target.value
                                       }))}
-                                      className="w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500"
+                                      className="w-full px-1.5 py-0.5 text-[11px] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-sm focus:outline-none focus:border-blue-500"
                                       onClick={(e) => e.stopPropagation()}
                                     />
                                   </div>
                                 )}
                                 {isLoadingThisDb && !dbLoaded ? (
-                                  <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
+                                  <div className="px-1.5 py-0.5 text-[11px] text-gray-400">{t('common.loading')}</div>
                                 ) : dbTables.length > 0 ? (
                                   (() => {
                                     const searchText = (tableSearchText[`${connection.id}:${db.name}`] || globalSearchText).toLowerCase()
@@ -970,7 +970,7 @@ export default function DbSidebar() {
                                     return filteredTables.length > 0 ? filteredTables.map((table) => (
                                       <div
                                         key={table.name}
-                                        className={`flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer ${
+                                        className={`flex items-center gap-1.5 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm cursor-pointer ${
                                           activeDatabase === db.name
                                             ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                                           : ''
@@ -982,22 +982,22 @@ export default function DbSidebar() {
                                       onContextMenu={(e) => handleContextMenu(e, 'table', connection.id, db.name, table.name)}
                                     >
                                       <Table className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{table.name}</span>
+                                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">{table.name}</span>
                                       {table.rowCount !== undefined && table.rowCount > 0 && (
-                                        <span className="text-xs text-gray-400 flex-shrink-0 ml-auto">{table.rowCount.toLocaleString()}</span>
+                                        <span className="text-[11px] text-gray-400 flex-shrink-0 ml-auto">{table.rowCount.toLocaleString()}</span>
                                       )}
                                     </div>
-                                    )) : <div className="px-2 py-1 text-xs text-gray-400 dark:text-gray-500">{t('database.noMatchingResults')}</div>
+                                    )) : <div className="px-1.5 py-0.5 text-[11px] text-gray-400 dark:text-gray-500">{t('database.noMatchingResults')}</div>
                                   })()
                                 ) : (
-                                  !isLoadingThisDb && <div className="px-2 py-1 text-xs text-gray-400">{t('common.none')}</div>
+                                  !isLoadingThisDb && <div className="px-1.5 py-0.5 text-[11px] text-gray-400">{t('common.none')}</div>
                                 )}
                                   </div>
                                 )}
 
                                 {/* 视图 - 支持折叠 */}
                                 <div
-                                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                  className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm"
                                   onClick={() => toggleCategory(`views:${connection.id}:${db.name}`)}
                                 >
                                   {isCategoryExpanded(`views:${connection.id}:${db.name}`) ? (
@@ -1012,12 +1012,12 @@ export default function DbSidebar() {
                                 {isCategoryExpanded(`views:${connection.id}:${db.name}`) && (
                                   <div className="ml-3 pl-2 border-l border-gray-100 dark:border-gray-700">
                                 {isLoadingThisDb && !dbLoaded ? (
-                                  <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
+                                  <div className="px-1.5 py-0.5 text-[11px] text-gray-400">{t('common.loading')}</div>
                                 ) : dbViews.length > 0 ? (
                                   dbViews.map((view) => (
                                     <div
                                       key={view.name}
-                                      className={`flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer ${
+                                      className={`flex items-center gap-1.5 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm cursor-pointer ${
                                         activeDatabase === db.name
                                           ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'
                                           : ''
@@ -1029,18 +1029,18 @@ export default function DbSidebar() {
                                       onContextMenu={(e) => handleContextMenu(e, 'view', connection.id, db.name, view.name)}
                                     >
                                       <Eye className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
-                                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{view.name}</span>
+                                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">{view.name}</span>
                                     </div>
                                   ))
                                 ) : (
-                                  !isLoadingThisDb && <div className="px-2 py-1 text-xs text-gray-400">{t('common.none')}</div>
+                                  !isLoadingThisDb && <div className="px-1.5 py-0.5 text-[11px] text-gray-400">{t('common.none')}</div>
                                 )}
                                   </div>
                                 )}
 
                                 {/* 存储过程 - 支持折叠 */}
                                 <div
-                                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium mt-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                  className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm"
                                   onClick={() => toggleCategory(`procedures:${connection.id}:${db.name}`)}
                                 >
                                   {isCategoryExpanded(`procedures:${connection.id}:${db.name}`) ? (
@@ -1055,12 +1055,12 @@ export default function DbSidebar() {
                                 {isCategoryExpanded(`procedures:${connection.id}:${db.name}`) && (
                                   <div className="ml-3 pl-2 border-l border-gray-100 dark:border-gray-700">
                                 {isLoadingThisDb && !dbLoaded ? (
-                                  <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
+                                  <div className="px-1.5 py-0.5 text-[11px] text-gray-400">{t('common.loading')}</div>
                                 ) : procedures.length > 0 ? (
                                   procedures.map((proc) => (
                                     <div
                                       key={proc.name}
-                                      className={`flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer ${
+                                      className={`flex items-center gap-1.5 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm cursor-pointer ${
                                         activeDatabase === db.name
                                           ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                                           : ''
@@ -1071,18 +1071,18 @@ export default function DbSidebar() {
                                       }}
                                     >
                                       <FileCode className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{proc.name}</span>
+                                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">{proc.name}</span>
                                     </div>
                                   ))
                                 ) : (
-                                  !isLoadingThisDb && <div className="px-4 py-1 text-xs text-gray-400">{t('common.none')}</div>
+                                  !isLoadingThisDb && <div className="px-3 py-0.5 text-[11px] text-gray-400">{t('common.none')}</div>
                                 )}
                                   </div>
                                 )}
 
                                 {/* 触发器 - 支持折叠 */}
                                 <div
-                                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                  className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm"
                                   onClick={() => toggleCategory(`triggers:${connection.id}:${db.name}`)}
                                 >
                                   {isCategoryExpanded(`triggers:${connection.id}:${db.name}`) ? (
@@ -1097,12 +1097,12 @@ export default function DbSidebar() {
                                 {isCategoryExpanded(`triggers:${connection.id}:${db.name}`) && (
                                   <div className="ml-3 pl-2 border-l border-gray-100 dark:border-gray-700">
                                 {isLoadingThisDb && !dbLoaded ? (
-                                  <div className="px-2 py-1 text-xs text-gray-400">{t('common.loading')}</div>
+                                  <div className="px-1.5 py-0.5 text-[11px] text-gray-400">{t('common.loading')}</div>
                                 ) : triggers.length > 0 ? (
                                   triggers.map((trigger) => (
                                     <div
                                       key={trigger.name}
-                                      className={`flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer ${
+                                      className={`flex items-center gap-1.5 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm cursor-pointer ${
                                         activeDatabase === db.name
                                           ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
                                           : ''
@@ -1113,12 +1113,12 @@ export default function DbSidebar() {
                                       }}
                                     >
                                       <Bolt className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
-                                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{trigger.name}</span>
-                                      <span className="text-xs text-gray-400 flex-shrink-0 ml-auto">{trigger.timing} {trigger.event}</span>
+                                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">{trigger.name}</span>
+                                      <span className="text-[11px] text-gray-400 flex-shrink-0 ml-auto">{trigger.timing} {trigger.event}</span>
                                     </div>
                                   ))
                                 ) : (
-                                  !isLoadingThisDb && <div className="px-2 py-1 text-xs text-gray-400">{t('common.none')}</div>
+                                  !isLoadingThisDb && <div className="px-1.5 py-0.5 text-[11px] text-gray-400">{t('common.none')}</div>
                                 )}
                                   </div>
                                 )}
@@ -1138,21 +1138,21 @@ export default function DbSidebar() {
         {/* 收藏查询 */}
         {savedQueries.length > 0 && (
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2 px-2 mb-2">
-              <Star className="w-4 h-4 text-yellow-500" />
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('database.savedQueries')}</span>
+            <div className="flex items-center gap-1.5 px-1.5 mb-2">
+              <Star className="w-3.5 h-3.5 text-yellow-500" />
+              <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{t('database.savedQueries')}</span>
             </div>
             <div className="space-y-1">
               {savedQueries.map((query) => (
                 <div
                   key={query.id}
-                  className="group flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
+                  className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm cursor-pointer"
                   onClick={() => {
                     createQueryTab(query.name, query.sql)
                   }}
                 >
-                  <FileCode className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">
+                  <FileCode className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate flex-1">
                     {query.name}
                   </span>
                   <button
@@ -1212,7 +1212,7 @@ export default function DbSidebar() {
         <>
           <div className="fixed inset-0 z-40" onClick={closeContextMenu} />
           <div
-            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-[160px]"
+            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg py-1 min-w-[160px]"
             style={{ left: contextMenu.x, top: contextMenu.y }}
           >
             {/* 表节点右键菜单 */}
@@ -1220,68 +1220,68 @@ export default function DbSidebar() {
               <>
                 <button
                   onClick={() => { setActiveDatabase(contextMenu.database!); openTableTab(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!, 'TABLE'); closeContextMenu() }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Table className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                  <Table className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
                   {t('database.openData')}
                 </button>
                 <button
                   onClick={() => newQueryForTable(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Terminal className="w-4 h-4 text-green-500" />
+                  <Terminal className="w-3.5 h-3.5 text-green-500" />
                   {t('database.newQueryForTable')}
                 </button>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
                 <button
                   onClick={() => generateSelectSql(contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <FileText className="w-4 h-4 text-gray-500" />
+                  <FileText className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.generateSelectSql')}
                 </button>
                 <button
                   onClick={() => generateInsertSql(contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <FileText className="w-4 h-4 text-gray-500" />
+                  <FileText className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.generateInsertSql')}
                 </button>
                 <button
                   onClick={() => generateUpdateSql(contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <FileText className="w-4 h-4 text-gray-500" />
+                  <FileText className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.generateUpdateSql')}
                 </button>
                 <button
                   onClick={() => generateDeleteSql(contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <FileText className="w-4 h-4 text-gray-500" />
+                  <FileText className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.generateDeleteSql')}
                 </button>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
                 <button
                   onClick={() => generateCreateTableSql(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <FileText className="w-4 h-4 text-gray-500" />
+                  <FileText className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.openStructure')}
                 </button>
                 <button
                   onClick={() => dropTable(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                   {t('database.dropTable')}
                 </button>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
                 <button
                   onClick={() => copyTableName(contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Clipboard className="w-4 h-4 text-gray-500" />
+                  <Clipboard className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.copyTableName')}
                 </button>
               </>
@@ -1292,23 +1292,23 @@ export default function DbSidebar() {
               <>
                 <button
                   onClick={() => { setActiveDatabase(contextMenu.database!); openTableTab(contextMenu.connectionId, contextMenu.database!, contextMenu.itemName!, 'VIEW'); closeContextMenu() }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Eye className="w-4 h-4 text-purple-500" />
+                  <Eye className="w-3.5 h-3.5 text-purple-500" />
                   {t('database.openData')}
                 </button>
                 <button
                   onClick={() => generateSelectSql(contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <FileText className="w-4 h-4 text-gray-500" />
+                  <FileText className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.generateSelectSql')}
                 </button>
                 <button
                   onClick={() => copyTableName(contextMenu.itemName!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Clipboard className="w-4 h-4 text-gray-500" />
+                  <Clipboard className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.copyTableName')}
                 </button>
               </>
@@ -1319,23 +1319,23 @@ export default function DbSidebar() {
               <>
                 <button
                   onClick={() => refreshTableList(contextMenu.connectionId, contextMenu.database!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <RefreshCw className="w-4 h-4 text-gray-500" />
+                  <RefreshCw className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.refreshTableList')}
                 </button>
                 <button
                   onClick={() => { createQueryTab(`Query - ${contextMenu.database}`, ''); closeContextMenu() }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Terminal className="w-4 h-4 text-green-500" />
+                  <Terminal className="w-3.5 h-3.5 text-green-500" />
                   {t('database.newQuery')}
                 </button>
                 <button
                   onClick={() => newTableForDatabase(contextMenu.connectionId, contextMenu.database!)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Plus className="w-4 h-4 text-blue-500" />
+                  <Plus className="w-3.5 h-3.5 text-blue-500" />
                   {t('database.newTable')}
                 </button>
               </>
@@ -1346,24 +1346,24 @@ export default function DbSidebar() {
               <>
                 <button
                   onClick={() => { createQueryTab('New Query', ''); closeContextMenu() }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <Terminal className="w-4 h-4 text-green-500" />
+                  <Terminal className="w-3.5 h-3.5 text-green-500" />
                   {t('database.newQuery')}
                 </button>
                 <button
                   onClick={() => refreshDatabaseList(contextMenu.connectionId)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <RefreshCw className="w-4 h-4 text-gray-500" />
+                  <RefreshCw className="w-3.5 h-3.5 text-gray-500" />
                   {t('database.refreshConnection')}
                 </button>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
                 <button
                   onClick={() => disconnect(contextMenu.connectionId)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
-                  <XCircle className="w-4 h-4" />
+                  <XCircle className="w-3.5 h-3.5" />
                   {t('database.disconnect')}
                 </button>
               </>

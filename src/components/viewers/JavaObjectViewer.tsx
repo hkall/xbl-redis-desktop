@@ -100,18 +100,18 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">{t('redis.deserializing')}</div>
+        <div className="text-gray-500 dark:text-gray-400 text-[13px]">{t('redis.deserializing')}</div>
       </div>
     )
   }
 
   if (error && !data) {
     return (
-      <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+      <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-start gap-1.5">
+        <AlertCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
         <div>
           <h3 className="font-medium text-red-800 dark:text-red-400 mb-1">{t('redis.deserializationError')}</h3>
-          <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <p className="text-[13px] text-red-700 dark:text-red-300">{error}</p>
         </div>
       </div>
     )
@@ -121,7 +121,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
     <div className="flex flex-col h-full">
       {/* Header info */}
       {data && (
-        <div className="flex items-center gap-2 mb-3 flex-shrink-0 text-xs">
+        <div className="flex items-center gap-1.5 mb-3 flex-shrink-0 text-[11px]">
           {byteArray && (
             <span className="text-gray-500 dark:text-gray-400">
               {t('redis.bytesCount', { count: byteArray.length })}
@@ -142,8 +142,8 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
       {/* JSON Display */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {data ? (
-          <div className="h-full overflow-auto bg-gray-100 dark:bg-gray-800 rounded-lg">
-            <pre className="p-4 text-sm leading-relaxed">
+          <div className="h-full overflow-auto bg-gray-100 dark:bg-gray-800 rounded-md">
+            <pre className="p-4 text-[13px] leading-relaxed">
               <code className="font-mono text-gray-800 dark:text-gray-200 whitespace-pre">
                 {formatJSON(data)}
               </code>
@@ -151,7 +151,7 @@ export default function JavaObjectViewer({ byteArray, data: propData }: JavaObje
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">{t('redis.noDataDisplay')}</p>
+            <p className="text-gray-500 dark:text-gray-400 text-[13px]">{t('redis.noDataDisplay')}</p>
           </div>
         )}
       </div>

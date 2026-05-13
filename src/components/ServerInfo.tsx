@@ -256,7 +256,7 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
   if (!connectionId) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <p className="text-gray-400 dark:text-gray-500 text-sm">{t('redis.pleaseConnect')}</p>
+        <p className="text-gray-400 dark:text-gray-500 text-[13px]">{t('redis.pleaseConnect')}</p>
       </div>
     )
   }
@@ -264,17 +264,17 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
   return (
     <div className="w-full h-full flex flex-col">
       {/* Control Bar */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-black/10 dark:border-white/10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold">{t('redis.realtimeMonitor')}</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${autoRefresh ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+      <div className="flex-shrink-0 px-3 py-2 border-b border-black/10 dark:border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[13px] font-semibold">{t('redis.realtimeMonitor')}</span>
+          <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${autoRefresh ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
             {autoRefresh ? t('redis.autoRefresh') : t('redis.manual')}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+            className={`px-2 py-1 text-[11px] font-medium rounded-full transition-all ${
               autoRefresh
                 ? 'bg-green-500 text-white hover:bg-green-600'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
@@ -285,29 +285,29 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
           <button
             onClick={() => loadServerInfo()}
             disabled={loading}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 transition-colors"
+            className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 transition-colors"
             title={t('redis.refresh2')}
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-3">
         {loading && Object.keys(serverInfo).length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="w-5 h-5 text-gray-400 animate-spin" />
+          <div className="flex items-center justify-center py-6">
+            <RefreshCw className="w-4 h-4 text-gray-400 animate-spin" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {/* Performance Metrics */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">{t('redis.performanceMetrics')}</h3>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-lg p-2">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Zap className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <h3 className="text-[13px] font-semibold text-green-900 dark:text-green-100">{t('redis.performanceMetrics')}</h3>
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-1.5">
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'performance')
                   .map(([key, config]) => {
@@ -317,12 +317,12 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
                     const formatted = formatValue(key, value, config.format ?? undefined)
 
                     return (
-                      <div key={key} className={`${status.bg} rounded-lg p-3`}>
-                        <div className="flex items-center gap-1.5 mb-1">
+                      <div key={key} className={`${status.bg} rounded-md p-2`}>
+                        <div className="flex items-center gap-1 mb-0.5">
                           <Icon className="w-3.5 h-3.5 text-green-700 dark:text-green-400" />
-                          <span className="text-xs text-green-700/80 dark:text-green-400/80">{t(`redis.${config.nameKey}`)}</span>
+                          <span className="text-[11px] text-green-700/80 dark:text-green-400/80">{t(`redis.${config.nameKey}`)}</span>
                         </div>
-                        <div className="text-lg font-bold text-green-900 dark:text-green-100">
+                        <div className="text-base font-bold text-green-900 dark:text-green-100">
                           {formatted}
                         </div>
                       </div>
@@ -332,12 +332,12 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
             </div>
 
             {/* Memory Metrics */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Database className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">{t('redis.memoryUsage')}</h3>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-2">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-[13px] font-semibold text-blue-900 dark:text-blue-100">{t('redis.memoryUsage')}</h3>
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-1.5">
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'memory')
                   .map(([key, config]) => {
@@ -347,10 +347,10 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
                     const formatted = formatValue(key, value, config.format ?? undefined)
 
                     return (
-                      <div key={key} className={`${status.bg} rounded-lg p-3`}>
-                        <div className="flex items-center gap-1.5 mb-1">
+                      <div key={key} className={`${status.bg} rounded-md p-2`}>
+                        <div className="flex items-center gap-1 mb-0.5">
                           <Icon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                          <span className="text-xs text-blue-700/80 dark:text-blue-400/80">{t(`redis.${config.nameKey}`)}</span>
+                          <span className="text-[11px] text-blue-700/80 dark:text-blue-400/80">{t(`redis.${config.nameKey}`)}</span>
                         </div>
                         <div className={`text-base font-bold ${
                           status.status === 'critical' ? 'text-red-600 dark:text-red-400' :
@@ -366,12 +366,12 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
             </div>
 
             {/* Server Metrics */}
-            <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100">{t('redis.serverInformation')}</h3>
+            <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-2">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Activity className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <h3 className="text-[13px] font-semibold text-purple-900 dark:text-purple-100">{t('redis.serverInformation')}</h3>
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-1.5">
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'server')
                   .map(([key, config]) => {
@@ -380,10 +380,10 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
                     const formatted = formatValue(key, value, config.format ?? undefined)
 
                     return (
-                      <div key={key} className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                        <div className="flex items-center gap-1.5 mb-1">
+                      <div key={key} className="bg-white/50 dark:bg-black/20 rounded-md p-2">
+                        <div className="flex items-center gap-1 mb-0.5">
                           <Icon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                          <span className="text-xs text-purple-700/80 dark:text-purple-400/80">{t(`redis.${config.nameKey}`)}</span>
+                          <span className="text-[11px] text-purple-700/80 dark:text-purple-400/80">{t(`redis.${config.nameKey}`)}</span>
                         </div>
                         <div className="text-base font-bold text-purple-900 dark:text-purple-100">
                           {formatted}
@@ -395,12 +395,12 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
             </div>
 
             {/* Stats Metrics */}
-            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <HardDrive className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-100">{t('redis.dataStatistics')}</h3>
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-2">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <HardDrive className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <h3 className="text-[13px] font-semibold text-amber-900 dark:text-amber-100">{t('redis.dataStatistics')}</h3>
               </div>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-5 gap-1.5">
                 {Object.entries(CORE_METRICS)
                   .filter(([_, config]) => config.category === 'stats')
                   .map(([key, config]) => {
@@ -409,10 +409,10 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
                     const formatted = formatValue(key, value, config.format ?? undefined)
 
                     return (
-                      <div key={key} className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                        <div className="flex items-center gap-1.5 mb-1">
+                      <div key={key} className="bg-white/50 dark:bg-black/20 rounded-md p-2">
+                        <div className="flex items-center gap-1 mb-0.5">
                           <Icon className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                          <span className="text-xs text-amber-700/80 dark:text-amber-400/80">{t(`redis.${config.nameKey}`)}</span>
+                          <span className="text-[11px] text-amber-700/80 dark:text-amber-400/80">{t(`redis.${config.nameKey}`)}</span>
                         </div>
                         <div className="text-base font-bold text-amber-900 dark:text-amber-100">
                           {formatted}
@@ -424,13 +424,13 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
             </div>
 
             {/* Persistence Metrics */}
-            <div className="bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 border border-cyan-200 dark:border-cyan-700 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <FileBox className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                  <h3 className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">{t('redis.persistenceBackup')}</h3>
+            <div className="bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 border border-cyan-200 dark:border-cyan-700 rounded-lg p-2">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <FileBox className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                  <h3 className="text-[13px] font-semibold text-cyan-900 dark:text-cyan-100">{t('redis.persistenceBackup')}</h3>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
                   persistenceInfo.persistenceMode === t('redis.noPersistence')
                     ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                     : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
@@ -439,19 +439,19 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 {/* RDB Section */}
-                <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Database className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">{t('redis.rdbSnapshot')}</span>
+                <div className="bg-white/50 dark:bg-black/20 rounded-md p-1.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Database className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                    <span className="text-[13px] font-medium text-cyan-900 dark:text-cyan-100">{t('redis.rdbSnapshot')}</span>
                     {persistenceInfo.rdbEnabled ? (
                       <CheckCircle className="w-3.5 h-3.5 text-green-500" />
                     ) : (
                       <AlertTriangle className="w-3.5 h-3.5 text-gray-400" />
                     )}
                   </div>
-                  <div className="space-y-1.5 text-xs">
+                  <div className="space-y-1 text-[11px]">
                     <div className="flex justify-between">
                       <span className="text-cyan-700/70 dark:text-cyan-400/70">{t('redis.lastSaveTime')}</span>
                       <span className="text-cyan-900 dark:text-cyan-100 font-medium">
@@ -472,17 +472,17 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
                 </div>
 
                 {/* AOF Section */}
-                <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Save className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">{t('redis.aofLog')}</span>
+                <div className="bg-white/50 dark:bg-black/20 rounded-md p-1.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Save className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                    <span className="text-[13px] font-medium text-cyan-900 dark:text-cyan-100">{t('redis.aofLog')}</span>
                     {persistenceInfo.aofEnabled ? (
                       <CheckCircle className="w-3.5 h-3.5 text-green-500" />
                     ) : (
                       <AlertTriangle className="w-3.5 h-3.5 text-gray-400" />
                     )}
                   </div>
-                  <div className="space-y-1.5 text-xs">
+                  <div className="space-y-1 text-[11px]">
                     <div className="flex justify-between">
                       <span className="text-cyan-700/70 dark:text-cyan-400/70">{t('redis.enabled')}</span>
                       <span className={`font-medium ${persistenceInfo.aofEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
@@ -506,8 +506,8 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
               </div>
 
               {/* Info */}
-              <div className="mt-3 p-2 bg-cyan-100/50 dark:bg-cyan-900/20 rounded-lg">
-                <p className="text-xs text-cyan-700 dark:text-cyan-300">
+              <div className="mt-1.5 p-1.5 bg-cyan-100/50 dark:bg-cyan-900/20 rounded-md">
+                <p className="text-[11px] text-cyan-700 dark:text-cyan-300">
                   {t('redis.persistenceTip')}
                 </p>
               </div>
@@ -517,7 +517,7 @@ export default function ServerInfo({ connectionId }: ServerInfoProps) {
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 h-[52px] px-4 border-t border-black/10 dark:border-white/10 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
+      <div className="flex-shrink-0 h-[52px] px-3 border-t border-black/10 dark:border-white/10 text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-between">
         <span>{Object.keys(serverInfo).length} {t('redis.metricsCount')}</span>
         <span>{t('redis.dataRefreshInterval')}</span>
       </div>
