@@ -42,7 +42,7 @@ function LanguageSwitcher() {
         className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         title={t('toolbar.switchLanguage')}
       >
-        <Languages className="w-3.5 h-3.5" />
+        <Languages className="w-4 h-4" />
       </button>
 
       {isOpen && (
@@ -59,7 +59,7 @@ function LanguageSwitcher() {
                   setLanguage(lang)
                   setIsOpen(false)
                 }}
-                className={`w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] transition-colors ${
+                className={`w-full flex items-center gap-1.5 px-2 py-1.5 text-[14px] transition-colors ${
                   language === lang
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -67,7 +67,7 @@ function LanguageSwitcher() {
               >
                 <span className="flex-1 text-left">{LANGUAGE_CONFIG[lang].nativeLabel}</span>
                 {language === lang && (
-                  <CheckCircle className="w-3.5 h-3.5" />
+                  <CheckCircle className="w-4 h-4" />
                 )}
               </button>
             ))}
@@ -232,14 +232,14 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                 key={toolId}
                 onClick={() => onToolChange(toolId)}
                 className={`
-                  flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all duration-200
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[14px] font-medium transition-all duration-200
                   ${isActive
                     ? `${colors.active} text-white shadow-md`
                     : `text-gray-600 dark:text-gray-400 ${colors.hover}`
                   }
                 `}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-4 h-4" />
                 <span>{config.label}</span>
               </button>
             )
@@ -272,7 +272,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
             className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             title={darkMode ? t('toolbar.switchToLightMode') : t('toolbar.switchToDarkMode')}
           >
-            {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
           {/* Language Switcher */}
@@ -285,7 +285,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm">
             <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
-              <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-[14px] font-semibold text-gray-900 dark:text-white">
                 {downloadComplete ? t('update.downloadComplete') : updateInfo.hasUpdate ? t('update.updateAvailable') : t('update.upToDateTitle')}
               </h3>
               <button
@@ -298,7 +298,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                 }}
                 className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
             <div className="p-6 text-center">
@@ -313,14 +313,14 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   <div className="flex gap-1.5 justify-center">
                     <button
                       onClick={handleOpenFile}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[13px] font-medium rounded-md transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[14px] font-medium rounded-md transition-colors"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-4 h-4" />
                       {t('update.openInstaller')}
                     </button>
                     <button
                       onClick={handleOpenFolder}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-[13px] font-medium rounded-md transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-[14px] font-medium rounded-md transition-colors"
                     >
                       {t('update.openFolder')}
                     </button>
@@ -334,7 +334,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   <p className="text-red-600 dark:text-red-400 mb-2 font-medium">
                     {t('update.downloadFailed')}
                   </p>
-                  <p className="text-[13px] text-gray-500 dark:text-gray-400">{downloadError}</p>
+                  <p className="text-[14px] text-gray-500 dark:text-gray-400">{downloadError}</p>
                 </>
               ) : downloading ? (
                 <>
@@ -353,7 +353,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                     </div>
                   )}
                   {downloadProgress && (
-                    <p className="text-[13px] text-gray-500 dark:text-gray-400">
+                    <p className="text-[14px] text-gray-500 dark:text-gray-400">
                       {downloadProgress.percent}% - {downloadProgress.speed}
                     </p>
                   )}
@@ -366,14 +366,14 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   <p className="text-gray-600 dark:text-gray-300 mb-2">
                     {t('update.newVersionAvailableMsg')}
                   </p>
-                  <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-4">
                     {t('update.currentLabel')}: <span className="font-mono">v{APP_VERSION}</span> → {t('update.latestLabel')}: <span className="font-mono text-green-600 dark:text-green-400">v{updateInfo.latestVersion}</span>
                   </p>
                   <button
                     onClick={handleDownloadUpdate}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[13px] font-medium rounded-md transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[14px] font-medium rounded-md transition-colors"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <Download className="w-4 h-4" />
                     {t('update.downloadUpdate')}
                   </button>
                 </>
@@ -385,7 +385,7 @@ export default function Toolbar({ activeTool, onToolChange, darkMode = true, onT
                   <p className="text-gray-600 dark:text-gray-300">
                     {t('update.upToDate')}
                   </p>
-                  <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-2">
+                  <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-2">
                     <span className="font-mono">v{APP_VERSION}</span>
                   </p>
                 </>
