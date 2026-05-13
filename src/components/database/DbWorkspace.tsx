@@ -486,11 +486,11 @@ function SqlEditor({
 
   const getSuggestionIcon = (type: string) => {
     switch (type) {
-      case 'keyword': return <Key className="w-3 h-3 text-purple-500" />
-      case 'function': return <FileCode className="w-3 h-3 text-blue-500" />
-      case 'database': return <Database className="w-3 h-3 text-green-500" />
-      case 'table': return <Table className="w-3 h-3 text-orange-500" />
-      case 'column': return <Columns className="w-3 h-3 text-cyan-500" />
+      case 'keyword': return <Key className="w-3.5 h-3.5 text-purple-500" />
+      case 'function': return <FileCode className="w-3.5 h-3.5 text-blue-500" />
+      case 'database': return <Database className="w-3.5 h-3.5 text-green-500" />
+      case 'table': return <Table className="w-3.5 h-3.5 text-orange-500" />
+      case 'column': return <Columns className="w-3.5 h-3.5 text-cyan-500" />
       default: return null
     }
   }
@@ -520,16 +520,16 @@ function SqlEditor({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm relative">
-      <div className="flex-shrink-0 flex items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <FileCode className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-2" />
-        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">SQL Query</span>
-        <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">{t('database.autocompleteEnabled')}</span>
+    <div className="h-full flex flex-col overflow-hidden rounded-md border border-gray-300 dark:border-gray-600 shadow-sm relative">
+      <div className="flex-shrink-0 flex items-center px-2 py-1.5 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <FileCode className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mr-2" />
+        <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">SQL Query</span>
+        <span className="ml-2 text-[11px] text-gray-400 dark:text-gray-500">{t('database.autocompleteEnabled')}</span>
       </div>
 
       <div className="flex-1 flex overflow-hidden bg-white dark:bg-gray-900">
         <div className="flex-shrink-0 w-10 bg-slate-50 dark:bg-slate-900/50 border-r border-gray-200 dark:border-gray-700 select-none overflow-hidden">
-          <div className="py-3 px-1 font-mono text-xs text-slate-400 dark:text-slate-500 text-right">
+          <div className="py-2 px-1 font-mono text-[11px] text-slate-400 dark:text-slate-500 text-right">
             {lineNumbers.map((num) => (
               <div key={num} className="leading-6 h-6">{num}</div>
             ))}
@@ -537,7 +537,7 @@ function SqlEditor({
         </div>
 
         <div className="flex-1 relative">
-          <div className="absolute inset-0 font-mono text-sm p-3 leading-6 overflow-auto whitespace-pre-wrap break-words pointer-events-none" aria-hidden="true">
+          <div className="absolute inset-0 font-mono text-[13px] p-2 leading-6 overflow-auto whitespace-pre-wrap break-words pointer-events-none" aria-hidden="true">
             {highlightSql(sql).map((part, index) => {
               let colorClass = 'text-gray-800 dark:text-gray-200'
               if (part.type === 'keyword') colorClass = 'text-purple-600 dark:text-purple-400 font-semibold'
@@ -555,7 +555,7 @@ function SqlEditor({
             onKeyDown={handleKeyDown}
             onBlur={() => { setTimeout(() => { if (!isSelectingRef.current) setShowSuggestions(false) }, 150) }}
             placeholder={t('database.sqlPlaceholderHint')}
-            className="absolute inset-0 bg-transparent text-transparent caret-gray-800 dark:caret-gray-200 font-mono text-sm p-3 resize-none focus:outline-none leading-6 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+            className="absolute inset-0 bg-transparent text-transparent caret-gray-800 dark:caret-gray-200 font-mono text-[13px] p-2 resize-none focus:outline-none leading-6 placeholder:text-gray-400 dark:placeholder:text-gray-600"
             spellCheck={false}
             disabled={executing}
           />
@@ -564,20 +564,20 @@ function SqlEditor({
 
       {showSuggestions && filteredSuggestions.length > 0 && (
         <div
-          className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 max-h-[240px] overflow-y-auto min-w-[200px]"
+          className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg py-1 max-h-[240px] overflow-y-auto min-w-[200px]"
           style={{ top: suggestionPosition.top, left: suggestionPosition.left }}
         >
           {filteredSuggestions.map((suggestion, index) => (
             <div
               key={`suggestion-${index}`}
               ref={el => { suggestionItemRefs.current[index] = el }}
-              className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${index === selectedSuggestionIndex ? 'bg-blue-50 dark:bg-blue-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+              className={`flex items-center gap-1.5 px-2 py-1.5 cursor-pointer ${index === selectedSuggestionIndex ? 'bg-blue-50 dark:bg-blue-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
               onMouseDown={(e) => { e.preventDefault(); applySuggestion(suggestion) }}
               onMouseEnter={() => setSelectedSuggestionIndex(index)}
             >
               {getSuggestionIcon(suggestion.type)}
-              <span className="font-mono text-sm text-gray-700 dark:text-gray-300">{suggestion.label}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">{suggestion.detail}</span>
+              <span className="font-mono text-[13px] text-gray-700 dark:text-gray-300">{suggestion.label}</span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500 ml-auto">{suggestion.detail}</span>
             </div>
           ))}
         </div>
@@ -1245,9 +1245,9 @@ function DataGrid({
   }, [selectedRows, focusedCell, editingCell, result, sortColumns, filters])
 
   if (loading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>
-  if (!result) return <div className="flex-1 flex items-center justify-center"><p className="text-gray-400 dark:text-gray-500 text-sm">{t('database.executeQueryResult')}</p></div>
-  if (!result.success) return <div className="flex-1 flex flex-col items-center justify-center p-4"><AlertCircle className="w-8 h-8 text-red-500 mb-2" /><p className="text-red-500 text-sm text-center">{result.error}</p></div>
-  if (!result.data || result.data.length === 0) return <div className="flex-1 flex flex-col items-center justify-center"><CheckCircle className="w-8 h-8 text-green-500 mb-2" /><p className="text-gray-500 dark:text-gray-400 text-sm">{result.affectedRows !== undefined ? t('database.rowsAffectedMsg', { count: result.affectedRows }) : result.rowCount === 0 ? t('database.querySuccessNoData') : t('database.querySuccessful')}</p></div>
+  if (!result) return <div className="flex-1 flex items-center justify-center"><p className="text-gray-400 dark:text-gray-500 text-[13px]">{t('database.executeQueryResult')}</p></div>
+  if (!result.success) return <div className="flex-1 flex flex-col items-center justify-center p-3"><AlertCircle className="w-8 h-8 text-red-500 mb-2" /><p className="text-red-500 text-[13px] text-center">{result.error}</p></div>
+  if (!result.data || result.data.length === 0) return <div className="flex-1 flex flex-col items-center justify-center"><CheckCircle className="w-8 h-8 text-green-500 mb-2" /><p className="text-gray-500 dark:text-gray-400 text-[13px]">{result.affectedRows !== undefined ? t('database.rowsAffectedMsg', { count: result.affectedRows }) : result.rowCount === 0 ? t('database.querySuccessNoData') : t('database.querySuccessful')}</p></div>
 
   const sortedData = getSortedData()
   const totalPages = Math.ceil(sortedData.length / pageSize)
@@ -1263,11 +1263,11 @@ function DataGrid({
     <div className="flex-1 flex flex-col min-h-0" onContextMenu={handleContextMenu}>
       {/* 篮选状态栏 */}
       {filters.length > 0 && (
-        <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+        <div className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1.5 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
           <Filter className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
-          <span className="text-xs text-blue-600 dark:text-blue-400">{t('database.filter')}:</span>
+          <span className="text-[11px] text-blue-600 dark:text-blue-400">{t('database.filter')}:</span>
           {filters.map((filter, idx) => (
-            <span key={idx} className="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-gray-800 rounded text-xs">
+            <span key={idx} className="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-gray-800 rounded text-[11px]">
               <span className="text-gray-600 dark:text-gray-300">{columns[filter.column]}</span>
               <span className="text-gray-400 dark:text-gray-500">{t(`database.${filter.operator}`)}</span>
               {filter.value && <span className="text-blue-500 dark:text-blue-400 font-medium">"{filter.value}"</span>}
@@ -1276,7 +1276,7 @@ function DataGrid({
               </button>
             </span>
           ))}
-          <button onClick={clearAllFilters} className="ml-2 px-2 py-0.5 text-xs text-gray-500 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+          <button onClick={clearAllFilters} className="ml-2 px-2 py-0.5 text-[11px] text-gray-500 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
             {t('database.clearFilter')}
           </button>
         </div>
@@ -1287,20 +1287,20 @@ function DataGrid({
         <table className="w-full border-collapse table-auto">
           <thead className="sticky top-0 z-10">
             <tr className="bg-gradient-to-b from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900">
-              <th className="w-14 px-2 py-2 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">#</th>
+              <th className="w-14 px-2 py-1.5 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">#</th>
               {columns.map((col, i) => {
                 if (hiddenColumns.has(i)) return null
                 const sortIndex = sortColumns.findIndex(s => s.column === i)
                 const hasFilter = filters.some(f => f.column === i)
                 return (
-                  <th key={i} onClick={e => handleColumnClick(i, e)} onContextMenu={e => handleColumnContextMenu(e, i)} style={{ width: columnWidths[i] || 150 }} className="relative px-3 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 border-b-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                  <th key={i} onClick={e => handleColumnClick(i, e)} onContextMenu={e => handleColumnContextMenu(e, i)} style={{ width: columnWidths[i] || 150 }} className="relative px-2 py-1.5 text-left text-[11px] font-semibold text-gray-600 dark:text-gray-300 border-b-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 group">
                     <div className="flex items-center gap-1">
                       <span className="truncate text-gray-700 dark:text-gray-200">{col}</span>
                       {/* 排序指示器 */}
                       {sortIndex >= 0 ? (
                         <div className="flex items-center gap-0.5">
                           {sortColumns[sortIndex].direction === 'asc' ? <ArrowUp className="w-3 h-3 text-blue-500 dark:text-blue-400" /> : <ArrowDown className="w-3 h-3 text-blue-500 dark:text-blue-400" />}
-                          {sortColumns.length > 1 && <span className="text-xs text-blue-500 dark:text-blue-400 font-medium">{sortIndex + 1}</span>}
+                          {sortColumns.length > 1 && <span className="text-[11px] text-blue-500 dark:text-blue-400 font-medium">{sortIndex + 1}</span>}
                         </div>
                       ) : (
                         <ArrowUp className="w-3 h-3 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-30" />
@@ -1321,12 +1321,12 @@ function DataGrid({
                     />
                     {/* 篮选面板 */}
                     {showFilterPanel === i && (
-                      <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 z-20 min-w-[200px]" onClick={e => e.stopPropagation()}>
-                        <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">{t('database.filterBy', { column: col })}</div>
+                      <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg p-2 z-20 min-w-[200px]" onClick={e => e.stopPropagation()}>
+                        <div className="text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('database.filterBy', { column: col })}</div>
                         <select
                           value={filterOperator}
                           onChange={e => setFilterOperator(e.target.value as FilterCondition['operator'])}
-                          className="w-full px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded mb-2 text-gray-700 dark:text-gray-300"
+                          className="w-full px-2 py-1 text-[11px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded mb-1.5 text-gray-700 dark:text-gray-300"
                         >
                           <option value="contains">{t('database.contains')}</option>
                           <option value="notContains">{t('database.notContains')}</option>
@@ -1345,19 +1345,19 @@ function DataGrid({
                             value={filterValue}
                             onChange={e => setFilterValue(e.target.value)}
                             placeholder={t('common.value')}
-                            className="w-full px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded mb-2 text-gray-700 dark:text-gray-300"
+                            className="w-full px-2 py-1 text-[11px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded mb-1.5 text-gray-700 dark:text-gray-300"
                           />
                         )}
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5">
                           <button
                             onClick={() => { setFilterColumn(i); addFilter() }}
-                            className="flex-1 px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded"
+                            className="flex-1 px-2 py-1 text-[11px] bg-blue-500 hover:bg-blue-600 text-white rounded"
                           >
                             {t('common.add')}
                           </button>
                           <button
                             onClick={() => { setShowFilterPanel(null); setFilterValue('') }}
-                            className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 rounded"
+                            className="px-2 py-1 text-[11px] bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 rounded"
                           >
                             {t('common.cancel')}
                           </button>
@@ -1375,7 +1375,7 @@ function DataGrid({
               const isSelected = selectedRows.has(actualIndex)
               return (
                 <tr key={actualIndex} onClick={e => handleRowSelect(actualIndex, e)} className={`${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : actualIndex % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'} hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer transition-colors`}>
-                  <td className="px-2 py-1.5 text-center text-xs text-gray-400 dark:text-gray-500 font-medium border-r border-gray-100 dark:border-gray-800">{isSelected ? <Check className="w-3 h-3 text-blue-500 dark:text-blue-400" /> : actualIndex + 1}</td>
+                  <td className="px-2 py-1 text-center text-[11px] text-gray-400 dark:text-gray-500 font-medium border-r border-gray-100 dark:border-gray-800">{isSelected ? <Check className="w-3 h-3 text-blue-500 dark:text-blue-400" /> : actualIndex + 1}</td>
                   {row.map((cell, colIndex) => {
                     if (hiddenColumns.has(colIndex)) return null
                     const isEditing = editingCell?.rowIndex === actualIndex && editingCell?.colIndex === colIndex
@@ -1390,7 +1390,7 @@ function DataGrid({
                         onDoubleClick={() => canEdit && startEdit(actualIndex, colIndex)}
                         onClick={() => setFocusedCell({ rowIndex: actualIndex, colIndex })}
                         onContextMenu={() => { contextMenuCellRef.current = { rowIndex: actualIndex, colIndex } }}
-                        className={`px-3 py-1.5 text-sm font-mono relative ${isChanged ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${isCurrentMatch ? 'ring-2 ring-orange-500 dark:ring-orange-400' : isFindMatch ? 'bg-yellow-100 dark:bg-yellow-900/30' : ''} ${isFocused && !isEditing ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}`}
+                        className={`px-2 py-1 text-[13px] font-mono relative ${isChanged ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${isCurrentMatch ? 'ring-2 ring-orange-500 dark:ring-orange-400' : isFindMatch ? 'bg-yellow-100 dark:bg-yellow-900/30' : ''} ${isFocused && !isEditing ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}`}
                       >
                         {isEditing ? (
                           <input
@@ -1399,7 +1399,7 @@ function DataGrid({
                             onKeyDown={handleEditKeyDown}
                             onBlur={() => setTimeout(cancelEdit, 150)}
                             autoFocus
-                            className="absolute inset-0 px-3 py-1.5 text-sm font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-b-2 border-blue-500 focus:outline-none z-10"
+                            className="absolute inset-0 px-2 py-1 text-[13px] font-mono text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-b-2 border-blue-500 focus:outline-none z-10"
                           />
                         ) : (
                           <CellContent value={cell} />
@@ -1416,10 +1416,10 @@ function DataGrid({
 
       {/* 查找栏 */}
       {showFindBar && (
-        <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-200 dark:border-yellow-800">
-          <span className="text-xs text-yellow-600 dark:text-yellow-400">{t('common.search')}:</span>
-          <input value={findText} onChange={e => performFind(e.target.value)} className="w-40 px-2 py-1 text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white" autoFocus onKeyDown={e => { if (e.key === 'Escape') { setShowFindBar(false); setFindText(''); setFindMatches([]); setCurrentMatchIndex(-1) } if (e.key === 'Enter' && findMatches.length > 0) { const dir = e.shiftKey ? -1 : 1; const next = (currentMatchIndex + dir + findMatches.length) % findMatches.length; setCurrentMatchIndex(next); setFocusedCell(findMatches[next]) } }} />
-          {findText && <span className="text-xs text-gray-500 dark:text-gray-400">{findMatches.length > 0 ? `${currentMatchIndex + 1}/${findMatches.length}` : '0/0'}</span>}
+        <div className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-200 dark:border-yellow-800">
+          <span className="text-[11px] text-yellow-600 dark:text-yellow-400">{t('common.search')}:</span>
+          <input value={findText} onChange={e => performFind(e.target.value)} className="w-40 px-2 py-1 text-[11px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white" autoFocus onKeyDown={e => { if (e.key === 'Escape') { setShowFindBar(false); setFindText(''); setFindMatches([]); setCurrentMatchIndex(-1) } if (e.key === 'Enter' && findMatches.length > 0) { const dir = e.shiftKey ? -1 : 1; const next = (currentMatchIndex + dir + findMatches.length) % findMatches.length; setCurrentMatchIndex(next); setFocusedCell(findMatches[next]) } }} />
+          {findText && <span className="text-[11px] text-gray-500 dark:text-gray-400">{findMatches.length > 0 ? `${currentMatchIndex + 1}/${findMatches.length}` : '0/0'}</span>}
           <button onClick={() => { if (findMatches.length > 0) { const next = (currentMatchIndex - 1 + findMatches.length) % findMatches.length; setCurrentMatchIndex(next); setFocusedCell(findMatches[next]) } }} className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Shift+F3"><ChevronUp className="w-3.5 h-3.5" /></button>
           <button onClick={() => { if (findMatches.length > 0) { const next = (currentMatchIndex + 1) % findMatches.length; setCurrentMatchIndex(next); setFocusedCell(findMatches[next]) } }} className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="F3"><ChevronDown className="w-3.5 h-3.5" /></button>
           <button onClick={() => { setShowFindBar(false); setFindText(''); setFindMatches([]); setCurrentMatchIndex(-1) }} className="ml-auto p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="w-3.5 h-3.5" /></button>
@@ -1427,14 +1427,14 @@ function DataGrid({
       )}
 
       {/* 状态栏 - 始终显示 */}
-      <div className="flex-shrink-0 flex items-center justify-between px-3 py-1.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-        <div className="flex items-center gap-2">
+      <div className="flex-shrink-0 flex items-center justify-between px-2 py-1.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-1.5">
           <span>{sortedData.length} {t('database.rows')}</span>
           {totalPages > 1 && <><span className="text-gray-300 dark:text-gray-600">|</span><span>{t('common.page')} {page}/{totalPages}</span></>}
           {selectedRows.size > 0 && <><span className="text-gray-300 dark:text-gray-600">|</span><span className="text-blue-500 dark:text-blue-400">{t('database.selectedRowsCount', { count: selectedRows.size })}</span></>}
           {hiddenColumns.size > 0 && <><span className="text-gray-300 dark:text-gray-600">|</span><span className="text-gray-400 dark:text-gray-500">{hiddenColumns.size} {t('database.columnsHidden')}</span></>}
           {findMatches.length > 0 && <><span className="text-gray-300 dark:text-gray-600">|</span><span className="text-yellow-600 dark:text-yellow-400">{currentMatchIndex + 1}/{findMatches.length}</span></>}
-          <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }} className="ml-1 px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs text-gray-700 dark:text-gray-300">
+          <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }} className="ml-1 px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-[11px] text-gray-700 dark:text-gray-300">
             <option value={50}>50</option>
             <option value={100}>100</option>
             <option value={200}>200</option>
@@ -1459,15 +1459,15 @@ function DataGrid({
             {showColumnMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowColumnMenu(false)} />
-                <div className="absolute right-0 bottom-full mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-2 z-20 max-h-60 overflow-y-auto min-w-[180px]">
-                  <div className="flex items-center justify-between mb-2 px-1">
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{t('database.columnsTab')}</span>
-                    <button onClick={() => setHiddenColumns(new Set())} className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">{t('database.showAllColumns')}</button>
+                <div className="absolute right-0 bottom-full mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg p-1.5 z-20 max-h-60 overflow-y-auto min-w-[180px]">
+                  <div className="flex items-center justify-between mb-1.5 px-1">
+                    <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300">{t('database.columnsTab')}</span>
+                    <button onClick={() => setHiddenColumns(new Set())} className="text-[11px] text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">{t('database.showAllColumns')}</button>
                   </div>
                   {columns.map((col, i) => (
-                    <label key={i} className="flex items-center gap-2 px-1 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer">
+                    <label key={i} className="flex items-center gap-1.5 px-1 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer">
                       <input type="checkbox" checked={!hiddenColumns.has(i)} onChange={() => setHiddenColumns(prev => { const s = new Set(prev); s.has(i) ? s.delete(i) : s.add(i); return s })} className="rounded border-gray-300 dark:border-gray-600 text-blue-500" />
-                      <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{col}</span>
+                      <span className="text-[11px] text-gray-700 dark:text-gray-300 truncate">{col}</span>
                     </label>
                   ))}
                 </div>
@@ -1479,7 +1479,7 @@ function DataGrid({
             <>
               <button
                 onClick={showSaveConfirmation}
-                className="flex items-center gap-1 px-2 py-1 rounded bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-medium transition-colors"
                 title="Ctrl+S"
               >
                 <Save className="w-3.5 h-3.5" />
@@ -1502,10 +1502,10 @@ function DataGrid({
             {showExportMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
-                <div className="absolute right-0 bottom-full mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 z-20 min-w-[120px]">
-                  <button onClick={() => { handleExport('csv'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5" />{t('database.exportCsv')}</button>
-                  <button onClick={() => { handleExport('json'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5" />{t('database.exportJson')}</button>
-                  <button onClick={() => { handleExport('sql'); setShowExportMenu(false) }} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileCode className="w-3.5 h-3.5" />{t('database.exportSql')}</button>
+                <div className="absolute right-0 bottom-full mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg py-1 z-20 min-w-[120px]">
+                  <button onClick={() => { handleExport('csv'); setShowExportMenu(false) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5" />{t('database.exportCsv')}</button>
+                  <button onClick={() => { handleExport('json'); setShowExportMenu(false) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5" />{t('database.exportJson')}</button>
+                  <button onClick={() => { handleExport('sql'); setShowExportMenu(false) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileCode className="w-3.5 h-3.5" />{t('database.exportSql')}</button>
                 </div>
               </>
             )}
@@ -1517,28 +1517,28 @@ function DataGrid({
       {contextMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setContextMenu(null)} />
-          <div className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-[160px]" style={{ left: contextMenu.x, top: contextMenu.y }}>
+          <div className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg py-1 min-w-[160px]" style={{ left: contextMenu.x, top: contextMenu.y }}>
             {contextMenuCellRef.current && (
               <>
-                <button onClick={() => { const c = contextMenuCellRef.current!; const val = sortedData[c.rowIndex]?.[c.colIndex]; navigator.clipboard.writeText(val === null || val === undefined ? '' : String(val)); setContextMenu(null) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Clipboard className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.copyCellValue')}</button>
-                <button onClick={() => { const c = contextMenuCellRef.current!; const val = sortedData[c.rowIndex]?.[c.colIndex]; if (val !== null && val !== undefined) { setFilters([...filters, { column: c.colIndex, operator: 'equals', value: String(val) }]); setPage(1) } setContextMenu(null) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Filter className="w-4 h-4 text-blue-500 dark:text-blue-400" />{t('database.filterByValue')}</button>
+                <button onClick={() => { const c = contextMenuCellRef.current!; const val = sortedData[c.rowIndex]?.[c.colIndex]; navigator.clipboard.writeText(val === null || val === undefined ? '' : String(val)); setContextMenu(null) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Clipboard className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.copyCellValue')}</button>
+                <button onClick={() => { const c = contextMenuCellRef.current!; const val = sortedData[c.rowIndex]?.[c.colIndex]; if (val !== null && val !== undefined) { setFilters([...filters, { column: c.colIndex, operator: 'equals', value: String(val) }]); setPage(1) } setContextMenu(null) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Filter className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />{t('database.filterByValue')}</button>
                 {canEdit && (
-                  <button onClick={() => { const c = contextMenuCellRef.current!; const currentVal = sortedData[c.rowIndex]?.[c.colIndex]; setEditValue(currentVal === null || currentVal === undefined ? '' : String(currentVal)); setEditingCell({ rowIndex: c.rowIndex, colIndex: c.colIndex }); setContextMenu(null) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Pencil className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('common.edit')}</button>
+                  <button onClick={() => { const c = contextMenuCellRef.current!; const currentVal = sortedData[c.rowIndex]?.[c.colIndex]; setEditValue(currentVal === null || currentVal === undefined ? '' : String(currentVal)); setEditingCell({ rowIndex: c.rowIndex, colIndex: c.colIndex }); setContextMenu(null) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Pencil className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('common.edit')}</button>
                 )}
                 {canEdit && (
-                  <button onClick={() => { const c = contextMenuCellRef.current!; setEditValue(''); setEditingCell({ rowIndex: c.rowIndex, colIndex: c.colIndex }); setContextMenu(null) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><XCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.setNull')}</button>
+                  <button onClick={() => { const c = contextMenuCellRef.current!; setEditValue(''); setEditingCell({ rowIndex: c.rowIndex, colIndex: c.colIndex }); setContextMenu(null) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><XCircle className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.setNull')}</button>
                 )}
-                <button onClick={() => { const c = contextMenuCellRef.current!; const row = sortedData[c.rowIndex]; const effectiveTable = tableName || editTableName; if (effectiveTable) { const vals = row.map(v => v === null || v === undefined ? 'NULL' : typeof v === 'number' || !isNaN(Number(v)) ? String(v) : `'${String(v).replace(/'/g, "''")}'`); const sql = `INSERT INTO \`${effectiveTable}\` (${columns.map(col => `\`${col}\``).join(', ')}) VALUES (${vals.join(', ')});`; navigator.clipboard.writeText(sql) } setContextMenu(null) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.copyAsInsert')}</button>
+                <button onClick={() => { const c = contextMenuCellRef.current!; const row = sortedData[c.rowIndex]; const effectiveTable = tableName || editTableName; if (effectiveTable) { const vals = row.map(v => v === null || v === undefined ? 'NULL' : typeof v === 'number' || !isNaN(Number(v)) ? String(v) : `'${String(v).replace(/'/g, "''")}'`); const sql = `INSERT INTO \`${effectiveTable}\` (${columns.map(col => `\`${col}\``).join(', ')}) VALUES (${vals.join(', ')});`; navigator.clipboard.writeText(sql) } setContextMenu(null) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.copyAsInsert')}</button>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
               </>
             )}
-            <button onClick={() => handleExport('csv')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.exportCsv')}</button>
-            <button onClick={() => handleExport('json')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.exportJson')}</button>
-            <button onClick={() => handleExport('sql')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-4 h-4 text-gray-500 dark:text-gray-400" />{t('database.exportSql')}</button>
+            <button onClick={() => handleExport('csv')} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.exportCsv')}</button>
+            <button onClick={() => handleExport('json')} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.exportJson')}</button>
+            <button onClick={() => handleExport('sql')} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.exportSql')}</button>
             {canEdit && selectedRows.size > 0 && (
               <>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
-                <button onClick={deleteSelectedRows} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 className="w-4 h-4" />{t('database.deleteSelectedRows')}</button>
+                <button onClick={deleteSelectedRows} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"><Trash2 className="w-3.5 h-3.5" />{t('database.deleteSelectedRows')}</button>
               </>
             )}
           </div>
@@ -1550,34 +1550,34 @@ function DataGrid({
         <>
           <div className="fixed inset-0 z-40" onClick={closeColumnContextMenu} />
           <div
-            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-[140px]"
+            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg py-1 min-w-[140px]"
             style={{ left: columnContextMenu.x, top: columnContextMenu.y }}
           >
-            <button onClick={sortColumnAsc} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <ArrowUp className="w-4 h-4" />
+            <button onClick={sortColumnAsc} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <ArrowUp className="w-3.5 h-3.5" />
               {t('database.sortAsc')}
             </button>
-            <button onClick={sortColumnDesc} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <ArrowDown className="w-4 h-4" />
+            <button onClick={sortColumnDesc} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <ArrowDown className="w-3.5 h-3.5" />
               {t('database.sortDesc')}
             </button>
             {sortColumns.length > 0 && (
-              <button onClick={clearSort} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                <X className="w-4 h-4" />
+              <button onClick={clearSort} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <X className="w-3.5 h-3.5" />
                 {t('database.sortNone')}
               </button>
             )}
             <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
-            <button onClick={hideColumn} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <Eye className="w-4 h-4" />
+            <button onClick={hideColumn} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Eye className="w-3.5 h-3.5" />
               {t('database.hideColumn')}
             </button>
-            <button onClick={autoFitThisColumn} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <Columns className="w-4 h-4" />
+            <button onClick={autoFitThisColumn} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Columns className="w-3.5 h-3.5" />
               {t('database.autoFitWidth')}
             </button>
-            <button onClick={resetAllColumnWidths} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <RefreshCw className="w-4 h-4" />
+            <button onClick={resetAllColumnWidths} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <RefreshCw className="w-3.5 h-3.5" />
               {t('database.resetAllWidths')}
             </button>
           </div>
@@ -1587,18 +1587,18 @@ function DataGrid({
       {/* SQL保存确认对话框 - DBeaver风格 */}
       {showSaveConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSaveConfirm(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('database.confirmSaveChanges')}</h3>
-              <button onClick={() => setShowSaveConfirm(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"><X className="w-4 h-4" /></button>
+          <div className="bg-white dark:bg-gray-800 rounded-md shadow-xl border border-gray-200 dark:border-gray-600 max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">{t('database.confirmSaveChanges')}</h3>
+              <button onClick={() => setShowSaveConfirm(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"><X className="w-3.5 h-3.5" /></button>
             </div>
-            <div className="flex-1 overflow-auto p-4">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('database.confirmSaveChangesHint')}</p>
-              <pre className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap overflow-x-auto">{saveConfirmMessage}</pre>
+            <div className="flex-1 overflow-auto p-3">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">{t('database.confirmSaveChangesHint')}</p>
+              <pre className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md p-2 text-[11px] font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap overflow-x-auto">{saveConfirmMessage}</pre>
             </div>
-            <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-              <button onClick={() => setShowSaveConfirm(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">{t('common.cancel')}</button>
-              <button onClick={executeSaveChanges} className="px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded transition-colors">{t('common.save')}</button>
+            <div className="flex justify-end gap-1.5 px-2 py-1.5 border-t border-gray-200 dark:border-gray-700">
+              <button onClick={() => setShowSaveConfirm(false)} className="px-3 py-1.5 text-[13px] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">{t('common.cancel')}</button>
+              <button onClick={executeSaveChanges} className="px-3 py-1.5 text-[13px] bg-green-500 hover:bg-green-600 text-white rounded transition-colors">{t('common.save')}</button>
             </div>
           </div>
         </div>
@@ -1649,12 +1649,12 @@ function exportToSqlInsert(columns: string[], data: any[][], tableName: string, 
 
 // CellContent组件
 function CellContent({ value }: { value: any }) {
-  if (value === null) return <span className="text-gray-400 dark:text-gray-500 italic text-xs">NULL</span>
-  if (value === undefined) return <span className="text-gray-400 dark:text-gray-500 italic text-xs">undefined</span>
-  if (typeof value === 'boolean') return <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${value ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>{value ? 'true' : 'false'}</span>
+  if (value === null) return <span className="text-gray-400 dark:text-gray-500 italic text-[11px]">NULL</span>
+  if (value === undefined) return <span className="text-gray-400 dark:text-gray-500 italic text-[11px]">undefined</span>
+  if (typeof value === 'boolean') return <span className={`px-1 py-0.5 rounded text-[11px] font-medium ${value ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>{value ? 'true' : 'false'}</span>
   if (typeof value === 'number') return <span className="text-blue-600 dark:text-blue-400 font-medium">{value.toLocaleString()}</span>
-  if (value instanceof Date) return <span className="text-purple-600 dark:text-purple-400 text-xs">{value.toISOString()}</span>
-  if (typeof value === 'object') return <span className="text-orange-600 dark:text-orange-400 text-xs truncate block" title={JSON.stringify(value)}>{JSON.stringify(value)}</span>
+  if (value instanceof Date) return <span className="text-purple-600 dark:text-purple-400 text-[11px]">{value.toISOString()}</span>
+  if (typeof value === 'object') return <span className="text-orange-600 dark:text-orange-400 text-[11px] truncate block" title={JSON.stringify(value)}>{JSON.stringify(value)}</span>
   return <span className="text-gray-700 dark:text-gray-300 truncate block" title={String(value)}>{String(value)}</span>
 }
 
@@ -1663,7 +1663,7 @@ function ExecutionInfo({ result }: { result: QueryResult | null | undefined }) {
   const { t } = useTranslation()
   if (!result) return null
   return (
-    <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-xs">
+    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-[11px]">
       <div className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600"><Clock className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" /><span className="text-gray-600 dark:text-gray-300 font-medium">{result.executionTime}ms</span></div>
       {result.rowCount !== undefined && <div className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600"><Hash className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" /><span className="text-gray-600 dark:text-gray-300 font-medium">{result.rowCount} {t('database.rows')}</span></div>}
       {result.affectedRows !== undefined && <div className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600"><CheckCircle className="w-3.5 h-3.5 text-green-500 dark:text-green-400" /><span className="text-gray-600 dark:text-gray-300 font-medium">{t('database.rowsAffectedMsg', { count: result.affectedRows })}</span></div>}
@@ -1677,8 +1677,8 @@ function EmptyState() {
   return (
     <div className="h-full flex flex-col items-center justify-center bg-white dark:bg-gray-900">
       <Database className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" />
-      <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{t('database.selectConnectionQuery')}</p>
-      <p className="text-gray-400 dark:text-gray-500 text-xs">{t('database.orCreateConnection')}</p>
+      <p className="text-gray-500 dark:text-gray-400 text-[13px] mb-2">{t('database.selectConnectionQuery')}</p>
+      <p className="text-gray-400 dark:text-gray-500 text-[11px]">{t('database.orCreateConnection')}</p>
     </div>
   )
 }
@@ -1703,7 +1703,7 @@ export default function DbWorkspace() {
   if (!activeConnectionId || !activeConnection?.connected) return <EmptyState />
 
   const renderTabContent = () => {
-    if (!activeTab) return <div className="flex-1 flex items-center justify-center"><p className="text-gray-400 text-sm">{t('database.selectTab')}</p></div>
+    if (!activeTab) return <div className="flex-1 flex items-center justify-center"><p className="text-gray-400 text-[13px]">{t('database.selectTab')}</p></div>
     switch (activeTab.type) {
       case 'table': return <TableDetail connectionId={activeTab.connectionId!} database={activeTab.database!} table={activeTab.itemName!} />
       case 'procedure': return <ProcedureDetail connectionId={activeTab.connectionId!} database={activeTab.database!} procedure={activeTab.itemName!} />
@@ -1725,7 +1725,7 @@ function UnifiedTabs({ tabs, activeTabId, onSelect, onClose, onCreate }: { tabs:
   const { t } = useTranslation()
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: string; tabIndex: number } | null>(null)
 
-  const getIcon = (type: string) => type === 'table' ? <Table className="w-4 h-4 text-orange-500 dark:text-orange-400" /> : type === 'procedure' ? <FileCode className="w-4 h-4 text-green-500 dark:text-green-400" /> : type === 'trigger' ? <Bolt className="w-4 h-4 text-yellow-500 dark:text-yellow-400" /> : <FileCode className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+  const getIcon = (type: string) => type === 'table' ? <Table className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> : type === 'procedure' ? <FileCode className="w-3.5 h-3.5 text-green-500 dark:text-green-400" /> : type === 'trigger' ? <Bolt className="w-3.5 h-3.5 text-yellow-500 dark:text-yellow-400" /> : <FileCode className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
 
   const handleContextMenu = (e: React.MouseEvent, tabId: string, tabIndex: number) => {
     e.preventDefault()
@@ -1763,51 +1763,51 @@ function UnifiedTabs({ tabs, activeTabId, onSelect, onClose, onCreate }: { tabs:
         {tabs.map((tab, index) => (
           <div
             key={tab.id}
-            className={`group flex items-center gap-2 px-3 py-2 border-r border-gray-200 dark:border-gray-700 cursor-pointer min-w-[100px] max-w-[180px] ${activeTabId === tab.id ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            className={`group flex items-center gap-1.5 px-2 py-1.5 border-r border-gray-200 dark:border-gray-700 cursor-pointer min-w-[100px] max-w-[180px] ${activeTabId === tab.id ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
             onClick={() => onSelect(tab.id)}
             onContextMenu={(e) => handleContextMenu(e, tab.id, index)}
           >
             {getIcon(tab.type)}
-            <span className="text-sm truncate">{tab.name}</span>
+            <span className="text-[13px] truncate">{tab.name}</span>
             {tab.type === 'query' && tab.isModified && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />}
             <button onClick={e => { e.stopPropagation(); onClose(tab.id) }} className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3 text-gray-400 dark:text-gray-500" /></button>
           </div>
         ))}
       </div>
-      <button onClick={onCreate} className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" title={t('database.newQueryTitle')}><Plus className="w-4 h-4" /></button>
+      <button onClick={onCreate} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" title={t('database.newQueryTitle')}><Plus className="w-3.5 h-3.5" /></button>
 
       {/* 右键菜单 */}
       {contextMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={closeContextMenu} />
           <div
-            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-[140px]"
+            className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg py-1 min-w-[140px]"
             style={{ left: contextMenu.x, top: contextMenu.y }}
           >
             <button
               onClick={() => { onClose(contextMenu.tabId); closeContextMenu() }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
               {t('database.closeTab')}
             </button>
             <button
               onClick={closeOtherTabs}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               {t('database.closeOtherTabs')}
             </button>
             <button
               onClick={closeRightTabs}
               disabled={contextMenu.tabIndex >= tabs.length - 1}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('database.closeRightTabs')}
             </button>
             <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
             <button
               onClick={closeAllTabs}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
             >
               {t('database.closeAllTabs')}
             </button>
@@ -1870,31 +1870,31 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
     <>
       {showSaveDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowSaveDialog(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 w-80 border border-gray-200 dark:border-gray-600" onClick={e => e.stopPropagation()}>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t('database.saveQuery')}</h3>
-            <input value={queryName} onChange={e => setQueryName(e.target.value)} placeholder={t('database.queryName')} className="w-full px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 mb-3" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleSaveQuery(); if (e.key === 'Escape') setShowSaveDialog(false) }} />
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowSaveDialog(false)} className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">{t('common.cancel')}</button>
-              <button onClick={handleSaveQuery} disabled={!queryName.trim()} className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t('common.save')}</button>
+          <div className="bg-white dark:bg-gray-800 rounded-md shadow-lg p-3 w-80 border border-gray-200 dark:border-gray-600" onClick={e => e.stopPropagation()}>
+            <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white mb-2">{t('database.saveQuery')}</h3>
+            <input value={queryName} onChange={e => setQueryName(e.target.value)} placeholder={t('database.queryName')} className="w-full px-2 py-1.5 text-[13px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 mb-2" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleSaveQuery(); if (e.key === 'Escape') setShowSaveDialog(false) }} />
+            <div className="flex justify-end gap-1.5">
+              <button onClick={() => setShowSaveDialog(false)} className="px-2 py-1 text-[13px] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">{t('common.cancel')}</button>
+              <button onClick={handleSaveQuery} disabled={!queryName.trim()} className="px-2 py-1 text-[13px] bg-blue-500 hover:bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t('common.save')}</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300"><Database className="w-4 h-4 text-gray-500 dark:text-gray-400" /><span className="font-medium">{activeConnection.name}</span></div>
+      <div className="flex-shrink-0 flex items-center justify-between px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 text-[13px] text-gray-700 dark:text-gray-300"><Database className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" /><span className="font-medium">{activeConnection.name}</span></div>
           {databases.length > 0 && (
             <div className="relative">
-              <button onClick={() => setShowDbSelector(!showDbSelector)} className="flex items-center gap-1.5 px-2 py-1 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-gray-700 dark:text-gray-300 transition-colors"><span>{activeDatabase || t('database.defaultDatabase')}</span><ChevronDown className="w-3 h-3" /></button>
+              <button onClick={() => setShowDbSelector(!showDbSelector)} className="flex items-center gap-1.5 px-2 py-1 text-[13px] bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md text-gray-700 dark:text-gray-300 transition-colors"><span>{activeDatabase || t('database.defaultDatabase')}</span><ChevronDown className="w-3 h-3" /></button>
               {showDbSelector && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowDbSelector(false)} />
-                  <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto min-w-[180px]">
+                  <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto min-w-[180px]">
                     {databases.map(db => (
-                      <button key={db.name} onClick={() => { setActiveDatabase(db.name); setShowDbSelector(false) }} className={`w-full flex items-center justify-between px-3 py-2 text-sm ${activeDatabase === db.name ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+                      <button key={db.name} onClick={() => { setActiveDatabase(db.name); setShowDbSelector(false) }} className={`w-full flex items-center justify-between px-2 py-1.5 text-[13px] ${activeDatabase === db.name ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
                         <span>{db.name}</span>
-                        {db.tableCount > 0 && <span className="text-xs text-gray-400 dark:text-gray-500">{db.tableCount}</span>}
+                        {db.tableCount > 0 && <span className="text-[11px] text-gray-400 dark:text-gray-500">{db.tableCount}</span>}
                       </button>
                     ))}
                   </div>
@@ -1904,22 +1904,22 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <button onClick={() => { setShowSaveDialog(true); setQueryName(activeTab?.name || '') }} disabled={!activeTab?.sql?.trim()} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><Save className="w-4 h-4" /></button>
-          <button onClick={() => activeTab?.id && updateTabSql(activeTab.id, formatSql(activeTab.sql || ''))} disabled={!activeTab?.sql?.trim()} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><FileCode className="w-4 h-4" />{t('database.format')}</button>
-          <button onClick={() => handleExecute()} disabled={executing || !activeTab?.sql?.trim()} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{executing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}{t('database.execute')}</button>
-          <span className="text-xs text-gray-400 dark:text-gray-500"><kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">Ctrl</kbd>+<kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">Enter</kbd></span>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => { setShowSaveDialog(true); setQueryName(activeTab?.name || '') }} disabled={!activeTab?.sql?.trim()} className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[13px] rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><Save className="w-3.5 h-3.5" /></button>
+          <button onClick={() => activeTab?.id && updateTabSql(activeTab.id, formatSql(activeTab.sql || ''))} disabled={!activeTab?.sql?.trim()} className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-[13px] rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><FileCode className="w-3.5 h-3.5" />{t('database.format')}</button>
+          <button onClick={() => handleExecute()} disabled={executing || !activeTab?.sql?.trim()} className="flex items-center gap-1 px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-[13px] rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{executing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}{t('database.execute')}</button>
+          <span className="text-[11px] text-gray-400 dark:text-gray-500"><kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">Ctrl</kbd>+<kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">Enter</kbd></span>
 
           <div className="relative">
-            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center px-2 py-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"><Clock className="w-4 h-4" /></button>
+            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center px-1.5 py-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"><Clock className="w-3.5 h-3.5" /></button>
             {showHistory && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowHistory(false)} />
-                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto min-w-[400px]">
-                  {history.length === 0 ? <div className="px-4 py-3 text-sm text-gray-400 dark:text-gray-500 text-center">{t('database.noQueryHistory')}</div> : history.map(item => (
-                    <button key={item.id} onClick={() => { if (activeTab?.id) { updateTabSql(activeTab.id, item.sql); setShowHistory(false) } }} className="w-full flex flex-col gap-1 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors">
-                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs"><Clock className="w-3 h-3" /><span>{new Date(item.timestamp).toLocaleString()}</span><span className="text-gray-300 dark:text-gray-600">|</span><span>{item.executionTime}ms</span>{item.rowCount !== undefined && <><span className="text-gray-300 dark:text-gray-600">|</span><span>{item.rowCount} rows</span></>}</div>
-                      <div className="font-mono text-xs text-gray-700 dark:text-gray-300 truncate">{item.sql}</div>
+                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg z-20 max-h-80 overflow-y-auto min-w-[400px]">
+                  {history.length === 0 ? <div className="px-2 py-1.5 text-[13px] text-gray-400 dark:text-gray-500 text-center">{t('database.noQueryHistory')}</div> : history.map(item => (
+                    <button key={item.id} onClick={() => { if (activeTab?.id) { updateTabSql(activeTab.id, item.sql); setShowHistory(false) } }} className="w-full flex flex-col gap-1 px-2 py-1.5 text-[13px] hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors">
+                      <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-[11px]"><Clock className="w-3 h-3" /><span>{new Date(item.timestamp).toLocaleString()}</span><span className="text-gray-300 dark:text-gray-600">|</span><span>{item.executionTime}ms</span>{item.rowCount !== undefined && <><span className="text-gray-300 dark:text-gray-600">|</span><span>{item.rowCount} rows</span></>}</div>
+                      <div className="font-mono text-[11px] text-gray-700 dark:text-gray-300 truncate">{item.sql}</div>
                     </button>
                   ))}
                 </div>
@@ -1933,7 +1933,7 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
         <div style={showResult ? { height: editorHeight } : undefined} className={`${showResult ? 'min-h-[150px]' : 'flex-1'} overflow-hidden relative`}>
           <SqlEditor sql={activeTab?.sql || ''} onChange={sql => activeTab?.id && updateTabSql(activeTab.id, sql)} onExecute={handleExecute} onFormat={() => activeTab?.id && updateTabSql(activeTab.id, formatSql(activeTab.sql || ''))} executing={executing} connectionId={activeConnectionId || ''} database={activeDatabase} />
           {!showResult && resultCount > 0 && (
-            <button onClick={() => setShowResult(true)} className="absolute bottom-3 right-3 flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"><ChevronUp className="w-3.5 h-3.5" />{t('database.viewResult')} {resultCount > 1 && <span className="text-blue-500">({resultCount})</span>}</button>
+            <button onClick={() => setShowResult(true)} className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-sm text-[11px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"><ChevronUp className="w-3.5 h-3.5" />{t('database.viewResult')} {resultCount > 1 && <span className="text-blue-500">({resultCount})</span>}</button>
           )}
         </div>
 
@@ -1941,17 +1941,17 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
           <>
             <ResizableDivider onResize={handleEditorResize} />
             <div className="flex-1 min-h-[100px] flex flex-col">
-              <div className="flex-shrink-0 flex items-center justify-between px-3 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{t('database.queryResult')}</span>
+              <div className="flex-shrink-0 flex items-center justify-between px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400">{t('database.queryResult')}</span>
                   {/* 多SQL结果标签页 */}
                   {activeTab?.results && activeTab.results.length > 1 && (
-                    <div className="flex items-center gap-1 ml-2">
+                    <div className="flex items-center gap-1 ml-1.5">
                       {activeTab.results.map((resultItem, index) => (
                         <button
                           key={resultItem.id}
                           onClick={() => setActiveResult(activeTab!.id, resultItem.id)}
-                          className={`flex items-center gap-1 px-2 py-0.5 text-xs rounded transition-colors ${
+                          className={`flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded transition-colors ${
                             activeTab.activeResultId === resultItem.id
                               ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'

@@ -178,7 +178,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">{t('common.loading')}</div>
+        <div className="text-gray-500 dark:text-gray-400 text-[13px]">{t('common.loading')}</div>
       </div>
     )
   }
@@ -187,10 +187,10 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
     <div className="flex flex-col h-full min-w-0">
       {/* Header with format selector - matching other viewers */}
       <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
           {/* Java Serialized indicator - other info shown in JavaObjectViewer */}
           {javaByteArray ? (
-            <span className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded font-medium flex-shrink-0">
+            <span className="text-[11px] bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 px-1.5 py-0.5 rounded font-medium flex-shrink-0">
               {t('redis.javaSerialized')}
             </span>
           ) : value ? (
@@ -199,7 +199,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
               <div className="relative flex-shrink-0">
                 <button
                   onClick={() => setShowFormatMenu(!showFormatMenu)}
-                  className="flex items-center gap-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1.5 rounded transition-colors"
+                  className="flex items-center gap-1.5 text-[11px] bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-md transition-colors"
                   title={t('toolbar.selectDataFormat')}
                 >
                   <span>{t('redis.formatLabel')}</span>
@@ -207,7 +207,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
                 </button>
 
                 {showFormatMenu && (
-                  <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 min-w-[140px]">
+                  <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl z-50 min-w-[140px]">
                     {formatOptions.map((option) => (
                       <button
                         key={option.value}
@@ -216,7 +216,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
                           setShowFormatMenu(false)
                           setDeserializationError(null)
                         }}
-                        className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                        className={`w-full text-left px-2 py-1.5 text-[11px] transition-colors ${
                         format === option.value
                           ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-medium'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -230,7 +230,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
               </div>
 
               {/* Show current format badge */}
-              <span className={`text-xs px-2 py-0.5 rounded font-medium flex-shrink-0 ${
+              <span className={`text-[11px] px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${
                 format === 'auto'
                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                   : format === 'json'
@@ -250,13 +250,13 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
         </div>
 
         {!editing && !javaByteArray && (
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-1.5 flex-shrink-0">
             <button
               onClick={() => {
                 handleStartEdit()
                 setShowFormatMenu(false)
               }}
-              className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0 font-medium"
+              className="text-[11px] bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded-md transition-colors flex items-center gap-1.5 flex-shrink-0 font-medium"
             >
               <Save className="w-3 h-3" />
               {t('redis.editDataBtn')}
@@ -265,11 +265,11 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
         )}
 
         {editing && (
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-1.5 flex-shrink-0">
             <button
               onClick={handleSave}
               disabled={saving}
-              className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 font-medium"
+              className="text-[11px] bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded-md transition-colors flex items-center gap-1.5 disabled:opacity-50 font-medium"
             >
               <Save className="w-3 h-3 flex-shrink-0" />
               {saving ? t('redis.saving') : t('redis.saveBtn')}
@@ -277,7 +277,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
             <button
               onClick={handleCancel}
               disabled={saving}
-              className="text-xs border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              className="text-[11px] border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1.5 rounded-md transition-colors disabled:opacity-50"
             >
               {t('redis.cancel')}
             </button>
@@ -289,8 +289,8 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
       {editing ? (
         <div className="flex-1 min-h-0 overflow-hidden px-4 pb-2 flex flex-col">
           {/* Edit info bar */}
-          <div className="flex-shrink-0 mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-xs text-blue-800 dark:text-blue-400">
+          <div className="flex-shrink-0 mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+            <p className="text-[11px] text-blue-800 dark:text-blue-400">
               {t('redis.editRawData')}
             </p>
           </div>
@@ -305,7 +305,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
             />
           </div>
           {/* Keyboard shortcuts hint */}
-          <div className="flex-shrink-0 mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex-shrink-0 mt-2 text-[11px] text-gray-500 dark:text-gray-400">
             {t('redis.tabIndent')} · {t('redis.ctrlEnterSave')}
           </div>
         </div>
@@ -319,15 +319,15 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
           {(format === 'raw' && !error && value && isLikelyBinary(value)) || error ? (
             <div className="flex-shrink-0 mb-2">
               {format === 'raw' && !error && value && isLikelyBinary(value) && (
-                <div className="mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-xs text-yellow-800 dark:text-yellow-400">
+                <div className="mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                  <p className="text-[11px] text-yellow-800 dark:text-yellow-400">
                     {t('redis.binaryDataHint')}
                   </p>
                 </div>
               )}
               {error && (
-                <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-xs text-red-800 dark:text-red-400">
+                <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-[11px] text-red-800 dark:text-red-400">
                     {error} - {t('redis.showErrorRaw')}
                   </p>
                 </div>
@@ -341,7 +341,7 @@ export default function StringViewer({ connectionId, keyName }: StringViewerProp
               value={displayValue || '<empty>'}
               onChange={() => {}}
               readOnly
-              className="h-full text-sm"
+              className="h-full text-[13px]"
               editorKey={keyName}
             />
           </div>

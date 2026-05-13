@@ -47,26 +47,26 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('redis.addKey')}</h3>
+        <div className="flex items-center justify-between px-4 py-2 border-b border-black/10 dark:border-white/10">
+          <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">{t('redis.addKey')}</h3>
           <button
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
             title={t('common.close')}
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
+        <div className="p-4 space-y-2">
           {/* Key Name */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               {t('redis.keyName')}
             </label>
             <input
@@ -74,20 +74,20 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               value={keyName}
               onChange={(e) => setKeyName(e.target.value)}
               placeholder={t('redis.searchKeysPlaceholder')}
-              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-[13px]"
             />
           </div>
 
           {/* Key Type */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               {t('redis.keyType')}
             </label>
-            <div className="grid grid-cols-5 gap-1.5">
+            <div className="grid grid-cols-5 gap-1">
               <button
                 type="button"
                 onClick={() => setKeyType('string')}
-                className={`px-2 py-2 rounded text-xs font-medium transition-colors ${
+                className={`px-2 py-1.5 rounded text-[11px] font-medium transition-colors ${
                   keyType === 'string'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -98,7 +98,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               <button
                 type="button"
                 onClick={() => setKeyType('hash')}
-                className={`px-2 py-2 rounded text-xs font-medium transition-colors ${
+                className={`px-2 py-1.5 rounded text-[11px] font-medium transition-colors ${
                   keyType === 'hash'
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -109,7 +109,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               <button
                 type="button"
                 onClick={() => setKeyType('list')}
-                className={`px-2 py-2 rounded text-xs font-medium transition-colors ${
+                className={`px-2 py-1.5 rounded text-[11px] font-medium transition-colors ${
                   keyType === 'list'
                     ? 'bg-purple-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -120,7 +120,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               <button
                 type="button"
                 onClick={() => setKeyType('set')}
-                className={`px-2 py-2 rounded text-xs font-medium transition-colors ${
+                className={`px-2 py-1.5 rounded text-[11px] font-medium transition-colors ${
                   keyType === 'set'
                     ? 'bg-orange-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -131,7 +131,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               <button
                 type="button"
                 onClick={() => setKeyType('zset')}
-                className={`px-2 py-2 rounded text-xs font-medium transition-colors ${
+                className={`px-2 py-1.5 rounded text-[11px] font-medium transition-colors ${
                   keyType === 'zset'
                     ? 'bg-pink-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -144,7 +144,7 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
 
           {/* Key Value */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               {t('common.value')}
             </label>
             <textarea
@@ -158,13 +158,13 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
                 'Enter value...'
               }
               rows={4}
-              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm resize-none"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-[13px] resize-none"
             />
           </div>
 
           {/* TTL */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               {t('redis.ttl')} <span className="text-gray-400 font-normal">({t('common.none')})</span>
             </label>
             <input
@@ -172,23 +172,23 @@ function AddKeyModal({ isOpen, onClose, onSave }: AddKeyModalProps) {
               value={ttl}
               onChange={(e) => setTtl(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder={t('toolbar.leaveEmptyNoExpiration')}
-              className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+              className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-[13px]"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-black/10 dark:border-white/10 flex justify-end gap-2.5 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
+        <div className="px-4 py-2 border-t border-black/10 dark:border-white/10 flex justify-end gap-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-[11px] font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors"
           >
             {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={!keyName.trim()}
-            className="px-4 py-2 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 text-[11px] font-medium bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('common.add')}
           </button>
@@ -825,11 +825,11 @@ export default function KeyBrowser() {
   if (!activeConnection) {
     return (
       <div className="h-full bg-white dark:bg-gray-800 flex flex-col overflow-hidden">
-        <div className="px-3 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center">
-          <h2 className="text-sm font-medium text-gray-900 dark:text-white">{t('redis.keys')}</h2>
+        <div className="px-2 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center">
+          <h2 className="text-[13px] font-medium text-gray-900 dark:text-white">{t('redis.keys')}</h2>
         </div>
         <div className="flex-1 flex items-center justify-center min-w-0">
-          <p className="text-gray-400 dark:text-gray-500 text-center text-sm">
+          <p className="text-gray-400 dark:text-gray-500 text-center text-[13px]">
             {t('redis.selectConnection')}
           </p>
         </div>
@@ -840,11 +840,11 @@ export default function KeyBrowser() {
   if (!activeConnection.connected) {
     return (
       <div className="h-full bg-white dark:bg-gray-800 flex flex-col overflow-hidden">
-        <div className="px-3 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center">
-          <h2 className="text-sm font-medium text-gray-900 dark:text-white">{t('redis.keys')}</h2>
+        <div className="px-2 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center">
+          <h2 className="text-[13px] font-medium text-gray-900 dark:text-white">{t('redis.keys')}</h2>
         </div>
         <div className="flex-1 flex items-center justify-center min-w-0">
-          <p className="text-gray-400 dark:text-gray-500 text-center text-sm">
+          <p className="text-gray-400 dark:text-gray-500 text-center text-[13px]">
             {t('redis.connectToView')}
           </p>
         </div>
@@ -857,13 +857,13 @@ export default function KeyBrowser() {
   return (
     <div className="w-full h-full bg-white dark:bg-gray-800 flex flex-col overflow-hidden">
       {/* Header - fixed height */}
-      <div className="px-3 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-gray-900 dark:text-white">{t('redis.keys')}</h2>
+      <div className="px-2 h-9 border-b border-black/10 dark:border-white/10 flex-shrink-0 flex items-center justify-between">
+        <h2 className="text-[13px] font-medium text-gray-900 dark:text-white">{t('redis.keys')}</h2>
         <div className="flex items-center gap-1">
           <button
             onClick={handleAddKeyClick}
             disabled={!activeConnection?.connected}
-            className="p-1.5 text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-1 text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded hover:bg-gray-100 dark:hover:bg-gray-700"
             title={t('redis.addKey')}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -871,7 +871,7 @@ export default function KeyBrowser() {
           <button
             onClick={handleRefresh}
             disabled={refreshing || keysLoading}
-            className="p-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
             title={t('redis.refreshKeys')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -880,21 +880,21 @@ export default function KeyBrowser() {
       </div>
 
       {/* Search and filter bar */}
-      <div className="px-3 py-2 border-b border-black/10 dark:border-white/10 flex-shrink-0 space-y-2">
+      <div className="px-2 py-1.5 border-b border-black/10 dark:border-white/10 flex-shrink-0 space-y-1.5">
         {/* Search input */}
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t('redis.searchKeys')}
-            className="w-full pl-8 pr-6 py-1.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+            className="w-full pl-7 pr-5 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-[13px] focus:outline-none focus:ring-1 focus:ring-red-500"
           />
           {searchInput && (
             <button
               onClick={handleClearSearch}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-1.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               title={t('common.close')}
             >
               <X className="w-3 h-3" />
@@ -906,7 +906,7 @@ export default function KeyBrowser() {
         <div className="flex flex-wrap gap-1">
           <button
             onClick={() => handleTypeFilterChange('all')}
-            className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+            className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
               keysTypeFilter === 'all'
                 ? 'bg-gray-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -918,7 +918,7 @@ export default function KeyBrowser() {
             <button
               key={type}
               onClick={() => handleTypeFilterChange(type)}
-              className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
                 keysTypeFilter === type
                   ? getTypeColor(type)
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -930,13 +930,13 @@ export default function KeyBrowser() {
         </div>
 
         {searchInput && (
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-[11px] text-gray-500 dark:text-gray-400">
             {getFilteredCount} key{getFilteredCount !== 1 ? 's' : ''} found
           </div>
         )}
 
         {isBrowserMode && (
-          <div className="p-1.5 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-xs text-yellow-800 dark:text-yellow-400 flex-shrink-0">
+          <div className="p-1 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-[11px] text-yellow-800 dark:text-yellow-400 flex-shrink-0">
             Browser mode: Showing mock data.
           </div>
         )}
@@ -945,11 +945,11 @@ export default function KeyBrowser() {
       <div className="flex-1 overflow-y-auto min-h-0">
         {keysLoading ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 dark:text-gray-500 text-sm">{t('common.loading')}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-[13px]">{t('common.loading')}</p>
           </div>
         ) : buildTree.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 dark:text-gray-500 text-sm">{t('redis.noKeys')}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-[13px]">{t('redis.noKeys')}</p>
           </div>
         ) : (
           <div className="p-1">
@@ -958,7 +958,7 @@ export default function KeyBrowser() {
         )}
       </div>
 
-      <div className="h-[52px] px-2 border-t border-black/10 dark:border-white/10 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 flex items-center">
+      <div className="h-[52px] px-2 border-t border-black/10 dark:border-white/10 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 flex items-center">
         {totalKeysInDb !== null ? (
           <span>
             {getFilteredCount} key{getFilteredCount !== 1 ? 's' : ''} displayed
@@ -983,32 +983,32 @@ export default function KeyBrowser() {
       {showRenameModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowRenameModal(false)}>
           <div
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/10">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('redis.renameKey')}</h3>
+            <div className="flex items-center justify-between px-4 py-2 border-b border-black/10 dark:border-white/10">
+              <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">{t('redis.renameKey')}</h3>
               <button
                 onClick={() => setShowRenameModal(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 space-y-2">
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('redis.oldKeyName')}
                 </label>
                 <input
                   type="text"
                   value={renameKey || ''}
                   readOnly
-                  className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400"
+                  className="w-full px-2 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-500 dark:text-gray-400"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('redis.newKeyName')} *
                 </label>
                 <input
@@ -1016,22 +1016,22 @@ export default function KeyBrowser() {
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder={t('redis.newKeyNamePlaceholder')}
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-[13px] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   autoFocus
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-black/10 dark:border-white/10 flex justify-end gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
+            <div className="px-4 py-2 border-t border-black/10 dark:border-white/10 flex justify-end gap-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg">
               <button
                 onClick={() => setShowRenameModal(false)}
-                className="px-4 py-2 text-xs font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-[11px] font-medium border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={handleRenameKey}
                 disabled={!newKeyName.trim()}
-                className="px-4 py-2 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-[11px] font-medium bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('redis.renameKey')}
               </button>
@@ -1043,7 +1043,7 @@ export default function KeyBrowser() {
       {/* Context Menu */}
       {contextMenu && (
         <div
-          className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50"
+          className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl z-50"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={closeContextMenu}
         >
@@ -1051,18 +1051,18 @@ export default function KeyBrowser() {
             onClick={() => {
               if (contextMenu.key) handleRenameKeyClick(contextMenu.key)
             }}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 first:rounded-t-lg"
+            className="w-full px-3 py-1.5 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1.5 first:rounded-t-md"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-3.5 h-3.5" />
             {t('redis.renameKey')}
           </button>
           <button
             onClick={() => {
               if (contextMenu.key) handleDeleteKey(contextMenu.key)
             }}
-            className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 last:rounded-b-lg"
+            className="w-full px-3 py-1.5 text-left text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5 last:rounded-b-md"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
             {t('redis.deleteKey')}
           </button>
         </div>

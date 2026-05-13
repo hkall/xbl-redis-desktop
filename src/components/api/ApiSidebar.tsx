@@ -50,7 +50,7 @@ const HighlightedText = ({ text, highlight }: { text: string; highlight: string 
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === highlight.toLowerCase() ? (
-          <mark key={i} className="bg-yellow-200 dark:bg-yellow-700/50 text-inherit rounded px-0.5">
+          <mark key={i} className="bg-yellow-200 dark:bg-yellow-700/50 text-inherit rounded-sm px-0.5">
             {part}
           </mark>
         ) : (
@@ -780,21 +780,21 @@ export default function ApiSidebar() {
     <div className="h-full bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
       <div className="px-4 h-12 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex items-center justify-between bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
-        <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-blue-500" />
-          <span className="text-sm font-semibold text-gray-800 dark:text-white">{t('api.projects')}</span>
+        <div className="flex items-center gap-1.5">
+          <Globe className="w-3.5 h-3.5 text-blue-500" />
+          <span className="text-[13px] font-semibold text-gray-800 dark:text-white">{t('api.projects')}</span>
         </div>
         <button
           onClick={() => addProject(t('api.newProject'))}
-          className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+          className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-sm-md transition-all"
           title={t('api.newProject')}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Search Box */}
-      <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+      <div className="px-1.5 py-0.5.5 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
           <input
@@ -802,13 +802,13 @@ export default function ApiSidebar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('common.search')}
-            className="w-full pl-8 pr-16 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-8 pr-16 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-md text-[13px] text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
+                className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-sm"
                 title={t('common.clear')}
               >
                 <X className="w-3.5 h-3.5" />
@@ -816,7 +816,7 @@ export default function ApiSidebar() {
             )}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-0.5 rounded transition-colors ${showFilters ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              className={`p-0.5 rounded-sm transition-colors ${showFilters ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
               title={t('api.filters')}
             >
               <Filter className="w-3.5 h-3.5" />
@@ -826,15 +826,15 @@ export default function ApiSidebar() {
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3 animate-in slide-in-from-top-2 duration-200">
+          <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-sm-md border border-gray-200 dark:border-gray-600 space-y-3 animate-in slide-in-from-top-2 duration-200">
             {/* HTTP Methods */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t('api.httpMethod')}</span>
+                <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">{t('api.httpMethod')}</span>
                 {(searchFilters.methods?.length || 0) > 0 && (
                   <button
                     onClick={() => setSearchFilters(prev => ({ ...prev, methods: [] }))}
-                    className="text-xs text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                    className="text-[11px] text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
                   >
                     {t('common.clear')}
                   </button>
@@ -845,7 +845,7 @@ export default function ApiSidebar() {
                   <button
                     key={method}
                     onClick={() => toggleMethodFilter(method)}
-                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                    className={`px-1.5 py-0.5 rounded-sm text-[11px] font-medium transition-all ${
                       searchFilters.methods?.includes(method)
                         ? `${METHOD_BG[method]} ${METHOD_COLORS[method]} ring-1 ring-current`
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -860,17 +860,17 @@ export default function ApiSidebar() {
             {/* Date Range */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t('api.dateRange')}</span>
+                <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">{t('api.dateRange')}</span>
                 {searchFilters.dateRange && (
                   <button
                     onClick={() => setSearchFilters(prev => ({ ...prev, dateRange: undefined }))}
-                    className="text-xs text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                    className="text-[11px] text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
                   >
                     {t('common.clear')}
                   </button>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <div className="flex-1">
                   <input
                     type="date"
@@ -887,10 +887,10 @@ export default function ApiSidebar() {
                       }))
                     }}
                     placeholder={t('api.startDate')}
-                    className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-sm text-[11px] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
-                <span className="text-xs text-gray-400">—</span>
+                <span className="text-[11px] text-gray-400">—</span>
                 <div className="flex-1">
                   <input
                     type="date"
@@ -907,7 +907,7 @@ export default function ApiSidebar() {
                       }))
                     }}
                     placeholder={t('api.endDate')}
-                    className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-sm text-[11px] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -917,7 +917,7 @@ export default function ApiSidebar() {
             {(searchFilters.methods?.length || searchFilters.dateRange) && (
               <button
                 onClick={clearFilters}
-                className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1.5"
+                className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-sm text-[11px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-3 h-3" />
                 {t('api.clearAllFilters')}
@@ -942,13 +942,13 @@ export default function ApiSidebar() {
                 activeProjectId === project.id ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''
               }`}
             >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 {expandedProjects.has(project.id) ? (
-                  <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                 ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                 )}
-                <Briefcase className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                <Briefcase className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
                 {editingProjectId === project.id ? (
                   <input
                     type="text"
@@ -969,14 +969,14 @@ export default function ApiSidebar() {
                       updateProject(project.id, { name: newName })
                       setEditingProjectId(null)
                     }}
-                    className="flex-1 min-w-0 px-2 py-0.5 bg-white dark:bg-gray-700 border border-blue-400 rounded text-sm focus:outline-none"
+                    className="flex-1 min-w-0 px-2 py-0.5 bg-white dark:bg-gray-700 border border-blue-400 rounded-sm text-[13px] focus:outline-none"
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{project.name || t('api.defaultProject')}</span>
+                  <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300 truncate">{project.name || t('api.defaultProject')}</span>
                 )}
-                <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                <span className="text-[11px] text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-sm-full flex-shrink-0">
                   {countRequests(project.requestFolders, project.rootRequests)}
                 </span>
               </div>
@@ -987,7 +987,7 @@ export default function ApiSidebar() {
                     setEditingProjectId(project.id)
                     setEditingProjectName(project.name || t('api.defaultProject'))
                   }}
-                  className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                  className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-sm"
                   title={t('common.edit')}
                 >
                   <Edit2 className="w-3 h-3" />
@@ -998,7 +998,7 @@ export default function ApiSidebar() {
                       e.stopPropagation()
                       setConfirmDeleteProject(project.id)
                     }}
-                    className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                    className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-sm"
                     title={t('api.deleteProject')}
                   >
                     <Trash2 className="w-3 h-3" />
@@ -1016,14 +1016,14 @@ export default function ApiSidebar() {
                     onClick={() => toggleSection('env-' + project.id)}
                     className="px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       {expandedSections.has('env-' + project.id) ? (
                         <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                       ) : (
                         <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                       )}
                       <Settings className="w-3.5 h-3.5 text-purple-500" />
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t('api.environments')}</span>
+                      <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">{t('api.environments')}</span>
                     </div>
                     <button
                       onClick={(e) => {
@@ -1032,7 +1032,7 @@ export default function ApiSidebar() {
                         setEditingEnv({ id: '', name: t('api.newEnvironment'), variables: [] })
                         setShowEnvModal(true)
                       }}
-                      className="p-0.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                      className="p-0.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-sm"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -1043,28 +1043,28 @@ export default function ApiSidebar() {
                         <div
                           key={env.id}
                           onClick={() => setActiveEnv(env.id)}
-                          className={`group mx-2 px-3 py-1.5 flex items-center gap-2 cursor-pointer rounded-lg transition-colors ${
+                          className={`group mx-2 px-3 py-1.5 flex items-center gap-1.5 cursor-pointer rounded-sm-md transition-colors ${
                             project.activeEnvId === env.id
                               ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700'
                               : 'hover:bg-gray-100 dark:hover:bg-gray-700/70'
                           }`}
                           title={env.variables.length > 0 ? env.variables.filter(v => v.enabled && v.key).map(v => `${v.key}: ${v.value}`).join('\n') : t('redis.noFieldsFound')}
                         >
-                          <div className={`w-2 h-2 rounded-full ${project.activeEnvId === env.id ? 'bg-blue-500' : 'bg-gray-300'}`} />
-                          <span className={`text-xs flex-1 truncate ${project.activeEnvId === env.id ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
+                          <div className={`w-2 h-2 rounded-sm-full ${project.activeEnvId === env.id ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                          <span className={`text-[11px] flex-1 truncate ${project.activeEnvId === env.id ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
                             {env.name || t('api.defaultEnvironment')}
                           </span>
                           {env.variables.filter(v => v.enabled && v.key).length > 0 && (
-                            <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                            <span className="text-[11px] text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-sm">
                               {env.variables.filter(v => v.enabled && v.key).length}
                             </span>
                           )}
                           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
-                            <button onClick={(e) => { e.stopPropagation(); setIsNewEnv(false); setEditingEnv(env); setShowEnvModal(true) }} className="p-0.5 text-gray-400 hover:text-blue-500 rounded">
+                            <button onClick={(e) => { e.stopPropagation(); setIsNewEnv(false); setEditingEnv(env); setShowEnvModal(true) }} className="p-0.5 text-gray-400 hover:text-blue-500 rounded-sm">
                               <Edit2 className="w-3 h-3" />
                             </button>
                             {project.environments.length > 1 && (
-                              <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteEnv(env.id) }} className="p-0.5 text-gray-400 hover:text-red-500 rounded">
+                              <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteEnv(env.id) }} className="p-0.5 text-gray-400 hover:text-red-500 rounded-sm">
                                 <Trash2 className="w-3 h-3" />
                               </button>
                             )}
@@ -1081,15 +1081,15 @@ export default function ApiSidebar() {
                     onClick={() => toggleSection('req-' + project.id)}
                     className="group px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       {expandedSections.has('req-' + project.id) ? (
                         <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                       ) : (
                         <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                       )}
                       <Folder className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t('api.requests')}</span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">{t('api.requests')}</span>
+                      <span className="text-[11px] text-gray-400">
                         {countRequests(activeProject.requestFolders, activeProject.rootRequests)}
                       </span>
                     </div>
@@ -1100,7 +1100,7 @@ export default function ApiSidebar() {
                           setExpandedSections(prev => { const next = new Set(prev); next.add('req-' + project.id); return next })
                           setShowNewFolderInput('root')
                         }}
-                        className="p-1 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded"
+                        className="p-1 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-sm"
                         title={t('api.newFolder')}
                       >
                         <FolderPlus className="w-3 h-3" />
@@ -1111,7 +1111,7 @@ export default function ApiSidebar() {
                           setExpandedSections(prev => { const next = new Set(prev); next.add('req-' + project.id); return next })
                           handleQuickAddRequest(null)
                         }}
-                        className="p-1 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded"
+                        className="p-1 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-sm"
                         title={t('api.newRequest')}
                       >
                         <FilePlus className="w-3 h-3" />
@@ -1122,8 +1122,8 @@ export default function ApiSidebar() {
                     <div className="py-1">
                       {/* 新建文件夹输入框（根目录） */}
                       {showNewFolderInput === 'root' && (
-                        <div className="flex items-center gap-1 py-1.5 mx-2 px-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                          <Folder className="w-4 h-4 text-amber-500" />
+                        <div className="flex items-center gap-1 py-1.5 mx-2 px-2 bg-amber-50 dark:bg-amber-900/20 rounded-sm-md">
+                          <Folder className="w-3.5 h-3.5 text-amber-500" />
                           <input
                             type="text"
                             value={newFolderName}
@@ -1133,13 +1133,13 @@ export default function ApiSidebar() {
                               if (e.key === 'Escape') { setShowNewFolderInput(null); setNewFolderName('') }
                             }}
                             placeholder={t('api.projectName')}
-                            className="flex-1 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-sm text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                             autoFocus
                           />
-                          <button onClick={() => handleAddFolder(null)} className="p-1 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded">
+                          <button onClick={() => handleAddFolder(null)} className="p-1 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-sm">
                             <Plus className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => { setShowNewFolderInput(null); setNewFolderName('') }} className="p-1 text-gray-400 hover:text-gray-600 rounded">
+                          <button onClick={() => { setShowNewFolderInput(null); setNewFolderName('') }} className="p-1 text-gray-400 hover:text-gray-600 rounded-sm">
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -1206,18 +1206,18 @@ export default function ApiSidebar() {
             onClick={() => toggleSection('history')}
             className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {expandedSections.has('history') ? (
-                <ChevronDown className="w-4 h-4 text-gray-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
               )}
-              <Clock className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('api.history')}</span>
-              <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">{history.length}</span>
+              <Clock className="w-3.5 h-3.5 text-gray-400" />
+              <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{t('api.history')}</span>
+              <span className="text-[11px] text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-sm-full">{history.length}</span>
             </div>
             {history.length > 0 && (
-              <button onClick={(e) => { e.stopPropagation(); setConfirmClearHistory(true) }} className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all">
+              <button onClick={(e) => { e.stopPropagation(); setConfirmClearHistory(true) }} className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-sm transition-all">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
@@ -1225,15 +1225,15 @@ export default function ApiSidebar() {
           {expandedSections.has('history') && (
             <div className="pb-1">
               {history.length === 0 ? (
-                <div className="px-8 py-4 text-xs text-gray-500 dark:text-gray-400 text-center">{t('redis.noFieldsFound')}</div>
+                <div className="px-8 py-4 text-[11px] text-gray-500 dark:text-gray-400 text-center">{t('redis.noFieldsFound')}</div>
               ) : (
                 <div className="px-2 space-y-0.5">
                   {history.slice(0, 20).map((item) => (
-                    <div key={item.id} onClick={() => handleSelectHistory(item)} className="group mx-2 px-3 py-2 flex items-center gap-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/70 rounded-lg transition-colors">
-                      <span className={`w-[52px] text-center py-0.5 rounded text-xs font-bold ${METHOD_BG[item.request.method]} ${METHOD_COLORS[item.request.method]}`}>{item.request.method}</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400 truncate flex-1" title={item.request.url}>{item.request.url}</span>
-                      <span className="text-xs text-gray-400">{formatDate(item.timestamp)}</span>
-                      <button onClick={(e) => { e.stopPropagation(); deleteHistoryItem(item.id) }} className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-all">
+                    <div key={item.id} onClick={() => handleSelectHistory(item)} className="group mx-2 px-1.5 py-0.5.5 flex items-center gap-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/70 rounded-sm-md transition-colors">
+                      <span className={`w-[52px] text-center py-0.5 rounded-sm text-[11px] font-bold ${METHOD_BG[item.request.method]} ${METHOD_COLORS[item.request.method]}`}>{item.request.method}</span>
+                      <span className="text-[13px] text-gray-600 dark:text-gray-400 truncate flex-1" title={item.request.url}>{item.request.url}</span>
+                      <span className="text-[11px] text-gray-400">{formatDate(item.timestamp)}</span>
+                      <button onClick={(e) => { e.stopPropagation(); deleteHistoryItem(item.id) }} className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-sm opacity-0 group-hover:opacity-100 transition-all">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -1251,22 +1251,22 @@ export default function ApiSidebar() {
               onClick={() => toggleSection('recycle-bin')}
               className="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {expandedSections.has('recycle-bin') ? (
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                 ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                 )}
-                <Archive className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('api.recycleBin')}</span>
-                <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">{recycleBin.length}</span>
+                <Archive className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{t('api.recycleBin')}</span>
+                <span className="text-[11px] text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-sm-full">{recycleBin.length}</span>
               </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation()
                   setConfirmClearRecycleBin(true)
                 }}
-                className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all"
+                className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-sm transition-all"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -1283,23 +1283,23 @@ export default function ApiSidebar() {
                     return (
                       <div
                         key={item.id}
-                        className={`group mx-2 px-3 py-2 flex items-center gap-2 rounded-lg transition-colors ${
+                        className={`group mx-2 px-1.5 py-0.5.5 flex items-center gap-1.5 rounded-sm-md transition-colors ${
                           isExpired
                             ? 'bg-red-50/50 dark:bg-red-900/10'
                             : 'hover:bg-gray-100 dark:hover:bg-gray-700/70'
                         }`}
                       >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           {item.type === 'folder' ? (
-                            <Folder className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                            <Folder className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                           ) : (
-                            <Globe className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                            <Globe className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm text-gray-600 dark:text-gray-400 truncate" title={item.name}>
+                            <div className="text-[13px] text-gray-600 dark:text-gray-400 truncate" title={item.name}>
                               {item.name}
                             </div>
-                            <div className="text-xs text-gray-400 flex items-center gap-1">
+                            <div className="text-[11px] text-gray-400 flex items-center gap-1">
                               <span>{item.projectName}</span>
                               <span className="text-gray-300">•</span>
                               <span className={isExpired ? 'text-red-400' : ''}>
@@ -1311,14 +1311,14 @@ export default function ApiSidebar() {
                         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                           <button
                             onClick={() => setConfirmRestoreItem(item.id)}
-                            className="p-1 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                            className="p-1 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-sm"
                             title={t('api.restore')}
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => setConfirmPermanentDeleteItem(item.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-sm"
                             title={t('api.permanentDelete')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1335,21 +1335,21 @@ export default function ApiSidebar() {
       </div>
 
       {/* Footer - Import/Export */}
-      <div className="flex-shrink-0 h-14 px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 flex items-center gap-3">
+      <div className="flex-shrink-0 h-14 px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 flex items-center gap-1">
         <button onClick={() => {
           setImportText('')
           setImportMode('new')
           setImportTargetProjectId(null)
           setShowImportExport('import')
-        }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors border border-gray-200 dark:border-gray-700">
-          <Download className="w-4 h-4" />
+        }} className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[13px] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-sm-md transition-colors border border-gray-200 dark:border-gray-700">
+          <Download className="w-3.5 h-3.5" />
           <span>{t('redis.import')}</span>
         </button>
         <button onClick={() => {
           setSelectedExportProjectId(null)
           setShowImportExport('export')
-        }} className="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors border border-gray-200 dark:border-gray-700">
-          <Upload className="w-4 h-4" />
+        }} className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[13px] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-sm-md transition-colors border border-gray-200 dark:border-gray-700">
+          <Upload className="w-3.5 h-3.5" />
           <span>{t('redis.export')}</span>
         </button>
       </div>
@@ -1357,7 +1357,7 @@ export default function ApiSidebar() {
       {/* Request Context Menu */}
       {requestContextMenu && createPortal(
         <div
-          className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] z-[100] animate-in fade-in-0 zoom-in-95 duration-200"
+          className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-xl shadow-2xl overflow-hidden min-w-[160px] z-[100] animate-in fade-in-0 zoom-in-95 duration-200"
           style={{ top: requestContextMenu.top, left: requestContextMenu.left }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -1372,9 +1372,9 @@ export default function ApiSidebar() {
                 }
                 setRequestContextMenu(null)
               }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              className="w-full px-1.5 py-0.5.5 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1.5"
             >
-              <Edit2 className="w-4 h-4" />
+              <Edit2 className="w-3.5 h-3.5" />
               {t('common.edit')}
             </button>
             <button
@@ -1386,9 +1386,9 @@ export default function ApiSidebar() {
                 }
                 setRequestContextMenu(null)
               }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              className="w-full px-1.5 py-0.5.5 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1.5"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-3.5 h-3.5" />
               {t('common.copy')}
             </button>
             <button
@@ -1398,9 +1398,9 @@ export default function ApiSidebar() {
                 setRequestContextMenu(null)
                 handleStartMoveRequest(requestId, null, pos)
               }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              className="w-full px-1.5 py-0.5.5 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1.5"
             >
-              <Move className="w-4 h-4" />
+              <Move className="w-3.5 h-3.5" />
               {t('api.move')}
             </button>
             <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
@@ -1409,9 +1409,9 @@ export default function ApiSidebar() {
                 setConfirmDeleteRequest(requestContextMenu.id)
                 setRequestContextMenu(null)
               }}
-              className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+              className="w-full px-1.5 py-0.5.5 text-left text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
               {t('common.delete')}
             </button>
           </div>
@@ -1422,7 +1422,7 @@ export default function ApiSidebar() {
       {/* Folder Context Menu */}
       {folderContextMenu && createPortal(
         <div
-          className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[160px] z-[100] animate-in fade-in-0 zoom-in-95 duration-200"
+          className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-xl shadow-2xl overflow-hidden min-w-[160px] z-[100] animate-in fade-in-0 zoom-in-95 duration-200"
           style={{ top: folderContextMenu.top, left: folderContextMenu.left }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -1436,9 +1436,9 @@ export default function ApiSidebar() {
                 }
                 setFolderContextMenu(null)
               }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              className="w-full px-1.5 py-0.5.5 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1.5"
             >
-              <Edit2 className="w-4 h-4" />
+              <Edit2 className="w-3.5 h-3.5" />
               {t('common.edit')}
             </button>
             <button
@@ -1447,9 +1447,9 @@ export default function ApiSidebar() {
                 setShowNewFolderInput(folderContextMenu.id)
                 setFolderContextMenu(null)
               }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              className="w-full px-1.5 py-0.5.5 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1.5"
             >
-              <FolderPlus className="w-4 h-4" />
+              <FolderPlus className="w-3.5 h-3.5" />
               {t('api.newFolder')}
             </button>
             <button
@@ -1458,9 +1458,9 @@ export default function ApiSidebar() {
                 handleQuickAddRequest(folderContextMenu.id)
                 setFolderContextMenu(null)
               }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              className="w-full px-1.5 py-0.5.5 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1.5"
             >
-              <FilePlus className="w-4 h-4" />
+              <FilePlus className="w-3.5 h-3.5" />
               {t('api.newRequest')}
             </button>
             <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
@@ -1469,9 +1469,9 @@ export default function ApiSidebar() {
                 setConfirmDeleteFolder(folderContextMenu.id)
                 setFolderContextMenu(null)
               }}
-              className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+              className="w-full px-1.5 py-0.5.5 text-left text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
               {t('common.delete')}
             </button>
           </div>
@@ -1483,8 +1483,8 @@ export default function ApiSidebar() {
       {movingRequestId && moveMenuPosition && createPortal(
         <>
           <div className="fixed inset-0 z-[99]" onClick={() => { setMovingRequestId(null); setMoveMenuPosition(null) }} />
-          <div className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[200px] z-[100] animate-in fade-in-0 zoom-in-95 duration-200" style={{ top: moveMenuPosition.top, left: moveMenuPosition.left }}>
-            <div className="px-4 py-2.5 text-xs text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50">{t('api.selectTargetFolder')}</div>
+          <div className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-xl shadow-2xl overflow-hidden min-w-[200px] z-[100] animate-in fade-in-0 zoom-in-95 duration-200" style={{ top: moveMenuPosition.top, left: moveMenuPosition.left }}>
+            <div className="px-4 py-2.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50">{t('api.selectTargetFolder')}</div>
             <div className="max-h-56 overflow-y-auto py-1">
               {folderOptions.map((opt) => {
                 const isCurrentLocation = opt.id === null ? !isInFolder(activeProject?.requestFolders || [], movingRequestId) : isInSpecificFolder(activeProject?.requestFolders || [], movingRequestId, opt.id)
@@ -1493,18 +1493,18 @@ export default function ApiSidebar() {
                     key={opt.id || 'root'}
                     onClick={() => { if (!isCurrentLocation) handleMoveRequest(opt.id) }}
                     disabled={isCurrentLocation}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${isCurrentLocation ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : 'hover:bg-purple-50 dark:hover:bg-purple-900/30 text-gray-700 dark:text-gray-300'}`}
+                    className={`w-full text-left px-4 py-2 text-[13px] transition-colors flex items-center gap-1.5 ${isCurrentLocation ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : 'hover:bg-purple-50 dark:hover:bg-purple-900/30 text-gray-700 dark:text-gray-300'}`}
                     style={{ paddingLeft: `${opt.depth * 16 + 16}px` }}
                   >
-                    <Folder className={`w-4 h-4 flex-shrink-0 ${isCurrentLocation ? 'text-gray-300' : 'text-purple-500'}`} />
+                    <Folder className={`w-3.5 h-3.5 flex-shrink-0 ${isCurrentLocation ? 'text-gray-300' : 'text-purple-500'}`} />
                     <span className="truncate">{opt.name}</span>
-                    {isCurrentLocation && <span className="ml-auto text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">{t('api.current')}</span>}
+                    {isCurrentLocation && <span className="ml-auto text-[11px] text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-sm">{t('api.current')}</span>}
                   </button>
                 )
               })}
             </div>
             <div className="border-t border-gray-200 dark:border-gray-700 p-2 bg-gray-100/80 dark:bg-gray-800/50">
-              <button onClick={() => { setMovingRequestId(null); setMoveMenuPosition(null) }} className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">{t('common.cancel')}</button>
+              <button onClick={() => { setMovingRequestId(null); setMoveMenuPosition(null) }} className="w-full px-4 py-2 text-[13px] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm-md transition-colors">{t('common.cancel')}</button>
             </div>
           </div>
         </>,
@@ -1596,31 +1596,31 @@ export default function ApiSidebar() {
       {/* Import/Export Modal */}
       {showImportExport && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={() => setShowImportExport(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-white dark:bg-gray-800 rounded-sm-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{showImportExport === 'export' ? t('redis.export') + ' ' + t('api.projects') : t('redis.import')}</h3>
-              <button onClick={() => setShowImportExport(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
+              <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">{showImportExport === 'export' ? t('redis.export') + ' ' + t('api.projects') : t('redis.import')}</h3>
+              <button onClick={() => setShowImportExport(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm-md transition-colors"><X className="w-3.5 h-3.5" /></button>
             </div>
             <div className="px-5 py-4">
               {showImportExport === 'export' ? (
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('api.selectProject')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">{t('api.selectProject')}</p>
                   <div className="space-y-1.5 max-h-64 overflow-y-auto">
                     {projects.map(project => (
                       <label
                         key={project.id}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-center gap-1 px-1.5 py-0.5.5.5 rounded-sm-md cursor-pointer transition-colors ${
                           selectedExportProjectId === project.id
                             ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700'
                             : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 border border-transparent'
                         }`}
                         onClick={() => setSelectedExportProjectId(project.id)}
                       >
-                        <Briefcase className={`w-4 h-4 ${selectedExportProjectId === project.id ? 'text-blue-500' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-medium flex-1 ${selectedExportProjectId === project.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                        <Briefcase className={`w-3.5 h-3.5 ${selectedExportProjectId === project.id ? 'text-blue-500' : 'text-gray-400'}`} />
+                        <span className={`text-[13px] font-medium flex-1 ${selectedExportProjectId === project.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
                           {project.name || t('api.defaultProject')}
                         </span>
-                        <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+                        <span className="text-[11px] text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-sm-full">
                           {countRequests(project.requestFolders, project.rootRequests)}
                         </span>
                       </label>
@@ -1629,15 +1629,15 @@ export default function ApiSidebar() {
                 </div>
               ) : (
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('api.importOpenAPISupport')}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">{t('api.importOpenAPISupport')}</p>
 
                   {/* 导入方式选择 */}
                   <div className="mb-3">
-                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">{t('api.importMode')}</label>
-                    <div className="flex gap-2">
+                    <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">{t('api.importMode')}</label>
+                    <div className="flex gap-1.5">
                       <button
                         onClick={() => { setImportMode('new'); setImportTargetProjectId(null) }}
-                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                        className={`flex-1 px-1.5 py-0.5.5 text-[13px] rounded-sm-md border transition-colors ${
                           importMode === 'new'
                             ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400'
                             : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
@@ -1647,7 +1647,7 @@ export default function ApiSidebar() {
                       </button>
                       <button
                         onClick={() => setImportMode('merge')}
-                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                        className={`flex-1 px-1.5 py-0.5.5 text-[13px] rounded-sm-md border transition-colors ${
                           importMode === 'merge'
                             ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400'
                             : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
@@ -1661,11 +1661,11 @@ export default function ApiSidebar() {
                   {/* 合并时选择目标项目 */}
                   {importMode === 'merge' && (
                     <div className="mb-3">
-                      <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">{t('api.targetProject')}</label>
+                      <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">{t('api.targetProject')}</label>
                       <select
                         value={importTargetProjectId || ''}
                         onChange={(e) => setImportTargetProjectId(e.target.value || null)}
-                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-1.5 py-0.5.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">{t('api.selectProject')}</option>
                         {projects.map(p => (
@@ -1696,27 +1696,27 @@ export default function ApiSidebar() {
                     />
                     <label
                       htmlFor="import-file-input"
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      className="flex items-center justify-center gap-1.5 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-sm-md cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                     >
-                      <Upload className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{t('api.selectFile')}</span>
+                      <Upload className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-[13px] text-gray-600 dark:text-gray-400">{t('api.selectFile')}</span>
                     </label>
                   </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 right-0 top-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-xs text-gray-400 bg-white dark:bg-gray-800 px-2">{t('api.orPasteContent')}</span>
+                      <span className="text-[11px] text-gray-400 bg-white dark:bg-gray-800 px-2">{t('api.orPasteContent')}</span>
                     </div>
-                    <textarea value={importText} onChange={(e) => setImportText(e.target.value)} placeholder=" " className="w-full h-32 px-3 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <textarea value={importText} onChange={(e) => setImportText(e.target.value)} placeholder=" " className="w-full h-32 px-1.5 py-0.5.5.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-md text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
                   </div>
                 </div>
               )}
             </div>
-            <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-3">
-              <button onClick={() => setShowImportExport(null)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">{t('common.cancel')}</button>
+            <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-1">
+              <button onClick={() => setShowImportExport(null)} className="px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm-md transition-colors">{t('common.cancel')}</button>
               {showImportExport === 'export' ? (
-                <button onClick={() => selectedExportProjectId && handleExport(selectedExportProjectId)} disabled={!selectedExportProjectId} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('redis.export')}</button>
+                <button onClick={() => selectedExportProjectId && handleExport(selectedExportProjectId)} disabled={!selectedExportProjectId} className="px-4 py-2 text-[13px] font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-sm-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('redis.export')}</button>
               ) : (
-                <button onClick={handleImport} disabled={!importText.trim() || (importMode === 'merge' && !importTargetProjectId)} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('redis.import')}</button>
+                <button onClick={handleImport} disabled={!importText.trim() || (importMode === 'merge' && !importTargetProjectId)} className="px-4 py-2 text-[13px] font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-sm-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">{t('redis.import')}</button>
               )}
             </div>
           </div>
@@ -1774,38 +1774,38 @@ function RequestTree({
           <div
             onClick={() => editingFolderId !== folder.id && onToggleFolder(folder.id)}
             onContextMenu={(e) => onFolderContextMenu(e, folder)}
-            className={`flex items-center gap-1 px-2 py-1.5 cursor-pointer rounded-lg mx-2 transition-colors ${
+            className={`flex items-center gap-1 px-1.5 py-0.5.5 cursor-pointer rounded-sm-md mx-2 transition-colors ${
               folderContextMenu?.id === folder.id
                 ? 'bg-blue-50 dark:bg-blue-900/30'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
             }`}
             style={{ marginLeft: depth > 0 ? `${depth * 12 + 8}px` : undefined }}
           >
-            <button onClick={(e) => { e.stopPropagation(); onToggleFolder(folder.id) }} className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded flex-shrink-0">
+            <button onClick={(e) => { e.stopPropagation(); onToggleFolder(folder.id) }} className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm flex-shrink-0">
               {expandedFolders.has(folder.id) ? <ChevronDown className="w-3.5 h-3.5 text-gray-500" /> : <ChevronRight className="w-3.5 h-3.5 text-gray-500" />}
             </button>
             {expandedFolders.has(folder.id) ? <FolderOpen className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" /> : <Folder className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
             {editingFolderId === folder.id ? (
-              <div className="flex-1 min-w-0 flex items-center gap-1 bg-white dark:bg-gray-700 rounded px-1.5 py-0.5 shadow-sm border border-blue-400 dark:border-blue-500">
-                <input type="text" value={editingFolderName} onChange={(e) => setEditingFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditFolder(); if (e.key === 'Escape') onCancelEditFolder() }} placeholder={t('api.enterName')} className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
-                <button onClick={(e) => { e.stopPropagation(); onConfirmEditFolder() }} className="p-0.5 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 rounded flex-shrink-0"><Check className="w-3 h-3" /></button>
-                <button onClick={(e) => { e.stopPropagation(); onCancelEditFolder() }} className="p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded flex-shrink-0"><X className="w-3 h-3" /></button>
+              <div className="flex-1 min-w-0 flex items-center gap-1 bg-white dark:bg-gray-700 rounded-sm px-1.5 py-0.5 shadow-sm border border-blue-400 dark:border-blue-500">
+                <input type="text" value={editingFolderName} onChange={(e) => setEditingFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditFolder(); if (e.key === 'Escape') onCancelEditFolder() }} placeholder={t('api.enterName')} className="flex-1 min-w-0 bg-transparent text-[13px] text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
+                <button onClick={(e) => { e.stopPropagation(); onConfirmEditFolder() }} className="p-0.5 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-sm flex-shrink-0"><Check className="w-3 h-3" /></button>
+                <button onClick={(e) => { e.stopPropagation(); onCancelEditFolder() }} className="p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-sm flex-shrink-0"><X className="w-3 h-3" /></button>
               </div>
             ) : (
               <>
-                <span className="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 truncate" title={folder.name}>{searchQuery ? <HighlightedText text={folder.name} highlight={searchQuery} /> : folder.name}</span>
-                <span className="text-xs text-gray-400 flex-shrink-0 ml-1">{countFolderRequests(folder)}</span>
+                <span className="flex-1 min-w-0 text-[13px] text-gray-700 dark:text-gray-300 truncate" title={folder.name}>{searchQuery ? <HighlightedText text={folder.name} highlight={searchQuery} /> : folder.name}</span>
+                <span className="text-[11px] text-gray-400 flex-shrink-0 ml-1">{countFolderRequests(folder)}</span>
               </>
             )}
           </div>
           {expandedFolders.has(folder.id) && (
             <div>
               {showNewFolderInput === folder.id && (
-                <div className="flex items-center gap-1 py-1.5 mx-2 px-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg" style={{ marginLeft: `${(depth + 1) * 12 + 8}px` }}>
-                  <Folder className="w-4 h-4 text-amber-500" />
-                  <input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmAddFolder(folder.id); if (e.key === 'Escape') onCancelAddFolder() }} placeholder={t('api.projectName')} className="flex-1 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autoFocus />
-                  <button onClick={() => onConfirmAddFolder(folder.id)} className="p-1 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"><Plus className="w-3.5 h-3.5" /></button>
-                  <button onClick={onCancelAddFolder} className="p-1 text-gray-400 hover:text-gray-600 rounded"><X className="w-3.5 h-3.5" /></button>
+                <div className="flex items-center gap-1 py-1.5 mx-2 px-2 bg-amber-50 dark:bg-amber-900/20 rounded-sm-md" style={{ marginLeft: `${(depth + 1) * 12 + 8}px` }}>
+                  <Folder className="w-3.5 h-3.5 text-amber-500" />
+                  <input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmAddFolder(folder.id); if (e.key === 'Escape') onCancelAddFolder() }} placeholder={t('api.projectName')} className="flex-1 px-2 py-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-sm text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500" autoFocus />
+                  <button onClick={() => onConfirmAddFolder(folder.id)} className="p-1 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-sm"><Plus className="w-3.5 h-3.5" /></button>
+                  <button onClick={onCancelAddFolder} className="p-1 text-gray-400 hover:text-gray-600 rounded-sm"><X className="w-3.5 h-3.5" /></button>
                 </div>
               )}
               <RequestTree folders={folder.children.filter(isFolder) as RequestFolder[]} rootRequests={folder.children.filter(isRequest) as SavedRequest[]} expandedFolders={expandedFolders} onToggleFolder={onToggleFolder} onSelectRequest={onSelectRequest} onDeleteRequest={onDeleteRequest} onDeleteFolder={onDeleteFolder} showNewFolderInput={showNewFolderInput} newFolderName={newFolderName} setNewFolderName={setNewFolderName} onConfirmAddFolder={onConfirmAddFolder} onCancelAddFolder={onCancelAddFolder} editingFolderId={editingFolderId} editingFolderName={editingFolderName} setEditingFolderName={setEditingFolderName} onStartEditFolder={onStartEditFolder} onConfirmEditFolder={onConfirmEditFolder} onCancelEditFolder={onCancelEditFolder} editingRequestId={editingRequestId} editingRequestName={editingRequestName} setEditingRequestName={setEditingRequestName} onStartEditRequest={onStartEditRequest} onConfirmEditRequest={onConfirmEditRequest} onCancelEditRequest={onCancelEditRequest} movingRequestId={movingRequestId} onStartMoveRequest={onStartMoveRequest} onAddFolder={onAddFolder} onAddRequest={onAddRequest} depth={depth + 1} requestContextMenu={requestContextMenu} onContextMenu={onContextMenu} duplicateRequest={duplicateRequest} openTab={openTab} showToast={showToast} folderContextMenu={folderContextMenu} onFolderContextMenu={onFolderContextMenu} searchQuery={searchQuery} />
@@ -1818,7 +1818,7 @@ function RequestTree({
           key={request.id}
           onClick={() => movingRequestId !== request.id && onSelectRequest(request)}
           onContextMenu={(e) => onContextMenu(e, request)}
-          className={`px-2 py-1.5 flex items-center gap-2 cursor-pointer rounded-lg transition-colors ${
+          className={`px-1.5 py-0.5.5 flex items-center gap-1.5 cursor-pointer rounded-sm-md transition-colors ${
             movingRequestId === request.id
               ? 'bg-blue-100 dark:bg-blue-900/40 ring-2 ring-blue-500 mx-2'
               : requestContextMenu?.id === request.id
@@ -1827,23 +1827,23 @@ function RequestTree({
           }`}
           style={{ marginLeft: depth > 0 ? `${depth * 12 + 8}px` : undefined }}
         >
-          <Globe className="w-4 h-4 text-blue-400 flex-shrink-0" />
-          <span className={`w-[52px] text-center py-0.5 rounded text-xs font-bold ${METHOD_BG[request.method]} ${METHOD_COLORS[request.method]}`}>{request.method}</span>
+          <Globe className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+          <span className={`w-[52px] text-center py-0.5 rounded-sm text-[11px] font-bold ${METHOD_BG[request.method]} ${METHOD_COLORS[request.method]}`}>{request.method}</span>
           {editingRequestId === request.id ? (
-            <div className="flex-1 min-w-0 flex items-center gap-1 bg-white dark:bg-gray-700 rounded px-1.5 py-0.5 shadow-sm border border-blue-400 dark:border-blue-500">
-              <input type="text" value={editingRequestName} onChange={(e) => setEditingRequestName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditRequest(); if (e.key === 'Escape') onCancelEditRequest() }} placeholder={t('api.enterName')} className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
-              <button onClick={(e) => { e.stopPropagation(); onConfirmEditRequest() }} className="p-0.5 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 rounded flex-shrink-0"><Check className="w-3 h-3" /></button>
-              <button onClick={(e) => { e.stopPropagation(); onCancelEditRequest() }} className="p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded flex-shrink-0"><X className="w-3 h-3" /></button>
+            <div className="flex-1 min-w-0 flex items-center gap-1 bg-white dark:bg-gray-700 rounded-sm px-1.5 py-0.5 shadow-sm border border-blue-400 dark:border-blue-500">
+              <input type="text" value={editingRequestName} onChange={(e) => setEditingRequestName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onConfirmEditRequest(); if (e.key === 'Escape') onCancelEditRequest() }} placeholder={t('api.enterName')} className="flex-1 min-w-0 bg-transparent text-[13px] text-gray-800 dark:text-gray-200 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()} />
+              <button onClick={(e) => { e.stopPropagation(); onConfirmEditRequest() }} className="p-0.5 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-sm flex-shrink-0"><Check className="w-3 h-3" /></button>
+              <button onClick={(e) => { e.stopPropagation(); onCancelEditRequest() }} className="p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-sm flex-shrink-0"><X className="w-3 h-3" /></button>
             </div>
           ) : (
-            <span className="text-sm text-gray-700 dark:text-gray-300 truncate flex-1" title={request.name || request.url}>
+            <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate flex-1" title={request.name || request.url}>
               {searchQuery ? <HighlightedText text={request.name || request.url} highlight={searchQuery} /> : (request.name || request.url)}
             </span>
           )}
         </div>
       ))}
       {folders.length === 0 && rootRequests.length === 0 && depth === 0 && (
-        <div className="px-8 py-4 text-xs text-gray-500 dark:text-gray-400 text-center">{t('api.noRequestsHint')}</div>
+        <div className="px-8 py-4 text-[11px] text-gray-500 dark:text-gray-400 text-center">{t('api.noRequestsHint')}</div>
       )}
     </div>
   )
@@ -1858,40 +1858,40 @@ function EnvironmentModal({ environment, isNew, onClose, onSave }: { environment
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-gray-800 rounded-sm-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{isNew ? t('api.newEnvironment') : t('api.editEnvironment')}</h3>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
+          <h3 className="text-[13px] font-semibold text-gray-900 dark:text-white">{isNew ? t('api.newEnvironment') : t('api.editEnvironment')}</h3>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm-md transition-colors"><X className="w-3.5 h-3.5" /></button>
         </div>
         <div className="px-5 py-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('api.environmentName')}</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('api.environmentName')} className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" autoFocus />
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">{t('api.environmentName')}</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('api.environmentName')} className="w-full px-1.5 py-0.5.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" autoFocus />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('api.variables')}</label>
-              <button onClick={() => setVariables([...variables, { key: '', value: '', enabled: true }])} className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1 px-2 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"><Plus className="w-3 h-3" />{t('common.add')}</button>
+              <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{t('api.variables')}</label>
+              <button onClick={() => setVariables([...variables, { key: '', value: '', enabled: true }])} className="text-[11px] text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1 px-1.5 py-0.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-sm transition-colors"><Plus className="w-3 h-3" />{t('common.add')}</button>
             </div>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {variables.length === 0 ? (
-                <div className="py-4 text-center text-gray-400 text-sm border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">{t('api.variablesHint')}</div>
+                <div className="py-4 text-center text-gray-400 text-[13px] border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-sm-md">{t('api.variablesHint')}</div>
               ) : (
                 variables.map((v, i) => (
-                  <div key={i} className="flex items-center gap-2 group">
-                    <input type="checkbox" checked={v.enabled} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], enabled: e.target.checked }; setVariables(newVars) }} className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500" />
-                    <input type="text" value={v.key} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], key: e.target.value }; setVariables(newVars) }} placeholder={t('api.variableName')} className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-                    <input type="text" value={v.value} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], value: e.target.value }; setVariables(newVars) }} placeholder={t('api.variableValue')} className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-                    <button onClick={() => setVariables(variables.filter((_, idx) => idx !== i))} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <div key={i} className="flex items-center gap-1.5 group">
+                    <input type="checkbox" checked={v.enabled} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], enabled: e.target.checked }; setVariables(newVars) }} className="w-3.5 h-3.5 rounded-sm border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500" />
+                    <input type="text" value={v.key} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], key: e.target.value }; setVariables(newVars) }} placeholder={t('api.variableName')} className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <input type="text" value={v.value} onChange={(e) => { const newVars = [...variables]; newVars[i] = { ...newVars[i], value: e.target.value }; setVariables(newVars) }} placeholder={t('api.variableValue')} className="flex-1 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm-md text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <button onClick={() => setVariables(variables.filter((_, idx) => idx !== i))} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-sm-md opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 ))
               )}
             </div>
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">{t('common.cancel')}</button>
-          <button onClick={() => { if (!name.trim()) { showToast(t('common.error'), 'error'); return } onSave({ ...environment, name, variables }) }} className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm">{t('common.save')}</button>
+        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-100/80 dark:bg-gray-800/50 flex justify-end gap-1">
+          <button onClick={onClose} className="px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-sm-md transition-colors">{t('common.cancel')}</button>
+          <button onClick={() => { if (!name.trim()) { showToast(t('common.error'), 'error'); return } onSave({ ...environment, name, variables }) }} className="px-4 py-2 text-[13px] font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-sm-md transition-colors shadow-sm">{t('common.save')}</button>
         </div>
       </div>
     </div>
