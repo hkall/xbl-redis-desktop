@@ -37,7 +37,7 @@ function copyNodeModules() {
   fs.mkdirSync(distNodeModules, { recursive: true });
 
   // Copy production dependencies only
-  const dependencies = ['ioredis', 'java-object-serialization', 'redis-errors'];
+  const dependencies = ['ioredis', 'java-object-serialization', 'redis-errors', 'mysql2'];
 
   for (const dep of dependencies) {
     const srcPath = path.join(rootNodeModules, dep);
@@ -107,7 +107,8 @@ const buildPackageJson = {
   main: 'main.cjs',
   dependencies: {
     'ioredis': rootPackageJson.dependencies.ioredis,
-    'java-object-serialization': rootPackageJson.dependencies['java-object-serialization']
+    'java-object-serialization': rootPackageJson.dependencies['java-object-serialization'],
+    'mysql2': rootPackageJson.dependencies.mysql2
   },
   devDependencies: {
     'electron': rootPackageJson.devDependencies.electron
