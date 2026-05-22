@@ -31,7 +31,6 @@ import {
   Trash2,
   Filter,
   XCircle,
-  Search,
   FileText,
   Clipboard,
   Upload,
@@ -684,10 +683,6 @@ function DataGrid({
   const [hiddenColumns, setHiddenColumns] = useState<Set<number>>(new Set())
   const [showColumnMenu, setShowColumnMenu] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
-  const [findText, setFindText] = useState('')
-  const [findMatches, setFindMatches] = useState<Array<{ rowIndex: number; colIndex: number }>>([])
-  const [currentMatchIndex, setCurrentMatchIndex] = useState(-1)
-  const [showFindBar, setShowFindBar] = useState(false)
   const gridRef = useRef<HTMLDivElement>(null)
   const contextMenuCellRef = useRef<{ rowIndex: number; colIndex: number } | null>(null)
 
@@ -879,23 +874,6 @@ function DataGrid({
         e.key === 'Tab' || e.key === 'Enter' || e.key === 'F2' || e.key === 'Escape' || e.key === 'Delete') {
       e.preventDefault()
     } else {
-      // Ctrl+F for find
-      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault()
-        setShowFindBar(true)
-        return
-      }
-      // F3 / Shift+F3 for find navigation
-      if (e.key === 'F3') {
-        e.preventDefault()
-        if (findMatches.length > 0) {
-          const dir = e.shiftKey ? -1 : 1
-          const next = (currentMatchIndex + dir + findMatches.length) % findMatches.length
-          setCurrentMatchIndex(next)
-          setFocusedCell(findMatches[next])
-        }
-        return
-      }
       return
     }
 
@@ -955,26 +933,6 @@ function DataGrid({
         }
         return
     }
-  }
-
-  // Find in results
-  const performFind = (text: string) => {
-    setFindText(text)
-    if (!text.trim()) { setFindMatches([]); setCurrentMatchIndex(-1); return }
-    const matches: Array<{ rowIndex: number; colIndex: number }> = []
-    const lower = text.toLowerCase()
-    const visibleCols = columns.map((_, i) => i).filter(i => !hiddenColumns.has(i))
-    for (let r = 0; r < sortedData.length; r++) {
-      for (const c of visibleCols) {
-        const val = sortedData[r]?.[c]
-        if (val !== null && val !== undefined && String(val).toLowerCase().includes(lower)) {
-          matches.push({ rowIndex: r, colIndex: c })
-        }
-      }
-    }
-    setFindMatches(matches)
-    setCurrentMatchIndex(matches.length > 0 ? 0 : -1)
-    if (matches.length > 0) setFocusedCell(matches[0])
   }
 
   // 列宽调整
@@ -1381,8 +1339,6 @@ function DataGrid({
                     const isEditing = editingCell?.rowIndex === actualIndex && editingCell?.colIndex === colIndex
                     const isChanged = pendingChanges.some(c => c.rowIndex === actualIndex && c.colIndex === colIndex)
                     const isFocused = focusedCell?.rowIndex === actualIndex && focusedCell?.colIndex === colIndex
-                    const isFindMatch = findMatches.some(m => m.rowIndex === actualIndex && m.colIndex === colIndex)
-                    const isCurrentMatch = currentMatchIndex >= 0 && findMatches[currentMatchIndex]?.rowIndex === actualIndex && findMatches[currentMatchIndex]?.colIndex === colIndex
                     return (
                       <td
                         key={colIndex}
@@ -1390,7 +1346,7 @@ function DataGrid({
                         onDoubleClick={() => canEdit && startEdit(actualIndex, colIndex)}
                         onClick={() => setFocusedCell({ rowIndex: actualIndex, colIndex })}
                         onContextMenu={() => { contextMenuCellRef.current = { rowIndex: actualIndex, colIndex } }}
-                        className={`px-2 py-1 text-[13px] font-mono relative ${isChanged ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${isCurrentMatch ? 'ring-2 ring-orange-500 dark:ring-orange-400' : isFindMatch ? 'bg-yellow-100 dark:bg-yellow-900/30' : ''} ${isFocused && !isEditing ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}`}
+                        className={`px-2 py-1 text-[13px] font-mono relative ${isChanged ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${isFocused && !isEditing ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}`}
                       >
                         {isEditing ? (
                           <input
@@ -1414,18 +1370,6 @@ function DataGrid({
         </table>
       </div>
 
-      {/* 查找栏 */}
-      {showFindBar && (
-        <div className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-200 dark:border-yellow-800">
-          <span className="text-[11px] text-yellow-600 dark:text-yellow-400">{t('common.search')}:</span>
-          <input value={findText} onChange={e => performFind(e.target.value)} className="w-40 px-2 py-1 text-[11px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white" autoFocus onKeyDown={e => { if (e.key === 'Escape') { setShowFindBar(false); setFindText(''); setFindMatches([]); setCurrentMatchIndex(-1) } if (e.key === 'Enter' && findMatches.length > 0) { const dir = e.shiftKey ? -1 : 1; const next = (currentMatchIndex + dir + findMatches.length) % findMatches.length; setCurrentMatchIndex(next); setFocusedCell(findMatches[next]) } }} />
-          {findText && <span className="text-[11px] text-gray-500 dark:text-gray-400">{findMatches.length > 0 ? `${currentMatchIndex + 1}/${findMatches.length}` : '0/0'}</span>}
-          <button onClick={() => { if (findMatches.length > 0) { const next = (currentMatchIndex - 1 + findMatches.length) % findMatches.length; setCurrentMatchIndex(next); setFocusedCell(findMatches[next]) } }} className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Shift+F3"><ChevronUp className="w-3.5 h-3.5" /></button>
-          <button onClick={() => { if (findMatches.length > 0) { const next = (currentMatchIndex + 1) % findMatches.length; setCurrentMatchIndex(next); setFocusedCell(findMatches[next]) } }} className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="F3"><ChevronDown className="w-3.5 h-3.5" /></button>
-          <button onClick={() => { setShowFindBar(false); setFindText(''); setFindMatches([]); setCurrentMatchIndex(-1) }} className="ml-auto p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="w-3.5 h-3.5" /></button>
-        </div>
-      )}
-
       {/* 状态栏 - 始终显示 */}
       <div className="flex-shrink-0 flex items-center justify-between px-2 py-1.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-[11px] text-gray-500 dark:text-gray-400">
         <div className="flex items-center gap-1.5">
@@ -1433,7 +1377,6 @@ function DataGrid({
           {totalPages > 1 && <><span className="text-gray-300 dark:text-gray-600">|</span><span>{t('common.page')} {page}/{totalPages}</span></>}
           {selectedRows.size > 0 && <><span className="text-gray-300 dark:text-gray-600">|</span><span className="text-blue-500 dark:text-blue-400">{t('database.selectedRowsCount', { count: selectedRows.size })}</span></>}
           {hiddenColumns.size > 0 && <><span className="text-gray-300 dark:text-gray-600">|</span><span className="text-gray-400 dark:text-gray-500">{hiddenColumns.size} {t('database.columnsHidden')}</span></>}
-          {findMatches.length > 0 && <><span className="text-gray-300 dark:text-gray-600">|</span><span className="text-yellow-600 dark:text-yellow-400">{currentMatchIndex + 1}/{findMatches.length}</span></>}
           <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }} className="ml-1 px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-[11px] text-gray-700 dark:text-gray-300">
             <option value={50}>50</option>
             <option value={100}>100</option>
@@ -1451,8 +1394,6 @@ function DataGrid({
               <span className="text-gray-300 dark:text-gray-600 mx-1">|</span>
             </>
           )}
-          {/* Find */}
-          <button onClick={() => setShowFindBar(!showFindBar)} className={`p-1 rounded ${showFindBar ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`} title="Ctrl+F"><Search className="w-3.5 h-3.5" /></button>
           {/* Column visibility */}
           <div className="relative">
             <button onClick={() => setShowColumnMenu(!showColumnMenu)} className={`p-1 rounded ${showColumnMenu ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`} title={t('database.columnsTab')}><Columns className="w-3.5 h-3.5" /></button>

@@ -22,7 +22,6 @@ import {
   Bolt,
   FileText,
   Clipboard,
-  Search,
   Terminal,
 } from 'lucide-react'
 import { useDbStore, createDefaultConnection } from '@/store/dbStore'
@@ -524,8 +523,6 @@ export default function DbSidebar() {
   const [triggersCache, setTriggersCache] = useState<Record<string, Record<string, any[]>>>({})
   const [loadedDatabases, setLoadedDatabases] = useState<Set<string>>(new Set())
   const [tableSearchText, setTableSearchText] = useState<Record<string, string>>({}) // 每个数据库的表搜索文本
-
-  // 右键菜单状态
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
@@ -653,9 +650,6 @@ export default function DbSidebar() {
     createQueryTab('New Table', sql)
     closeContextMenu()
   }
-
-  // 全局搜索状态
-  const [globalSearchText, setGlobalSearchText] = useState('')
 
   // 默认展开所有分类
   useEffect(() => {
@@ -791,30 +785,6 @@ export default function DbSidebar() {
           </button>
         </div>
       </div>
-
-      {/* 全局搜索框 */}
-      {connections.some(c => c.connected) && (
-        <div className="flex-shrink-0 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-            <input
-              type="text"
-              placeholder={t('database.searchTables')}
-              value={globalSearchText}
-              onChange={(e) => setGlobalSearchText(e.target.value)}
-              className="w-full pl-7 pr-2 py-1.5 text-[11px] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-sm focus:outline-none focus:border-blue-500"
-            />
-            {globalSearchText && (
-              <button
-                onClick={() => setGlobalSearchText('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* 连接列表 */}
       <div className="flex-1 overflow-y-auto p-2">
@@ -963,7 +933,7 @@ export default function DbSidebar() {
                                   <div className="px-1.5 py-0.5 text-[11px] text-gray-400">{t('common.loading')}</div>
                                 ) : dbTables.length > 0 ? (
                                   (() => {
-                                    const searchText = (tableSearchText[`${connection.id}:${db.name}`] || globalSearchText).toLowerCase()
+                                    const searchText = (tableSearchText[`${connection.id}:${db.name}`] || '').toLowerCase()
                                     const filteredTables = searchText
                                       ? dbTables.filter(t => t.name.toLowerCase().includes(searchText))
                                       : dbTables
