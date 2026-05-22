@@ -6,10 +6,14 @@ import {
   Upload, FileText, Braces, Pencil, Terminal, ChevronLeft, ChevronRight, MapPin, Paperclip
 } from 'lucide-react'
 import { useApiStore } from '@/store/apiStore'
-import { KeyValue, HttpMethod, RequestBody, AuthConfig, RequestFolder, isFolder, SavedRequest, FormField } from '@/store/types'
+import { KeyValue, HttpMethod, RequestBody, AuthConfig, RequestFolder, isFolder, SavedRequest, FormField, TestPanelMode } from '@/store/types'
 import { useToast } from '@/components/common/Toast'
 import { generateCode, CodeTarget } from '@/utils/codeGenerator'
 import { useTranslation } from '@/store/i18nStore'
+import StressTestPanel from './stress/StressTestPanel'
+import TestCasePanel from './test/TestCasePanel'
+import TestSuitePanel from './test/TestSuitePanel'
+import TestReportPanel from './test/TestReportPanel'
 
 // HTTP方法选项
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
@@ -194,6 +198,9 @@ export default function ApiWorkspace() {
     switchTab,
     // 定位请求
     setLocateRequestId,
+    // 测试面板
+    testPanelMode,
+    setTestPanelMode,
   } = useApiStore()
 
   // Get active project and its data
@@ -958,6 +965,36 @@ export default function ApiWorkspace() {
         </div>
       </div>
     )
+  }
+
+  // 测试面板渲染
+  if (testPanelMode) {
+    switch (testPanelMode) {
+      case 'stress':
+        return (
+          <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+            <StressTestPanel />
+          </div>
+        )
+      case 'testCase':
+        return (
+          <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+            <TestCasePanel />
+          </div>
+        )
+      case 'testSuite':
+        return (
+          <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+            <TestSuitePanel />
+          </div>
+        )
+      case 'report':
+        return (
+          <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+            <TestReportPanel />
+          </div>
+        )
+    }
   }
 
   return (

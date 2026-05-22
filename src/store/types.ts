@@ -1,3 +1,6 @@
+// 导出测试相关类型
+export * from '@/types/testTypes'
+
 // 工具类型
 export type ToolType = 'redis' | 'api' | 'mysql' | 'mongodb'
 
@@ -144,6 +147,13 @@ export interface ApiProject {
   rootRequests: SavedRequest[]
   environments: Environment[]
   activeEnvId: string | null
+
+  // 测试相关
+  testCases?: TestCase[]       // 测试用例
+  testSuites?: TestSuite[]     // 测试套件
+  stressTestHistory?: StressTestRecord[]  // 压力测试历史
+  testReports?: TestReport[]   // 测试报告历史
+
   createdAt: number
   updatedAt: number
 }

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Globe, Clock, Folder, FolderOpen, ChevronDown, ChevronRight, Trash2, Plus,
-  Download, Upload, Edit2, X, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, RotateCcw, Archive, Check, Filter
+  Download, Upload, Edit2, X, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, RotateCcw, Archive, Check, Filter,
+  Zap, FileCode, Layers, FileText
 } from 'lucide-react'
 import { useApiStore } from '@/store/apiStore'
 import { useTranslation } from '@/store/i18nStore'
-import { SavedRequest, HistoryItem, Environment, KeyValue, HttpMethod, RequestFolder, isFolder, isRequest, ApiProject } from '@/store/types'
+import { SavedRequest, HistoryItem, Environment, KeyValue, HttpMethod, RequestFolder, isFolder, isRequest, ApiProject, TestPanelMode } from '@/store/types'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useToast } from '@/components/common/Toast'
 
@@ -98,7 +99,19 @@ export default function ApiSidebar() {
     restoreFromRecycleBin,
     permanentlyDelete,
     clearRecycleBin,
+    testPanelMode,
+    setTestPanelMode,
+    getTestCases,
+    getTestSuites,
+    getStressTestHistory,
+    getTestReports,
   } = useApiStore()
+
+  // 获取测试相关数据
+  const testCases = getTestCases()
+  const testSuites = getTestSuites()
+  const stressHistory = getStressTestHistory()
+  const testReports = getTestReports()
 
   // 获取store的setState函数
   const setApiStore = useApiStore.setState
@@ -1259,6 +1272,117 @@ export default function ApiSidebar() {
                   })}
                 </div>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* 测试模块 */}
+        <div className="border-t border-gray-200 dark:border-gray-700/50">
+          <div
+            onClick={() => toggleSection('test-module')}
+            className="px-3 py-1.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              {expandedSections.has('test-module') ? (
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              ) : (
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              )}
+              <Zap className="w-4 h-4 text-orange-500" />
+              <span className="text-[12px] font-medium text-gray-600 dark:text-gray-400">测试模块</span>
+            </div>
+          </div>
+          {expandedSections.has('test-module') && (
+            <div className="pb-1">
+              <div className="px-1 space-y-0.5">
+                {/* 压力测试 */}
+                <div
+                  onClick={() => setTestPanelMode('stress')}
+                  className={`group px-2.5 py-1.5 flex items-center gap-2 cursor-pointer rounded transition-colors ${
+                    testPanelMode === 'stress'
+                      ? 'bg-orange-50 dark:bg-orange-900/30'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/70'
+                  }`}
+                >
+                  <Zap className="w-4 h-4 text-orange-500" />
+                  <span className={`text-[12px] flex-1 ${
+                    testPanelMode === 'stress'
+                      ? 'text-orange-700 dark:text-orange-300 font-medium'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}>压力测试</span>
+                  {stressHistory.length > 0 && (
+                    <span className="text-[12px] text-gray-400 bg-gray-200/70 dark:bg-gray-700/70 px-1.5 py-0.5 rounded">
+                      {stressHistory.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* 测试用例 */}
+                <div
+                  onClick={() => setTestPanelMode('testCase')}
+                  className={`group px-2.5 py-1.5 flex items-center gap-2 cursor-pointer rounded transition-colors ${
+                    testPanelMode === 'testCase'
+                      ? 'bg-blue-50 dark:bg-blue-900/30'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/70'
+                  }`}
+                >
+                  <FileCode className="w-4 h-4 text-blue-500" />
+                  <span className={`text-[12px] flex-1 ${
+                    testPanelMode === 'testCase'
+                      ? 'text-blue-700 dark:text-blue-300 font-medium'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}>测试用例</span>
+                  {testCases.length > 0 && (
+                    <span className="text-[12px] text-gray-400 bg-gray-200/70 dark:bg-gray-700/70 px-1.5 py-0.5 rounded">
+                      {testCases.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* 测试套件 */}
+                <div
+                  onClick={() => setTestPanelMode('testSuite')}
+                  className={`group px-2.5 py-1.5 flex items-center gap-2 cursor-pointer rounded transition-colors ${
+                    testPanelMode === 'testSuite'
+                      ? 'bg-purple-50 dark:bg-purple-900/30'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/70'
+                  }`}
+                >
+                  <Layers className="w-4 h-4 text-purple-500" />
+                  <span className={`text-[12px] flex-1 ${
+                    testPanelMode === 'testSuite'
+                      ? 'text-purple-700 dark:text-purple-300 font-medium'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}>测试套件</span>
+                  {testSuites.length > 0 && (
+                    <span className="text-[12px] text-gray-400 bg-gray-200/70 dark:bg-gray-700/70 px-1.5 py-0.5 rounded">
+                      {testSuites.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* 测试报告 */}
+                <div
+                  onClick={() => setTestPanelMode('report')}
+                  className={`group px-2.5 py-1.5 flex items-center gap-2 cursor-pointer rounded transition-colors ${
+                    testPanelMode === 'report'
+                      ? 'bg-green-50 dark:bg-green-900/30'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/70'
+                  }`}
+                >
+                  <FileText className="w-4 h-4 text-green-500" />
+                  <span className={`text-[12px] flex-1 ${
+                    testPanelMode === 'report'
+                      ? 'text-green-700 dark:text-green-300 font-medium'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}>测试报告</span>
+                  {testReports.length > 0 && (
+                    <span className="text-[12px] text-gray-400 bg-gray-200/70 dark:bg-gray-700/70 px-1.5 py-0.5 rounded">
+                      {testReports.length}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>

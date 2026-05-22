@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { ApiState, ApiProject, SavedRequest, HistoryItem, Environment, KeyValue, RequestFolder, isFolder, isRequest, RecycleBinItem, RequestBody } from './types'
+import { ApiState, ApiProject, SavedRequest, HistoryItem, Environment, KeyValue, RequestFolder, isFolder, isRequest, RecycleBinItem, RequestBody, TestCase, TestSuite, StressTestRecord, TestReport, TestPanelMode } from './types'
 
 // 默认请求
 const createDefaultRequest = (): SavedRequest => ({
@@ -37,6 +37,10 @@ const createDefaultProject = (name: string = ''): ApiProject => {
     rootRequests: [],
     environments: createDefaultEnvironments(),
     activeEnvId: 'env-default',
+    testCases: [],
+    testSuites: [],
+    stressTestHistory: [],
+    testReports: [],
     createdAt: Date.now(),
     updatedAt: Date.now(),
   }
@@ -73,6 +77,8 @@ interface ApiActions {
 
   // 获取所有请求（扁平化）
   getAllRequests: () => SavedRequest[]
+  // 获取带层级信息的请求列表
+  getAllRequestsWithHierarchy: () => { request: SavedRequest; projectName: string; folderPath: string }[]
   // 根据ID查找请求
   findRequestById: (id: string) => SavedRequest | null
 
@@ -118,6 +124,30 @@ interface ApiActions {
   permanentlyDelete: (itemId: string) => void
   clearExpiredItems: () => void
   clearRecycleBin: () => void
+
+  // 测试面板模式
+  testPanelMode: TestPanelMode
+  setTestPanelMode: (mode: TestPanelMode) => void
+
+  // 测试用例管理
+  addTestCase: (testCase: Omit<TestCase, 'id' | 'createdAt' | 'updatedAt'>) => void
+  updateTestCase: (id: string, testCase: Partial<TestCase>) => void
+  deleteTestCase: (id: string) => void
+  getTestCases: () => TestCase[]
+
+  // 测试套件管理
+  addTestSuite: (testSuite: Omit<TestSuite, 'id' | 'createdAt' | 'updatedAt'>) => void
+  updateTestSuite: (id: string, testSuite: Partial<TestSuite>) => void
+  deleteTestSuite: (id: string) => void
+  getTestSuites: () => TestSuite[]
+
+  // 压力测试历史
+  addStressTestRecord: (record: StressTestRecord) => void
+  getStressTestHistory: () => StressTestRecord[]
+
+  // 测试报告
+  addTestReport: (report: TestReport) => void
+  getTestReports: () => TestReport[]
 }
 
 // 历史记录最大条数
@@ -308,6 +338,10 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
       rootRequests: [],
       environments: createDefaultEnvironments(),
       activeEnvId: 'env-default',
+      testCases: [],
+      testSuites: [],
+      stressTestHistory: [],
+      testReports: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
     }
@@ -825,6 +859,46 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
     const project = state.getActiveProject()
     if (!project) return []
     return flattenRequests(project.requestFolders, project.rootRequests)
+  },
+
+  // 获取带层级信息的请求列表
+  getAllRequestsWithHierarchy: () => {
+    const state = get()
+    const results: { request: SavedRequest; projectName: string; folderPath: string }[] = []
+
+    state.projects.forEach(project => {
+      // 递归获取文件夹路径
+      const collectFromFolders = (folders: RequestFolder[], parentPath: string = '') => {
+        folders.forEach(folder => {
+          const currentPath = parentPath ? `${parentPath}/${folder.name}` : folder.name
+          folder.children.forEach(child => {
+            if (isRequest(child)) {
+              results.push({
+                request: child,
+                projectName: project.name || '默认项目',
+                folderPath: currentPath,
+              })
+            } else if (isFolder(child)) {
+              collectFromFolders([child], currentPath)
+            }
+          })
+        })
+      }
+
+      // 收集根目录请求
+      project.rootRequests.forEach(req => {
+        results.push({
+          request: req,
+          projectName: project.name || '默认项目',
+          folderPath: '',
+        })
+      })
+
+      // 收集文件夹中的请求
+      collectFromFolders(project.requestFolders)
+    })
+
+    return results
   },
 
   findRequestById: (id) => {
@@ -1441,6 +1515,184 @@ export const useApiStore = create<ApiState & ApiActions>((set, get) => ({
   }),
 
   clearRecycleBin: () => set({ recycleBin: [] }),
+
+  // 测试面板模式
+  testPanelMode: null,
+  setTestPanelMode: (mode) => set({ testPanelMode: mode }),
+
+  // 测试用例管理
+  addTestCase: (testCase) => set((state) => {
+    const project = state.getActiveProject()
+    if (!project) return state
+
+    const newTestCase: TestCase = {
+      ...testCase,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+
+    return {
+      projects: state.projects.map(p =>
+        p.id === project.id
+          ? { ...p, testCases: [...(p.testCases || []), newTestCase], updatedAt: Date.now() }
+          : p
+      )
+    }
+  }),
+
+  updateTestCase: (id, testCase) => set((state) => {
+    const project = state.getActiveProject()
+    if (!project) return state
+
+    return {
+      projects: state.projects.map(p =>
+        p.id === project.id
+          ? {
+              ...p,
+              testCases: (p.testCases || []).map(tc =>
+                tc.id === id ? { ...tc, ...testCase, updatedAt: Date.now() } : tc
+              ),
+              updatedAt: Date.now()
+            }
+          : p
+      )
+    }
+  }),
+
+  deleteTestCase: (id) => set((state) => {
+    const project = state.getActiveProject()
+    if (!project) return state
+
+    return {
+      projects: state.projects.map(p =>
+        p.id === project.id
+          ? {
+              ...p,
+              testCases: (p.testCases || []).filter(tc => tc.id !== id),
+              updatedAt: Date.now()
+            }
+          : p
+      )
+    }
+  }),
+
+  getTestCases: () => {
+    const state = get()
+    const project = state.getActiveProject()
+    return project?.testCases || []
+  },
+
+  // 测试套件管理
+  addTestSuite: (testSuite) => set((state) => {
+    const project = state.getActiveProject()
+    if (!project) return state
+
+    const newTestSuite: TestSuite = {
+      ...testSuite,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+
+    return {
+      projects: state.projects.map(p =>
+        p.id === project.id
+          ? { ...p, testSuites: [...(p.testSuites || []), newTestSuite], updatedAt: Date.now() }
+          : p
+      )
+    }
+  }),
+
+  updateTestSuite: (id, testSuite) => set((state) => {
+    const project = state.getActiveProject()
+    if (!project) return state
+
+    return {
+      projects: state.projects.map(p =>
+        p.id === project.id
+          ? {
+              ...p,
+              testSuites: (p.testSuites || []).map(ts =>
+                ts.id === id ? { ...ts, ...testSuite, updatedAt: Date.now() } : ts
+              ),
+              updatedAt: Date.now()
+            }
+          : p
+      )
+    }
+  }),
+
+  deleteTestSuite: (id) => set((state) => {
+    const project = state.getActiveProject()
+    if (!project) return state
+
+    return {
+      projects: state.projects.map(p =>
+        p.id === project.id
+          ? {
+              ...p,
+              testSuites: (p.testSuites || []).filter(ts => ts.id !== id),
+              updatedAt: Date.now()
+            }
+          : p
+      )
+    }
+  }),
+
+  getTestSuites: () => {
+    const state = get()
+    const project = state.getActiveProject()
+    return project?.testSuites || []
+  },
+
+  // 压力测试历史
+  addStressTestRecord: (record) => set((state) => {
+    const project = state.getActiveProject()
+    if (!project) return state
+
+    return {
+      projects: state.projects.map(p =>
+        p.id === project.id
+          ? {
+              ...p,
+              stressTestHistory: [...(p.stressTestHistory || []), record].slice(-20), // 保留最近20条
+              updatedAt: Date.now()
+            }
+          : p
+      )
+    }
+  }),
+
+  getStressTestHistory: () => {
+    const state = get()
+    const project = state.getActiveProject()
+    return project?.stressTestHistory || []
+  },
+
+  // 测试报告
+  addTestReport: (report) => set((state) => {
+    const project = state.getActiveProject()
+    if (!project) return state
+
+    return {
+      projects: state.projects.map(p =>
+        p.id === project.id
+          ? {
+              ...p,
+              testReports: [...(p.testReports || []), report].slice(-50), // 保留最近50条
+              updatedAt: Date.now()
+            }
+          : p
+      )
+    }
+  }),
+
+  getTestReports: () => {
+    const state = get()
+    const project = state.getActiveProject()
+    return project?.testReports || []
+  },
 }))
 
 // 辅助函数：创建空请求
