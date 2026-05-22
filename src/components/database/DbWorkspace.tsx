@@ -42,6 +42,18 @@ import TableDetail from './TableDetail'
 import ProcedureDetail from './ProcedureDetail'
 import TriggerDetail from './TriggerDetail'
 
+// SQL 值转义函数 - 防止SQL注入
+const escapeSqlValue = (value: string): string => {
+  return String(value)
+    .replace(/\\/g, '\\\\')  // 反斜杠
+    .replace(/'/g, "\\'")     // 单引号
+    .replace(/"/g, '\\"')     // 双引号
+    .replace(/\0/g, '\\0')    // NULL字节
+    .replace(/\n/g, '\\n')    // 换行符
+    .replace(/\r/g, '\\r')    // 回车符
+    .replace(/\x1a/g, '\\Z')  // Ctrl+Z
+}
+
 // SQL 关键字列表
 const SQL_KEYWORDS = [
   'SELECT', 'FROM', 'WHERE', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'ALTER', 'DROP',
@@ -734,7 +746,7 @@ function DataGrid({
     const sqls = pendingChanges.map(change => {
       const idValue = sortedData[change.rowIndex][effectiveIdCol]
       const colName = columns[change.colIndex]
-      return `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${String(change.newValue).replace(/'/g, "''")}'`} WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`};`
+      return `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${escapeSqlValue(String(change.newValue))}'`} WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${escapeSqlValue(String(idValue))}'`};`
     })
     setSaveConfirmMessage(sqls.join('\n'))
     setShowSaveConfirm(true)
@@ -754,7 +766,7 @@ function DataGrid({
       for (const change of pendingChanges) {
         const idValue = sortedData[change.rowIndex][effectiveIdCol]
         const colName = columns[change.colIndex]
-        const sql = `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${String(change.newValue).replace(/'/g, "''")}'`} WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${idValue}'`}`
+        const sql = `UPDATE \`${effectiveTable}\` SET \`${colName}\` = ${change.newValue === null ? 'NULL' : `'${escapeSqlValue(String(change.newValue))}'`} WHERE \`${columns[effectiveIdCol]}\` = ${typeof idValue === 'number' || !isNaN(Number(idValue)) ? idValue : `'${escapeSqlValue(String(idValue))}'`}`
 
         const res = await window.electronAPI?.dbExecuteQuery?.(connectionId, sql, database)
         if (!res?.success) {

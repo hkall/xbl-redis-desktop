@@ -21,6 +21,18 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '@/store/i18nStore'
 
+// SQL 值转义函数 - 防止SQL注入
+const escapeSqlValue = (value: string): string => {
+  return String(value)
+    .replace(/\\/g, '\\\\')  // 反斜杠
+    .replace(/'/g, "\\'")     // 单引号
+    .replace(/"/g, '\\"')     // 双引号
+    .replace(/\0/g, '\\0')    // NULL字节
+    .replace(/\n/g, '\\n')    // 换行符
+    .replace(/\r/g, '\\r')    // 回车符
+    .replace(/\x1a/g, '\\Z')  // Ctrl+Z
+}
+
 interface TableDetailProps {
   connectionId: string
   database: string
@@ -198,8 +210,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
       } else if (typeof val === 'number') {
         return `\`${col}\` = ${val}`
       } else {
-        const escaped = String(val).replace(/'/g, "''")
-        return `\`${col}\` = '${escaped}'`
+        return `\`${col}\` = '${escapeSqlValue(String(val))}'`
       }
     }).join(',\n  ')
 
@@ -209,8 +220,7 @@ function TableDataView({ connectionId, database, table }: { connectionId: string
       } else if (typeof val === 'number') {
         return `\`${col}\` = ${val}`
       } else {
-        const escaped = String(val).replace(/'/g, "''")
-        return `\`${col}\` = '${escaped}'`
+        return `\`${col}\` = '${escapeSqlValue(String(val))}'`
       }
     }).join(' AND ')
 
@@ -1002,23 +1012,21 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
     // 判断nullable是否被改变：从nullable变成NOT NULL
     const nullableChangedToNotNull = col.nullable && !isNullable
 
-    // 辅助函数：转义默认值中的单引号
-    const escapeDefaultValue = (val: string): string => {
-      return String(val).replace(/'/g, "''")
-    }
+    // 使用全局 escapeSqlValue 函数转义值
+    // (已在文件顶部定义)
 
     if (col.isNew) {
       sql = `ALTER TABLE \`${table}\` ADD COLUMN \`${newData.name || col.name}\` ${newData.type || col.type}`
       if (!isNullable) sql += ' NOT NULL'
       // NOT NULL 列不能有 DEFAULT NULL
       if (newData.defaultValue !== undefined && newData.defaultValue !== null) {
-        sql += ` DEFAULT '${escapeDefaultValue(newData.defaultValue)}'`
+        sql += ` DEFAULT '${escapeSqlValue(String(newData.defaultValue))}'`
       } else if (!isNullable && newData.defaultValue === undefined) {
         // NOT NULL 且没有设置默认值，不添加 DEFAULT（用户需要手动处理）
       } else if (isNullable && newData.defaultValue === null) {
         sql += ' DEFAULT NULL'
       }
-      if (newData.comment || col.comment) sql += ` COMMENT '${escapeDefaultValue(newData.comment || col.comment)}'`
+      if (newData.comment || col.comment) sql += ` COMMENT '${escapeSqlValue(newData.comment || col.comment)}'`
     } else {
       sql = `ALTER TABLE \`${table}\` MODIFY COLUMN \`${newData.name || col.name}\` ${newData.type || col.type}`
       if (!isNullable) sql += ' NOT NULL'
@@ -1031,14 +1039,14 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
           }
           // NOT NULL 列不添加 DEFAULT NULL，保持无默认值状态
         } else {
-          sql += ` DEFAULT '${escapeDefaultValue(newData.defaultValue)}'`
+          sql += ` DEFAULT '${escapeSqlValue(String(newData.defaultValue))}'`
         }
       } else if (nullableChangedToNotNull && (col.defaultValue === null || String(col.defaultValue).toUpperCase() === 'NULL')) {
         // 从nullable变为NOT NULL，且原默认值是NULL，则不保留默认值
         // 不添加任何DEFAULT
       } else if (col.defaultValue !== null && col.defaultValue !== undefined && String(col.defaultValue).toUpperCase() !== 'NULL') {
         // 保留原有的非NULL默认值
-        sql += ` DEFAULT '${escapeDefaultValue(col.defaultValue)}'`
+        sql += ` DEFAULT '${escapeSqlValue(String(col.defaultValue))}'`
       } else if (isNullable && (col.defaultValue === null || col.defaultValue === undefined)) {
         // nullable列且无默认值，保持DEFAULT NULL或不设置
         if (col.defaultValue === null) {
@@ -1046,7 +1054,7 @@ function TableStructureView({ connectionId, database, table }: { connectionId: s
         }
       }
       if (col.extra) sql += ` ${col.extra}`
-      if (newData.comment !== undefined ? newData.comment : col.comment) sql += ` COMMENT '${escapeDefaultValue(newData.comment !== undefined ? newData.comment : col.comment)}'`
+      if (newData.comment !== undefined ? newData.comment : col.comment) sql += ` COMMENT '${escapeSqlValue(String(newData.comment !== undefined ? newData.comment : col.comment))}'`
     }
     return sql + ';'
   }

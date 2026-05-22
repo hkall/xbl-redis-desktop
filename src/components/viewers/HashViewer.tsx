@@ -364,8 +364,12 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
         let allFields: HashField[] = [...fields]
         let currentCursor = cursor
         let hasMoreData: boolean = hasMore
+        let iterations = 0
+        const maxIterations = 100 // Safety limit to prevent infinite loop
+        const maxFieldsLimit = 50000 // Maximum fields limit to prevent memory overflow
 
-        while (hasMoreData === true) {
+        while (hasMoreData === true && iterations < maxIterations && allFields.length < maxFieldsLimit) {
+          iterations++
           const result = await window.electronAPI.redisHscan(
             connectionId!,
             keyName,
@@ -385,6 +389,10 @@ export default function HashViewer({ connectionId, keyName }: HashViewerProps) {
           } else {
             break
           }
+        }
+
+        if (iterations >= maxIterations || allFields.length >= maxFieldsLimit) {
+          console.warn('Hash search: reached limit', { iterations, fieldsCount: allFields.length })
         }
 
         setFields(allFields)
