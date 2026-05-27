@@ -1,805 +1,182 @@
 # XBL DevTools
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](../../releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](../../releases)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](../../releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node.js-18%2B-brightgreen.svg)](https://nodejs.org)
-[![Redis](https://img.shields.io/badge/Redis-6.0%2B-red.svg)](https://redis.io)
 
 ---
 
-A powerful and intuitive Redis desktop management tool to help you easily visualize and manage Redis databases.
-
-![XBL DevTools](./screenshots/main.png)
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Screenshots](#screenshots)
-- [Quick Start](#quick-start)
-  - [Installation](#installation)
-  - [Connect to Redis](#connect-to-redis)
-- [User Guide](#user-guide)
-  - [Connection Management](#connection-management)
-  - [Data Browsing](#data-browsing)
-  - [Data Editing](#data-editing)
-  - [Search & Filter](#search--filter)
-  - [Key Management](#key-management)
-  - [API Testing](#api-testing)
-- [Data Type Support](#data-type-support)
-- [Tech Stack](#tech-stack)
-- [Development Guide](#development-guide)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+A powerful desktop tool for Redis management, API testing, and MySQL database operations.
 
 ---
 
 ## Features
 
-### Core Features
-
-- 📊 **Intuitive UI** - Clean three-panel layout design with clear key-value display and fluid operation
-- 🔍 **Complete Type Support** - Full support for Redis five core data types
-- ✏️ **Inline Editing** - Edit data directly in the interface without switching tools, supports keyboard shortcuts
-- 📝 **Perfect Chinese Support** - Supports Chinese data, Chinese key name sorting, avoids garbled text
-- 🔄 **Multi-Connection Management** - Manage multiple Redis connections simultaneously with quick switching
-- 🎨 **Modern UI** - Modern dark theme interface built with React + Tailwind CSS + Electron
-- ⚡ **High Performance** - SCAN-based pagination browsing, won't block Redis server
-- 🌳 **Smart Grouping** - Auto-group keys by colon, tree view display, clear hierarchy
-- 🔑 **Quick Actions** - Supports keyboard shortcuts for efficient operation
-- 💾 **Config Persistence** - Auto-save connection config, restore on next startup
-- 🌐 **Internationalization** - Full Chinese/English language support with one-click switching
-
-### Modules
+### 🚀 Three Core Modules
 
 | Module | Description |
 |--------|-------------|
-| **Redis** | Full Redis management with data viewing, editing, CLI, batch operations, and export |
-| **API Testing** | Complete API testing tool with request management, environments, and code generation |
-| **Database** | MySQL database connection and query execution (more databases coming soon) |
+| **Redis** | Full Redis management - data viewing, editing, CLI, batch operations, export, server monitoring |
+| **API Testing** | Complete API testing tool - request management, environments, code generation, stress testing, automated testing |
+| **Database** | MySQL connection and query execution with data editing, export support |
+
+### ✨ Highlights
+
+- 📊 **Intuitive UI** - Clean layout with clear key-value display
+- 🔍 **Complete Redis Type Support** - String, Hash, List, Set, ZSet with Java serialization viewer
+- ✏️ **Inline Editing** - Edit data directly, supports keyboard shortcuts
+- 🔄 **Multi-Connection Management** - Manage multiple Redis/database connections simultaneously
+- 🌐 **Internationalization** - Full Chinese/English support with one-click switching
+- ⚡ **High Performance** - SCAN-based pagination, won't block Redis server
+- 🌳 **Smart Key Grouping** - Auto-group keys by colon delimiter, tree view display
+
+### 📋 API Testing Features
+
+- Multiple HTTP methods (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
+- Request body support (JSON, form-data, x-www-form-urlencoded, raw, binary)
+- Environment variables with `{{var}}` syntax
+- Code generation (cURL, fetch, axios, XMLHttpRequest)
+- **Stress Testing** - Concurrent requests, real-time RPS metrics, response time distribution
+- **Automated Testing** - Test cases, assertions, test suites, execution reports
+- Request history and project management
+- Import/Export with OpenAPI 3.0 support
+
+### 🗄️ Database Features
+
+- MySQL connection management
+- SQL editor with syntax highlighting and auto-completion
+- Data viewing and inline editing
+- Query execution with pagination
+- Export to CSV, JSON, SQL, Excel
+- Table structure viewing and editing
+- Stored procedures and triggers management
 
 ---
 
-## 📝 Changelog
+## Installation
 
-### v1.2.0 (2026-03-12)
+### Windows
 
-#### ⚡ Performance
+Download from [Releases](../../releases):
 
-- **Hash Lazy Loading** - Implemented HSCAN-based pagination for Hash viewer, significantly improving performance when viewing Hash keys with large datasets. Data loads in batches of 100 fields with automatic loading on scroll.
-
-#### 🎯 Improvements
-
-- Removed debug `console.log` statements from production code
-- Added missing TypeScript type definitions (`redisHscan`, `openExternal`, `createAndDownloadArchive`)
-- Cleaned up empty catch blocks with descriptive comments
-
-### v1.1.0 (2026-03-11)
-
-#### ✨ New Features
-
-- **CLI Command Line Tool** - Execute Redis commands directly with syntax highlighting, history support, and Enter key shortcut
-- **Batch Operations** - Delete multiple keys at once with pattern matching and preview functionality
-- **Data Export** - Export Redis data in JSON/CSV formats, supports single key or full database export with archive option
-- **Enhanced Server Monitoring** - Added 6 new metrics: hit rate, total keys, total commands, expired keys, rejected connections, last save time
-- **Connection Copy** - Quickly duplicate connection configurations with one click
-- **Connection Card Click** - Click anywhere on connection card to switch active connection
-- **API Testing Module** - Complete API testing tool with project management, environment variables, code generation, and request history
-- **Internationalization** - Full Chinese/English language support
-- **Key Rename** - Rename keys directly from context menu
-- **Folder-level Refresh** - Refresh specific folders in key browser
-
-#### 🐛 Bug Fixes
-
-- Fixed `flush is not a function` error in debug logging
-- Fixed null buffer crash when reading certain keys
-- Fixed Enter key not working in CLI input field
-- Fixed data not refreshing after connecting from Export/Batch/Server views
-- Fixed panel divider alignment issues across all views
-
-#### 🎨 UI Improvements
-
-- Redesigned export format selectors as tabs for better UX
-- Unified divider line alignment across left/center/right panels
-- Improved connection panel with rounded corners
-
-### v1.0.0 (Initial Release)
-
-- Basic connection management
-- View and edit five Redis data types
-- Key search and filtering
-- Tree key browser
-- TTL setting
-- Config persistence
-- Chinese support
-
-### Data Type Operations
-
-| Data Type | View Mode | Edit Features | Special Features |
-|-----------|-----------|---------------|------------------|
-| String | Text/JSON/Base64/Hex/URL | Multiple format editing support | Java serialization object viewer |
-| Hash | Key-value table | Add/edit/delete fields | Inline editing support |
-| List | List form | Add/modify/delete items | Support head/tail insertion |
-| Set | Set form | Add/delete members | Auto deduplication |
-| ZSet | Sorted list | Add/modify/delete members | Score editing functionality |
-
----
-
-## Screenshots
-
-### Main Interface
-
-![Main Interface](./screenshots/main.png)
-
-### Connection Panel
-
-![Connection Panel](./screenshots/connection.png)
-
-### Key Browser
-
-![Key Browser](./screenshots/keys.png)
-
-### Data Editor
-
-![Data Editor](./screenshots/data-editor.png)
+- **Installer**: `XBL DevTools-win-1.3.0.exe` - Standard Windows installer
+- **Portable**: Extract and run directly, no installation required
 
 ---
 
 ## Quick Start
 
-### Installation
-
-#### Windows Installer
-
-1. Download the latest installer `XBL DevTools Setup 1.2.0.exe` from [Releases](../../releases)
-2. Double-click to run the installer and follow the prompts to complete installation
-3. A shortcut will be created on the desktop, click to launch
-
-#### Windows Portable
-
-1. Download the portable version `XBL DevTools 1.2.0.exe` from [Releases](../../releases)
-2. Unzip and run directly, no installation required
-
-**Recommend using portable version** - requires no admin privileges, can be carried on USB drive.
-
----
-
-## Connect to Redis
-
-### Create New Connection
-
-1. Launch XBL DevTools
-2. Click the "New Connection" button (red link icon) in the top left
-3. Fill in connection information:
-
-| Field | Description | Default |
-|-------|-------------|---------|
-| Name | A recognizable name for the connection | My Redis |
-| Host | Redis server address | localhost |
-| Port | Redis port | 6379 |
-| Database | Database index to connect to | 0 |
-| Password | Redis password (optional) | Empty |
-
-4. Click "Add" button to save the connection
-
-### Connect to Server
-
-1. Find the target connection in the connection list
-2. Click the "Connect" button to start using
-3. Green "Connected" status will display after successful connection
-
-### Switch Database
-
-1. Click the "DB: X" dropdown menu on the connection card
-2. Select the database index you want to switch to
-3. The tool will automatically reconnect and load keys from the new database
-
-**Tip**: The key count for each database is displayed next to the corresponding DB option.
-
----
-
-## User Guide
-
-### Connection Management
-
-#### Add Connection
-
-Click the "New Connection" button, fill in connection info and save.
-
-#### Edit Connection
-
-Click the "Edit" icon in the top right of the connection card, modify connection info and save.
-
-#### Delete Connection
-
-Click the "Delete" icon in the top right of the connection card, confirm to delete the connection.
-
-**Note**: Deleting a connection will not delete data on the Redis server, only clears local connection config.
-
----
-
-### Data Browsing
-
-#### Three-Panel Layout
-
-The application adopts a classic three-panel layout:
-
-- **Left Panel (18.75%)** - Connection management panel
-- **Center Panel (31.25%)** - Key browser panel
-- **Right Panel (50%)** - Data edit/view panel
-
-#### Key Tree Browsing
-
-The key browser supports tree structure display:
-
-1. Keys are automatically grouped by colon (`:`)
-2. Click folder icon to expand/collapse groups
-3. Key count is displayed after the folder name
-4. Keys are sorted alphabetically for English, then by Pinyin for Chinese
-5. Right-click folder to refresh keys in that folder only
-
----
-
-### Data Editing
-
-#### String Type Editing
-
-String type supports multiple data formats:
-
-| Format | Description | Use Case |
-|--------|-------------|----------|
-| Auto | Auto-detect format | General scenarios |
-| Raw | Raw text | Plain text |
-| JSON | JSON formatted | JSON data |
-| Base64 | Base64 encoded | Binary data |
-| Hex | Hexadecimal | Binary data viewing |
-| URL | URL encoded | URL parameters |
-
-**Edit Operations**:
-
-1. Click "Edit" button to enter edit mode
-2. Modify data in the editor
-3. Press `Ctrl + Enter` or click "Save" to save
-
-**Shortcuts**:
-
-- `Tab` - Insert two spaces for indentation
-- `Ctrl + Enter` - Save changes
-
----
-
-#### Hash Type Editing
-
-Hash type is displayed in table format, supports:
-
-- **Add Field**: Click "Add Field" button, enter field name and value
-- **Edit Field**: Double-click cell to edit directly
-- **Delete Field**: Click delete button at row end
-- **Search Fields**: Search by field name or value
-- **Lazy Loading**: Large hashes load fields in batches of 100
-
-```json
-// Example Hash Data
-{
-  "name": "张三",
-  "age": "25",
-  "email": "zhangsan@example.com"
-}
-```
-
----
-
-#### List Type Editing
-
-List type is displayed in list format, supports:
-
-- **Add Item**: Add to list head (LPUSH) at top, to tail (RPUSH) at bottom
-- **Modify Item**: Double-click list item to edit
-- **Delete Item**: Click delete button on the right of the item
-- **Batch Delete**: Select multiple rows then click batch delete
-
-```json
-// Example List Data
-["item1", "item2", "item3", "item4"]
-```
-
----
-
-#### Set Type Editing
-
-Set type displays unordered set members, supports:
-
-- **Add Member**: Enter member value, press Enter or click add
-- **Delete Member**: Click delete button on the right of the member
-- **Member Deduplication**: Auto-duplicate values
-
-```json
-// Example Set Data
-["member1", "member2", "member3"]
-```
-
----
-
-#### ZSet Type Editing
-
-ZSet type displays members sorted by score, supports:
-
-- **Add Member**: Enter member value and score (float)
-- **Edit Score**: Double-click score value to edit
-- **Delete Member**: Click delete button on the right of the member
-
-```json
-// Example ZSet Data
-[
-  {"member": "user1", "score": 100.5},
-  {"member": "user2", "score": 89.3},
-  {"member": "user3", "score": 75.0}
-]
-```
-
----
-
-### Search & Filter
-
-#### Search Keys
-
-Enter keywords in the search box:
-
-- **Real-time Search**: Search as you type, no need to press Enter
-- **Fuzzy Matching**: Match any position in key name
-- **Case Insensitive**: Default case-insensitive matching
-
-#### Type Filter
-
-Click type filter buttons to quickly filter specific type keys:
-
-- `All` - Show all types keys
-- `String` - Show string type only
-- `Hash` - Show hash type only
-- `List` - Show list type only
-- `Set` - Show set type only
-- `ZSet` - Show sorted set type only
-
----
-
-### Key Management
-
-#### Copy Key Name
-
-Double-click key name to copy to clipboard, convenient for use elsewhere.
-
-#### Delete Key
-
-1. Select the key to delete
-2. Click "Delete" button (trash icon) in right panel
-3. Confirm delete operation
-
-**Warning**: Delete operation cannot be undone, please be careful!
-
-#### Rename Key
-
-Right-click on the key in key browser, select "Rename", enter new name.
-
-#### Set TTL
-
-1. Select a key, you can see TTL display at the top of right panel
-2. Click TTL value to edit directly
-3. Enter new expiration time (seconds), `-1` means never expire
-4. Press `Enter` or click save button to confirm
-
----
+### Redis Connection
+
+1. Click "New Connection" button
+2. Enter Redis server info (host, port, password)
+3. Click "Connect" to start
 
 ### API Testing
 
-XBL DevTools includes a complete API testing module for testing REST APIs.
+1. Create a new project
+2. Add requests with URL, method, headers, body
+3. Press `Ctrl + Enter` to send
 
-#### Features
+### Database Connection
 
-- **Project Management** - Organize requests into projects and folders
-- **Multiple HTTP Methods** - GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
-- **Request Configuration**
-  - Query parameters
-  - Headers
-  - Request body (JSON, form-data, x-www-form-urlencoded, raw, binary)
-  - Authentication (Bearer Token, Basic Auth, API Key)
-- **Environment Variables** - Define variables with `{{var}}` syntax
-- **Code Generation** - Generate code for cURL, fetch, axios, XMLHttpRequest
-- **Request History** - View and replay previous requests
-- **Import/Export** - Import/export projects, OpenAPI 3.0 support
-- **Recycle Bin** - Deleted items go to recycle bin with 3-day recovery period
-
-#### Using Variables
-
-Use `{{variableName}}` syntax in URL, headers, and body. Variables are replaced with values from the selected environment.
-
-#### Keyboard Shortcuts
-
-- `Ctrl + Enter` - Send request
-- `Ctrl + S` - Save request
-
----
-
-## Data Type Support
-
-### String (Strings)
-
-The most basic data type in Redis, can store any form of string, including:
-
-- Plain text
-- JSON data
-- Base64 encoded data
-- Binary data
-- Java serialized objects
-
-**Commands Corresponding**:
-- View: `GET key`
-- Set: `SET key value`
-- Others: `SETEX`, `SETNX`, `INCR`, `DECR` etc.
-
----
-
-### Hash (Hash Tables)
-
-Suitable for storing object-type data, structure is key-value pair collection.
-
-**Commands Corresponding**:
-- View all: `HGETALL key`
-- Get field: `HGET key field`
-- Set field: `HSET key field value`
-- Delete field: `HDEL key field`
-- Field count: `HLEN key`
-
-**Use Cases**:
-- User info storage: `user:123` → `{name: "张三", age: 25}`
-- Config info: `config:web` → `{lang: "zh-CN", theme: "dark"}`
-
----
-
-### List (Lists)
-
-String collection sorted by insertion order, supports insertion and pop from both ends.
-
-**Commands Corresponding**:
-- Get list: `LRANGE key 0 -1`
-- Add left: `LPUSH key value`
-- Add right: `RPUSH key value`
-- Pop left: `LPOP key`
-- Pop right: `RPOP key`
-- List length: `LLEN key`
-
-**Use Cases**:
-- Message queue: `queue:tasks`
-- Latest article list: `articles:latest`
-- Log recording: `logs:app`
-
----
-
-### Set (Sets)
-
-Unordered string collection, automatic deduplication.
-
-**Commands Corresponding**:
-- Get members: `SMEMBERS key`
-- Add member: `SADD key member`
-- Remove member: `SREM key member`
-- Member count: `SCARD key`
-- Check exists: `SISMEMBER key member`
-
-**Use Cases**:
-- Tag system: `tags:article:123`
-- Online users: `online:users`
-- Common friends: `friends:intersection`
-
----
-
-### ZSet (Sorted Sets)
-
-Similar to Set, but each member has an associated score, sorted by score.
-
-**Commands Corresponding**:
-- Get members: `ZRANGE key 0 -1 WITHSCORES`
-- Add member: `ZADD key score member`
-- Remove member: `ZREM key member`
-- Get score: `ZSCORE key member`
-- Get rank: `ZRANK key member`
-- Member count: `ZCARD key`
-
-**Use Cases**:
-- Leaderboard: `leaderboard:game`
-- Priority queue: `queue:priority`
-- Scheduled tasks: `jobs:scheduled`
+1. Add new database connection
+2. Enter MySQL server info
+3. Browse tables and execute queries
 
 ---
 
 ## Tech Stack
 
-| Technology | Version |
-|------------|---------|
-| Frontend Framework | React 18.3.1 |
-| Build Tool | Vite 5.2.11 |
-| Styling | Tailwind CSS 3.4.3 |
-| Desktop Framework | Electron 31.0.0 |
-| Language | TypeScript 5.4.5 |
-| State Management | Zustand 4.5.2 |
-| Redis Client | ioredis 5.4.1 |
-| Icon Library | Lucide React 0.400.0 |
-| Java Deserialization | java-object-serialization 0.1.2 |
-| Internationalization | i18next-style with Zustand persist |
+| Technology | Description |
+|------------|-------------|
+| Electron 31 | Cross-platform desktop framework |
+| React 18 | UI framework |
+| Vite 5 | Build tool |
+| Tailwind CSS 3 | Styling |
+| TypeScript 5 | Type-safe development |
+| Zustand | State management |
+| ioredis | Redis client |
+| mysql2 | MySQL client |
+| xlsx | Excel export |
 
 ---
 
-## Development Guide
-
-### Environment Requirements
-
-- Node.js 18 or higher
-- npm or yarn
-- Git
-
-### Clone Repository
+## Development
 
 ```bash
+# Clone
 git clone https://github.com/hkall/xbl-redis-desktop.git
 cd xbl-redis-desktop
-```
 
-### Install Dependencies
-
-```bash
+# Install
 npm install
-```
 
-### Development Mode
-
-```bash
+# Development
 npm run electron:dev
-```
 
-This will launch Vite dev server and Electron app window with hot reload support.
-
-### Project Structure
-
-```
-xbl-redis-desktop/
-├── electron/              # Electron main process
-│   └── main.cjs           # Main process entry file
-├── src/
-│   ├── components/        # React components
-│   │   ├── viewers/       # Data type viewers
-│   │   │   ├── StringViewer.tsx
-│   │   │   ├── HashViewer.tsx
-│   │   │   ├── ListViewer.tsx
-│   │   │   ├── SetViewer.tsx
-│   │   │   ├── ZSetViewer.tsx
-│   │   │   └── JavaObjectViewer.tsx
-│   │   ├── api/           # API testing module
-│   │   │   ├── ApiSidebar.tsx
-│   │   │   └── ApiWorkspace.tsx
-│   │   ├── database/      # Database module
-│   │   │   └── DbWorkspace.tsx
-│   │   ├── common/        # Common components
-│   │   │   └── Toolbar.tsx
-│   │   ├── ConnectionPanel.tsx      # Connection management panel
-│   │   ├── KeyBrowser.tsx           # Key browser
-│   │   ├── DataPanel.tsx            # Data edit panel
-│   │   ├── CodeEditor.tsx           # Code editor
-│   │   ├── ConfirmDialog.tsx        # Confirm dialog
-│   │   ├── CommandLine.tsx          # CLI command line
-│   │   ├── BatchOperations.tsx      # Batch operations
-│   │   ├── DataExport.tsx           # Data export
-│   │   └── ServerInfo.tsx           # Server monitoring
-│   ├── locales/           # Internationalization
-│   │   ├── en.ts          # English translations
-│   │   └── zh.ts          # Chinese translations
-│   ├── services/          # Service layer
-│   │   └── redis.ts       # Redis operations wrapper
-│   ├── store/             # State management
-│   │   ├── redisStore.ts  # Redis state store
-│   │   ├── apiStore.ts    # API testing state store
-│   │   ├── dbStore.ts     # Database state store
-│   │   └── i18nStore.ts   # Internationalization store
-│   ├── utils/             # Utility functions
-│   │   ├── formatter.ts   # Data formatting
-│   │   └── deserializer.ts # Data deserialization
-│   ├── App.tsx            # Main component
-│   └── main.tsx           # Entry file
-├── public/                # Static resources
-├── package.json
-├── tsconfig.json
-├── tailwind.config.js
-├── vite.config.ts
-└── electron-builder.json
-```
-
-### Build Package
-
-```bash
-npm run electron:build
-```
-
-After building, installer and portable version will be output to `dist` directory:
-
-```
-dist/
-├── XBL DevTools Setup 1.2.0.exe    # Installer
-└── XBL DevTools 1.2.0.exe           # Portable version
+# Build
+npm run electron:build:win
 ```
 
 ---
 
-## FAQ
+## Changelog
 
-### Q: What to do if connection fails?
+### v1.3.0 (2026-04-02)
 
-**Answer**: Please check the following points:
+- **API Stress Testing** - Concurrent requests with real-time metrics (RPS, response time, error rate)
+- **API Automated Testing** - Test cases, assertions, test suites, execution reports
+- **Database Module** - MySQL support with query execution, data editing, export
+- **Excel Export** - Export query results to Excel format
+- **Smart Column Width** - Intelligent column width calculation for query results
+- **Performance Optimization** - Removed unnecessary table row count queries
 
-1. Is Redis service running?
-2. Are host address and port correct?
-3. If password is set, confirm password is correct
-4. Check firewall settings
-5. If connecting to remote server, confirm server allows remote connections
+### v1.2.0 (2026-03-12)
 
----
+- Hash lazy loading with HSCAN pagination
+- Performance improvements for large Hash keys
 
-### Q: Chinese text shows garbled?
+### v1.1.0 (2026-03-11)
 
-**Answer**: XBL DevTools perfectly supports Chinese. If garbled text appears, please check:
-
-1. Is Redis data stored in UTF-8 encoding?
-2. Confirm display settings in app are correct
-
----
-
-### Q: Does it support connecting to Redis Cluster?
-
-**Answer**: Current version supports Standalone mode only. Cluster and Sentinel modes are under development.
+- CLI command line tool
+- Batch operations with pattern matching
+- Data export (JSON/CSV)
+- API testing module
+- Internationalization (Chinese/English)
 
 ---
 
-### Q: Will data be lost?
+## Roadmap
 
-**Answer**: Local tool is only for managing Redis data, no additional backup. Please ensure Redis server is configured with persistence (RDB or AOF).
-
----
-
-### Q: What Redis versions are supported?
-
-**Answer**: Supports Redis 6.0 and above versions.
-
----
-
-### Q: Can I connect to multiple Redis instances simultaneously?
-
-**Answer**: Yes! Supports managing multiple Redis connections simultaneously with quick switching.
-
----
-
-### Q: Will it lag when there are too many keys?
-
-**Answer**: No. Application uses SCAN command for pagination, won't block Redis server.
-
----
-
-### Q: How to switch language?
-
-**Answer**: Click the language icon (地球图标) in the top right toolbar to switch between Chinese and English.
-
----
-
-## Contributing
-
-We welcome any form of contribution!
-
-### How to Contribute
-
-1. Fork this repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Code Standards
-
-- Write code in TypeScript
-- Follow ESLint rules
-- Use functional components + Hooks
-- Use Tailwind CSS for styling
-- Use Conventional Commits spec for commit messages
-- Ensure all UI text supports internationalization (i18n)
-
-### Bug Feedback
-
-If you encounter problems during use, please:
-
-1. Search if similar issue already exists in [Issues](../../issues)
-2. If not, create new Issue, including:
-   - Problem description
-   - Reproduction steps
-   - Expected behavior
-   - Actual behavior
-   - Environment info (system version, app version, Redis version)
-   - Screenshots or logs (if relevant)
+- [ ] Redis Cluster support
+- [ ] Redis Sentinel support
+- [ ] PostgreSQL support
+- [ ] MongoDB support
+- [ ] Data import functionality
+- [ ] Pub/Sub subscription
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT License](LICENSE)
 
 ---
 
-## Contact
+## Author
 
-- **Author**: hukun
-- **Email**: 1181929830@qq.com
-
----
-
-## Special Thanks
-
-Thanks to the following open source projects. This tool wouldn't be possible without their support:
-
-| Project | Description |
-|---------|-------------|
-| [Electron](https://www.electronjs.org/) | Cross-platform desktop app framework |
-| [React](https://reactjs.org/) | User interface library |
-| [Vite](https://vitejs.dev/) | Next-gen frontend build tool |
-| [Tailwind CSS](https://tailwindcss.com/) | CSS framework |
-| [ioredis](https://github.com/luin/ioredis) | Redis Node.js client |
-| [Zustand](https://github.com/pmndrs/zustand) | State management library |
-| [Lucide](https://lucide.dev/) | Icon library |
-| [TypeScript](https://www.typescriptlang.org/) | JS superset |
+- **hukun** - 1181929830@qq.com
 
 ---
 
-## Feature Roadmap
+## Acknowledgments
 
-### Completed ✅
+Thanks to these open source projects:
 
-- [x] Basic connection management
-- [x] View and edit five data types
-- [x] Key search and filtering
-- [x] Tree key browser
-- [x] TTL setting
-- [x] Config persistence
-- [x] Chinese support
-- [x] Data export functionality (v1.1.0)
-- [x] Command-line execution interface (v1.1.0)
-- [x] Batch data operations (v1.1.0)
-- [x] API testing module (v1.1.0)
-- [x] Internationalization (Chinese/English) (v1.1.0)
-- [x] Key rename functionality (v1.1.0)
-- [x] Folder-level refresh (v1.1.0)
-
-### In Progress 🚧
-
-- [ ] Redis Cluster support
-- [ ] Redis Sentinel support
-- [ ] Data import functionality
-- [ ] More database support (PostgreSQL, MongoDB, etc.)
-
-### Planned 📋
-
-- [ ] Key move (MOVE command)
-- [ ] Pub/Sub message subscription
-- [ ] Slow query analysis
-- [ ] Memory usage statistics
-- [ ] Multi-language support (Japanese, French, etc.)
+[Electron](https://www.electronjs.org/) | [React](https://reactjs.org/) | [Vite](https://vitejs.dev/) | [Tailwind CSS](https://tailwindcss.com/) | [ioredis](https://github.com/luin/ioredis) | [Zustand](https://github.com/pmndrs/zustand) | [Lucide](https://lucide.dev/)
 
 ---
 
-## Star History
-
-If this project helps you, please give us a ⭐️ Star!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=your-username/xbl-redis-desktop&type=Date)](https://star-history.com/#your-username/xbl-redis-desktop&Date)
-
----
-
-**XBL DevTools** - Making Redis management simpler and more efficient!
-
-> [Back to Top](#xbl-redis-desktop)
+**XBL DevTools** - Making Redis & API management simpler and more efficient!
