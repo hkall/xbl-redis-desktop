@@ -345,7 +345,13 @@ function ConnectionItem({
           ? 'bg-blue-50 dark:bg-blue-900/20'
           : 'hover:bg-gray-100 dark:hover:bg-gray-700'
       }`}
-      onClick={onSelect}
+      onClick={() => {
+        onSelect()
+        // 如果已连接，点击卡片也能展开/折叠
+        if (connection.connected && onToggle) {
+          onToggle()
+        }
+      }}
       onContextMenu={onContextMenu}
     >
       {/* 展开/折叠按钮（仅已连接时显示） */}

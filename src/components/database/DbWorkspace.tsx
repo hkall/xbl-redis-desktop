@@ -962,7 +962,7 @@ function DataGrid({
     if (resizingColumn === null) return
     const handleMouseMove = (e: MouseEvent) => {
       const delta = e.clientX - startXRef.current
-      const newWidth = Math.max(80, Math.min(500, startWidthRef.current + delta))
+      const newWidth = Math.max(80, Math.min(300, startWidthRef.current + delta))
       setColumnWidths(prev => { const w = [...prev]; w[resizingColumn] = newWidth; return w })
     }
     const handleMouseUp = () => { setResizingColumn(null); document.body.style.cursor = ''; document.body.style.userSelect = '' }
@@ -1142,33 +1142,63 @@ function DataGrid({
     setPage(1)
   }
 
-  // 自动调整列宽
+  // 自动调整单列列宽 - 智能限制
   const autoFitColumnWidth = (colIndex: number) => {
-    if (!result?.data) return
-    const column = result.columns?.[colIndex]
+    if (!result?.data || !result?.columns) return
+    const column = result.columns[colIndex]
     if (!column) return
 
-    // 计算该列最大内容宽度
-    let maxWidth = column.length * 8 + 40 // 列名宽度
-    const sampleData = result.data.slice(0, 100) // 取前100行估算
+    const minWidth = 80
+    const maxWidth = 300 // 减小最大宽度，让用户滚动查看长内容
+
+    // 计算列名宽度
+    const headerWidth = column.length * 8 + 24
+
+    // 分析前100行数据估算内容宽度
+    const sampleData = result.data.slice(0, 100)
+    let contentLengths: number[] = []
+
     sampleData.forEach(row => {
       const cell = Array.isArray(row) ? row[colIndex] : row[column]
-      const cellWidth = (cell === null ? 4 : String(cell).length) * 8 + 20
-      if (cellWidth > maxWidth) maxWidth = cellWidth
+      if (cell !== null && cell !== undefined) {
+        contentLengths.push(String(cell).length)
+      }
     })
-    maxWidth = Math.min(maxWidth, 500) // 最大500
+
+    // 使用90分位数而非最大值，避免极端长值
+    let contentWidth = headerWidth
+    if (contentLengths.length > 0) {
+      contentLengths.sort((a, b) => a - b)
+      const p90Index = Math.floor(contentLengths.length * 0.9)
+      const p90Length = contentLengths[p90Index] || contentLengths[contentLengths.length - 1]
+      contentWidth = p90Length * 8 + 16
+    }
+
+    // 根据列名特征限制宽度
+    const colLower = column.toLowerCase()
+    if (colLower === 'id' || colLower.endsWith('_id') || colLower === 'pk') {
+      contentWidth = Math.min(contentWidth, 100)
+    } else if (colLower.includes('status') || colLower.includes('type') || colLower.includes('flag')) {
+      contentWidth = Math.min(contentWidth, 120)
+    } else if (colLower.includes('desc') || colLower.includes('description') || colLower.includes('content') || colLower.includes('text')) {
+      contentWidth = Math.min(contentWidth, 180)
+    }
+
+    // 应用全局限制
+    const finalWidth = Math.max(minWidth, Math.min(maxWidth, Math.max(headerWidth, contentWidth)))
 
     setColumnWidths(prev => {
       const w = [...prev]
-      w[colIndex] = maxWidth
+      w[colIndex] = finalWidth
       return w
     })
   }
 
-  // 重置所有列宽
+  // 重置所有列宽 - 使用智能计算
   const resetAllColumnWidths = () => {
-    if (result?.columns?.length) {
-      setColumnWidths(result.columns.map(() => 150))
+    if (result?.columns?.length && result?.data) {
+      const smartWidths = calculateSmartColumnWidths(result.columns, result.data)
+      setColumnWidths(smartWidths)
     }
   }
 
@@ -1185,14 +1215,92 @@ function DataGrid({
     }
   }
 
-  // 初始化列宽
+  // 智能计算列宽 - 基于列名和数据内容
+  const calculateSmartColumnWidths = useCallback((columns: string[], data: any[][]): number[] => {
+    if (!columns.length) return []
+
+    // 计算可用宽度（假设表格容器宽度约800-1200px）
+    const avgWidth = 120 // 平均每列目标宽度
+    const minWidth = 80 // 最小宽度
+    const maxWidth = 300 // 最大宽度（减小以显示更多列）
+
+    // 分析每列内容特征
+    return columns.map((col, colIndex) => {
+      // 列名宽度
+      const headerWidth = col.length * 8 + 24 // padding + icon空间
+
+      // 分析前50行数据估算内容宽度
+      const sampleData = data.slice(0, 50)
+      let maxContentWidth = 0
+      let contentLengths: number[] = []
+
+      sampleData.forEach(row => {
+        const cell = Array.isArray(row) ? row[colIndex] : row[col]
+        if (cell !== null && cell !== undefined) {
+          const len = String(cell).length
+          contentLengths.push(len)
+          // 内容宽度：字符数 * 8px（估算字体宽度）
+          maxContentWidth = Math.max(maxContentWidth, len * 8 + 16)
+        }
+      })
+
+      // 统计分析：使用90分位数而非最大值，避免极端值影响
+      if (contentLengths.length > 0) {
+        contentLengths.sort((a, b) => a - b)
+        const p90Index = Math.floor(contentLengths.length * 0.9)
+        const p90Length = contentLengths[p90Index] || contentLengths[contentLengths.length - 1]
+        maxContentWidth = p90Length * 8 + 16
+      }
+
+      // 智能选择宽度
+      // 短列（如id、状态）：使用较小的宽度
+      // 中等列：使用内容宽度
+      // 长列（如描述、内容）：限制宽度，让用户滚动查看
+      let finalWidth = Math.max(headerWidth, maxContentWidth)
+
+      // 根据列名特征调整
+      const colLower = col.toLowerCase()
+      // ID类列通常较短
+      if (colLower === 'id' || colLower.endsWith('_id') || colLower === 'pk') {
+        finalWidth = Math.min(finalWidth, 100)
+      }
+      // 状态、类型列通常较短
+      else if (colLower.includes('status') || colLower.includes('type') || colLower.includes('flag')) {
+        finalWidth = Math.min(finalWidth, 120)
+      }
+      // 时间列中等宽度
+      else if (colLower.includes('time') || colLower.includes('date') || colLower.includes('created') || colLower.includes('updated')) {
+        finalWidth = Math.min(finalWidth, 160)
+      }
+      // 名称、标题列中等宽度
+      else if (colLower.includes('name') || colLower.includes('title')) {
+        finalWidth = Math.min(finalWidth, 150)
+      }
+      // 描述、内容、备注等长文本列限制宽度
+      else if (colLower.includes('desc') || colLower.includes('description') || colLower.includes('content') || colLower.includes('text') || colLower.includes('remark') || colLower.includes('note') || colLower.includes('comment')) {
+        finalWidth = Math.min(finalWidth, 180)
+      }
+      // JSON、数据类列限制宽度
+      else if (colLower.includes('json') || colLower.includes('data') || colLower.includes('config')) {
+        finalWidth = Math.min(finalWidth, 150)
+      }
+
+      // 应用全局限制
+      finalWidth = Math.max(minWidth, Math.min(maxWidth, finalWidth))
+
+      return finalWidth
+    })
+  }, [])
+
+  // 初始化列宽 - 智能计算
   useEffect(() => {
-    if (result?.columns?.length) {
-      setColumnWidths(result.columns.map(() => 150))
+    if (result?.columns?.length && result?.data) {
+      const smartWidths = calculateSmartColumnWidths(result.columns, result.data)
+      setColumnWidths(smartWidths)
       setSelectedRows(new Set())
       setPendingChanges([])
     }
-  }, [result?.columns])
+  }, [result?.columns, result?.data, calculateSmartColumnWidths])
 
   // 复制 (行选中复制行，单元格焦点复制单元格)
   useEffect(() => {
