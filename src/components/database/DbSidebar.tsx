@@ -959,9 +959,6 @@ export default function DbSidebar() {
                                     >
                                       <Table className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
                                       <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">{table.name}</span>
-                                      {table.rowCount !== undefined && table.rowCount > 0 && (
-                                        <span className="text-[11px] text-gray-400 flex-shrink-0 ml-auto">{table.rowCount.toLocaleString()}</span>
-                                      )}
                                     </div>
                                     )) : <div className="px-1.5 py-0.5 text-[11px] text-gray-400 dark:text-gray-500">{t('database.noMatchingResults')}</div>
                                   })()

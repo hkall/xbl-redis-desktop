@@ -721,6 +721,7 @@ export default {
     exportCsv: '导出CSV',
     exportJson: '导出JSON',
     exportSql: '导出SQL',
+    exportExcel: '导出Excel',
 
     // 篮选和排序
     filter: '筛选',

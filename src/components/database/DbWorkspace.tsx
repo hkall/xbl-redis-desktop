@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
+import * as XLSX from 'xlsx'
 import {
   Play,
   Save,
@@ -34,6 +35,7 @@ import {
   FileText,
   Clipboard,
   Upload,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { useDbStore } from '@/store/dbStore'
 import { QueryResult, UnifiedTab } from '@/types/database'
@@ -720,13 +722,14 @@ function DataGrid({
   }
 
   // 执行导出
-  const handleExport = (format: 'csv' | 'json' | 'sql') => {
+  const handleExport = (format: 'csv' | 'json' | 'sql' | 'excel') => {
     setContextMenu(null)
     const data = getSortedData()
     const tbl = tableName || 'export_table'
     if (format === 'csv') exportToCsv(columns, data, 'query_result')
     else if (format === 'json') exportToJson(columns, data, 'query_result')
     else if (format === 'sql') exportToSqlInsert(columns, data, tbl, 'query_result')
+    else if (format === 'excel') exportToExcel(columns, data, 'query_result')
   }
 
   // 保存确认对话框
@@ -1564,6 +1567,7 @@ function DataGrid({
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
                 <div className="absolute right-0 bottom-full mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg py-1 z-20 min-w-[120px]">
+                  <button onClick={() => { handleExport('excel'); setShowExportMenu(false) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileSpreadsheet className="w-3.5 h-3.5 text-green-600" />{t('database.exportExcel')}</button>
                   <button onClick={() => { handleExport('csv'); setShowExportMenu(false) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5" />{t('database.exportCsv')}</button>
                   <button onClick={() => { handleExport('json'); setShowExportMenu(false) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileText className="w-3.5 h-3.5" />{t('database.exportJson')}</button>
                   <button onClick={() => { handleExport('sql'); setShowExportMenu(false) }} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileCode className="w-3.5 h-3.5" />{t('database.exportSql')}</button>
@@ -1596,6 +1600,7 @@ function DataGrid({
             <button onClick={() => handleExport('csv')} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.exportCsv')}</button>
             <button onClick={() => handleExport('json')} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.exportJson')}</button>
             <button onClick={() => handleExport('sql')} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><Download className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />{t('database.exportSql')}</button>
+            <button onClick={() => handleExport('excel')} className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"><FileSpreadsheet className="w-3.5 h-3.5 text-green-600" />{t('database.exportExcel')}</button>
             {canEdit && selectedRows.size > 0 && (
               <>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1" />
@@ -1706,6 +1711,17 @@ function exportToSqlInsert(columns: string[], data: any[][], tableName: string, 
   link.download = `${filename}.sql`
   link.click()
   URL.revokeObjectURL(link.href)
+}
+
+function exportToExcel(columns: string[], data: any[][], filename: string) {
+  // 将数据转换为工作表格式
+  const wsData = [columns, ...data.map(row => row.map(v => v === null || v === undefined ? '' : v))]
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
+  // 创建工作簿
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
+  // 导出文件
+  XLSX.writeFile(wb, `${filename}.xlsx`)
 }
 
 // CellContent组件

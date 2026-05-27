@@ -721,6 +721,7 @@ export default {
     exportCsv: 'Export CSV',
     exportJson: 'Export JSON',
     exportSql: 'Export SQL',
+    exportExcel: 'Export Excel',
 
     // Filter and Sort
     filter: 'Filter',

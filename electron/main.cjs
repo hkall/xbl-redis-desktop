@@ -1536,33 +1536,22 @@ ipcMain.handle('db:getTables', async (_event, connectionId, database) => {
       connInfo.config.database = database
     }
 
-    // 单个查询获取所有表信息 - 使用 INFORMATION_SCHEMA 一次性获取，避免 N+1 查询
+    // 单个查询获取所有表信息 - 只获取必要的字段，优化查询效率
     const [tables] = await connection.query(`
       SELECT
         TABLE_NAME as name,
         TABLE_TYPE as type,
-        TABLE_ROWS as rowCount,
-        DATA_LENGTH as dataSize,
-        INDEX_LENGTH as indexSize,
         TABLE_COMMENT as comment
       FROM INFORMATION_SCHEMA.TABLES
       WHERE TABLE_SCHEMA = '${database}'
       ORDER BY TABLE_TYPE, TABLE_NAME
     `)
 
-    // 不再执行 COUNT(*) 查询，使用 TABLE_ROWS 作为参考值
     const tableInfos = tables.map(t => {
       const tableType = convertValue(t.type)
-      const rowCount = convertValue(t.rowCount)
-      const dataSize = convertValue(t.dataSize)
-      const indexSize = convertValue(t.indexSize)
-
       return {
         name: convertValue(t.name),
         type: tableType === 'VIEW' ? 'VIEW' : 'TABLE',
-        rowCount: rowCount ? (typeof rowCount === 'string' ? parseInt(rowCount, 10) : rowCount) : 0,
-        dataSize: dataSize ? (typeof dataSize === 'string' ? parseInt(dataSize, 10) : dataSize) : 0,
-        indexSize: indexSize ? (typeof indexSize === 'string' ? parseInt(indexSize, 10) : indexSize) : 0,
         comment: convertValue(t.comment) || ''
       }
     })
