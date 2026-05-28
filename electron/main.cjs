@@ -2066,3 +2066,59 @@ ipcMain.handle('db:deleteRows', async (_event, connectionId, database, table, pr
     }
   }
 })
+
+// AI请求处理器 - 绕过浏览器CORS限制
+ipcMain.handle('ai:request', async (_event, config) => {
+  const { url, method, headers, body, timeout = 60000 } = config
+  const startTime = Date.now()
+
+  try {
+    const options = {
+      method: method || 'POST',
+      headers: headers || {},
+      body: body ? JSON.stringify(body) : undefined,
+    }
+
+    // 确保有Content-Type
+    if (body && !options.headers['Content-Type']) {
+      options.headers['Content-Type'] = 'application/json'
+    }
+
+    // 使用AbortController处理超时
+    const controller = new AbortController()
+    options.signal = controller.signal
+    const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+    const response = await fetch(url, options)
+    clearTimeout(timeoutId)
+    const endTime = Date.now()
+    const latency = endTime - startTime
+
+    if (!response.ok) {
+      let errorData
+      try {
+        errorData = await response.json()
+      } catch {
+        errorData = { message: response.statusText }
+      }
+      return {
+        success: false,
+        error: errorData.error?.message || errorData.error_msg || `请求失败 (${response.status})`,
+        latency,
+      }
+    }
+
+    const data = await response.json()
+    return {
+      success: true,
+      data,
+      latency,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.name === 'AbortError' ? '请求超时' : (error.message || '网络请求失败'),
+      latency: Date.now() - startTime,
+    }
+  }
+})

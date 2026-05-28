@@ -810,6 +810,12 @@ export default {
     editSetupRequired: '请输入表名并选择主键列',
     pendingChanges: '处修改',
     enterTableName: '输入表名',
+
+    // AI功能
+    aiConfig: 'AI配置',
+    aiSqlGenerate: 'AI生成SQL',
+    aiSqlExplain: 'AI解释SQL',
+    aiDataGenerate: 'AI生成测试数据',
   },
 
   // 更新
@@ -831,6 +837,110 @@ export default {
     latestLabel: '最新',
     updateAvailable: '发现新版本',
     upToDateTitle: '已是最新',
+  },
+
+  // AI功能
+  ai: {
+    // 配置
+    configTitle: 'AI模型配置',
+    configHint: '配置大模型API以启用AI辅助功能。支持OpenAI、Anthropic、DeepSeek、智谱、百度、阿里等主流厂商。',
+    noConfig: '暂无AI配置',
+    addConfig: '添加配置',
+    activeConfig: '当前配置',
+    noActiveConfig: '未选择活跃配置',
+    configName: '配置名称',
+    configNamePlaceholder: '例如：工作用、个人用',
+    provider: '提供商',
+    apiKey: 'API密钥',
+    apiKeyPlaceholder: '输入API密钥',
+    baseUrl: 'API地址',
+    baseUrlPlaceholder: '自定义API地址',
+    model: '模型',
+    modelPlaceholder: '输入模型名称',
+    enabled: '已启用',
+    disabled: '已禁用',
+    configure: '配置',
+    testConnection: '测试连通',
+    testing: '测试中...',
+    noValidConfig: '请先配置有效的AI模型',
+    noValidConfigWarning: '未配置有效的AI模型，点击配置按钮添加',
+
+    // 功能面板
+    sqlGenerate: 'AI生成SQL',
+    sqlGeneratePlaceholder: '描述你的查询需求，例如：查询最近7天注册的用户数量',
+    sqlGenerateDesc: '使用自然语言描述查询需求，AI将为你生成对应的SQL语句。',
+    sqlExplain: 'AI解释SQL',
+    sqlExplainPlaceholder: '输入需要解释的SQL语句',
+    sqlExplainDesc: '输入复杂的SQL语句，AI将为你解释其含义和功能。',
+    dataGenerate: 'AI生成测试数据',
+    dataGeneratePlaceholder: '描述需要的测试数据，例如：生成10条用户数据',
+    dataGenerateDesc: '根据表结构生成合理的测试数据INSERT语句。',
+
+    // 操作
+    input: '输入',
+    output: '输出',
+    execute: '执行',
+    processing: '处理中...',
+    apply: '应用',
+    waitingInput: '等待执行...',
+    emptyInput: '请输入内容',
+
+    // 安全机制
+    safeMode: '安全模式',
+    sqlPreview: 'SQL预览',
+    highRisk: '高危',
+    mediumRisk: '中危',
+    writeOp: '写操作',
+    safeQuery: '安全查询',
+    highRiskTitle: '高危操作警告',
+    mediumRiskTitle: '风险操作确认',
+    confirmExecute: '确认执行',
+    highRiskBlocked: '高危操作已被拦截，禁止执行',
+    confirmAndExecute: '确认并执行',
+    noTableSelected: '未选中具体表，建议先在左侧选择一个表，或在描述中指定表名',
+
+    // 意图匹配
+    selectTable: '选择表',
+    searchTable: '搜索表名或注释',
+    specifiedTable: '指定查询表',
+    aiMatchedTable: 'AI匹配的表',
+    tableMismatch: '表不匹配',
+    youSpecified: '你指定了',
+
+    // SQL分析器
+    sqlAnalyzer: 'SQL分析器',
+    sqlAnalyzerDesc: '全面分析SQL性能、安全并提供优化建议',
+    sqlInput: 'SQL输入',
+    sqlInputPlaceholder: '粘贴需要分析的SQL语句...',
+    pasteFromClipboard: '从剪贴板粘贴',
+    analyze: '开始分析',
+    analyzing: '正在深度分析...',
+    waitingSQL: '粘贴SQL开始分析',
+    clear: '重新分析',
+
+    // 分析结果标签页
+    summary: '语义解释',
+    performance: '性能问题',
+    optimize: '优化建议',
+    security: '安全风险',
+    functionSummary: '功能概述',
+    executionFlow: '执行流程',
+    issuesOverview: '问题概览',
+    compatibility: '兼容性说明',
+    highSeverity: '高危',
+    mediumSeverity: '中危',
+    lowSeverity: '低危',
+    suggestion: '建议',
+    noPerformanceIssues: '未发现性能问题',
+    noSecurityIssues: '未发现安全问题',
+    noOptimizationNeeded: 'SQL已达到良好状态',
+    indexSuggestions: '索引建议',
+    rewrittenSQL: 'SQL重写建议',
+    optimizedSQL: '优化后的SQL',
+    show: '展开',
+    hide: '收起',
+    optimizationTips: '优化提示',
+    issueType: '问题类型',
   },
 
   // 设置

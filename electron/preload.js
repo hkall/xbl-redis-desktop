@@ -77,6 +77,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   dbUpdateRow: (id, database, table, primaryKey, rowData) => ipcRenderer.invoke('db:updateRow', id, database, table, primaryKey, rowData),
   dbDeleteRows: (id, database, table, primaryKeys) => ipcRenderer.invoke('db:deleteRows', id, database, table, primaryKeys),
 
+  // AI请求 - 绕过浏览器CORS限制
+  aiRequest: (config) => ipcRenderer.invoke('ai:request', config),
+
   // 用于渲染进程生成唯一ID
   generateRequestId: () => crypto.randomUUID(),
 })

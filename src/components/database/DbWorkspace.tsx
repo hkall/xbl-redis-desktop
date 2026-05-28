@@ -35,14 +35,19 @@ import {
   FileText,
   Clipboard,
   Upload,
+  Settings,
   FileSpreadsheet,
+  Search,
 } from 'lucide-react'
 import { useDbStore } from '@/store/dbStore'
+import { useAiStore, TableSchemaInfo, DatabaseTableInfo } from '@/store/aiStore'
 import { QueryResult, UnifiedTab } from '@/types/database'
 import { useTranslation } from '@/store/i18nStore'
 import TableDetail from './TableDetail'
 import ProcedureDetail from './ProcedureDetail'
 import TriggerDetail from './TriggerDetail'
+import AiConfigPanel from '../ai/AiConfigPanel'
+import SQLAnalyzerPanel from '../ai/SQLAnalyzerPanel'
 
 // SQL 值转义函数 - 防止SQL注入
 const escapeSqlValue = (value: string): string => {
@@ -1305,9 +1310,19 @@ function DataGrid({
     }
   }, [result?.columns, result?.data, calculateSmartColumnWidths])
 
-  // 复制 (行选中复制行，单元格焦点复制单元格)
+  // 复制 (行选中复制行，单元格焦点复制单元格) - 仅在表格区域有焦点时生效
   useEffect(() => {
     const handleCopy = (e: KeyboardEvent) => {
+      // 如果焦点在输入框或textarea上，不拦截，让浏览器默认处理
+      const activeElement = document.activeElement
+      if (activeElement && (
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.tagName === 'INPUT' ||
+        activeElement.getAttribute('role') === 'textbox'
+      )) {
+        return // 不阻止默认行为，让编辑器正常复制
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         if (selectedRows.size > 0) {
           e.preventDefault()
@@ -1915,12 +1930,63 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
   t: (key: string, params?: any) => string
 }) {
   const { getQueryHistory, addSavedQuery, setActiveResult, clearTabResults } = useDbStore()
+  const { showConfigPanel, setShowConfigPanel, setActiveFeature, hasValidConfig } = useAiStore()
+  const { getCachedColumns, getCachedTables } = useDbStore()
   const [showHistory, setShowHistory] = useState(false)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [queryName, setQueryName] = useState('')
+  const [sqlAnalyzerOpen, setSqlAnalyzerOpen] = useState(false)
   const history = getQueryHistory(100).filter(h => h.connectionId === activeConnectionId).slice(0, 20)
 
   const handleSaveQuery = () => { if (queryName.trim() && activeTab?.sql?.trim()) { addSavedQuery(queryName.trim(), activeTab.sql); setShowSaveDialog(false); setQueryName('') } }
+
+  // 构建当前表的Schema上下文
+  const buildTableSchemaContext = (): TableSchemaInfo | undefined => {
+    if (!activeConnectionId || !activeDatabase || !activeTab?.itemName) return undefined
+
+    const columns = getCachedColumns(activeConnectionId, activeDatabase, activeTab.itemName)
+    if (!columns) return undefined
+
+    return {
+      tableName: activeTab.itemName,
+      columns: columns.map(col => ({
+        name: col.name,
+        type: col.type,
+        comment: col.comment,
+        nullable: col.nullable,
+        primaryKey: col.key === 'PRI',
+      })),
+    }
+  }
+
+  // 获取可关联的表列表
+  const getRelatedTables = (): string[] | undefined => {
+    if (!activeConnectionId || !activeDatabase) return undefined
+
+    const tables = getCachedTables(activeConnectionId, activeDatabase)
+    if (!tables) return undefined
+
+    // 返回当前库中的其他表名（排除当前表）
+    return tables
+      .filter(t => t.name !== activeTab?.itemName)
+      .slice(0, 10)
+      .map(t => t.name)
+  }
+
+  // 获取当前数据库所有表的信息（用于AI意图匹配）
+  const getDatabaseTablesInfo = (): DatabaseTableInfo[] | undefined => {
+    if (!activeConnectionId || !activeDatabase) return undefined
+
+    const tables = getCachedTables(activeConnectionId, activeDatabase)
+    if (!tables || tables.length === 0) return undefined
+
+    // 返回所有表的名称和注释
+    return tables.map(t => ({
+      name: t.name,
+      comment: t.comment,
+      type: t.type,
+    }))
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); if (activeTab?.sql?.trim()) { setShowSaveDialog(true); setQueryName(activeTab.name || '') } } }
@@ -2003,6 +2069,28 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
               </>
             )}
           </div>
+
+          {/* SQL分析器按钮 */}
+          <div className="relative flex items-center gap-1">
+            <button
+              onClick={() => setSqlAnalyzerOpen(true)}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+              title={t('ai.sqlAnalyzer')}
+            >
+              <Search className="w-4 h-4" />
+              <span className="text-[13px]">{t('ai.sqlAnalyzer')}</span>
+            </button>
+            <button
+              onClick={() => setShowConfigPanel(true)}
+              className="p-1 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title={t('ai.configTitle')}
+            >
+              <Settings className="w-3.5 h-3.5" />
+              {!hasValidConfig() && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-yellow-500 rounded-full" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2066,6 +2154,25 @@ function QueryEditorContent({ activeTab, editorHeight, showResult, setShowResult
           </>
         )}
       </div>
+
+      {/* AI配置面板 */}
+      <AiConfigPanel
+        isOpen={showConfigPanel}
+        onClose={() => setShowConfigPanel(false)}
+      />
+
+      {/* SQL分析器面板 */}
+      <SQLAnalyzerPanel
+        isOpen={sqlAnalyzerOpen}
+        onClose={() => setSqlAnalyzerOpen(false)}
+        context={{
+          databaseType: 'MySQL',
+          tableName: activeTab?.itemName,
+          tableSchema: buildTableSchemaContext(),
+          databaseTables: getDatabaseTablesInfo(),
+        }}
+        initialSQL={activeTab?.sql}
+      />
     </>
   )
 }
