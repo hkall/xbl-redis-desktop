@@ -214,6 +214,21 @@ function ConfigCard({
           )}
         </div>
 
+        {/* 超时时间 */}
+        <div>
+          <label className="block text-[11px] text-gray-500 dark:text-gray-400 mb-0.5">
+            {t('ai.timeout')} (秒)
+          </label>
+          <input
+            type="number"
+            value={config.timeout ? Math.floor(config.timeout / 1000) : 120}
+            onChange={(e) => onUpdate({ timeout: (parseInt(e.target.value) || 120) * 1000 })}
+            min={10}
+            max={300}
+            className="w-full px-2 py-1.5 text-[13px] bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         {/* 启用状态 */}
         <div className="flex items-center gap-2">
           <button

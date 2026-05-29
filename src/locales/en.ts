@@ -851,6 +851,7 @@ export default {
     baseUrlPlaceholder: 'Custom API URL',
     model: 'Model',
     modelPlaceholder: 'Enter model name',
+    timeout: 'Timeout',
     enabled: 'Enabled',
     disabled: 'Disabled',
     configure: 'Configure',

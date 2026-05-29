@@ -386,7 +386,8 @@ const buildUserPrompt = (params: AIRequestParams): string => {
 const sendRequest = async (
   url: string,
   headers: Record<string, string>,
-  body: any
+  body: any,
+  timeout: number = 120000
 ): Promise<{ success: boolean; data?: any; error?: string; latency?: number }> => {
   try {
     // 检查是否有Electron API
@@ -396,7 +397,7 @@ const sendRequest = async (
         method: 'POST',
         headers,
         body,
-        timeout: 60000,
+        timeout,
       })
       return result
     }
@@ -464,7 +465,7 @@ const callOpenAICompatible = async (config: AIConfig, systemPrompt: string, user
 
   console.log('[AI Service] 发送请求到:', url, '模型:', config.model)
 
-  const result = await sendRequest(url, headers, body)
+  const result = await sendRequest(url, headers, body, config.timeout || 120000)
 
   console.log('[AI Service] 响应耗时:', result.latency, 'ms')
 
@@ -497,7 +498,7 @@ const callAnthropic = async (config: AIConfig, systemPrompt: string, userPrompt:
     messages: [{ role: 'user', content: userPrompt }],
   }
 
-  const result = await sendRequest(url, headers, body)
+  const result = await sendRequest(url, headers, body, config.timeout || 120000)
 
   if (!result.success) {
     return { success: false, error: result.error }
@@ -556,7 +557,7 @@ const callAzure = async (config: AIConfig, systemPrompt: string, userPrompt: str
     max_tokens: 2000,
   }
 
-  const result = await sendRequest(url, headers, body)
+  const result = await sendRequest(url, headers, body, config.timeout || 120000)
 
   if (!result.success) {
     return { success: false, error: result.error }
@@ -727,7 +728,7 @@ const testOpenAICompatible = async (config: AIConfig): Promise<{ success: boolea
     max_tokens: 10,
   }
 
-  const result = await sendRequest(url, headers, body)
+  const result = await sendRequest(url, headers, body, config.timeout || 120000)
 
   if (!result.success) {
     return { success: false, message: result.error || '请求失败', latency: result.latency }
@@ -756,7 +757,7 @@ const testAnthropic = async (config: AIConfig): Promise<{ success: boolean; mess
     messages: [{ role: 'user', content: '请回复OK两个字' }],
   }
 
-  const result = await sendRequest(url, headers, body)
+  const result = await sendRequest(url, headers, body, config.timeout || 120000)
 
   if (!result.success) {
     return { success: false, message: result.error || '请求失败', latency: result.latency }
@@ -805,7 +806,7 @@ const testAzure = async (config: AIConfig): Promise<{ success: boolean; message:
     max_tokens: 10,
   }
 
-  const result = await sendRequest(url, headers, body)
+  const result = await sendRequest(url, headers, body, config.timeout || 120000)
 
   if (!result.success) {
     return { success: false, message: result.error || '请求失败', latency: result.latency }

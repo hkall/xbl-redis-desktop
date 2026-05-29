@@ -12,6 +12,7 @@ export interface AIConfig {
   baseUrl: string  // 自定义API地址
   model: string    // 模型名称
   enabled: boolean
+  timeout?: number  // 超时时间(毫秒)，默认120000
 }
 
 // 提供商预设配置

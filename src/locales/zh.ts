@@ -857,6 +857,7 @@ export default {
     baseUrlPlaceholder: '自定义API地址',
     model: '模型',
     modelPlaceholder: '输入模型名称',
+    timeout: '超时时间',
     enabled: '已启用',
     disabled: '已禁用',
     configure: '配置',
