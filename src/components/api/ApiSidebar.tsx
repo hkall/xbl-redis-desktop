@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Globe, Clock, Folder, FolderOpen, ChevronDown, ChevronRight, Trash2, Plus,
-  Download, Upload, Edit2, X, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, RotateCcw, Archive, Check, Filter,
+  Download, Upload, Edit2, X, Settings, Move, FilePlus, FolderPlus, Briefcase, Copy, Search, Archive, Check,
   Zap, FileCode, Layers, FileText
 } from 'lucide-react'
 import { useApiStore } from '@/store/apiStore'
@@ -10,11 +10,6 @@ import { useTranslation } from '@/store/i18nStore'
 import { SavedRequest, HistoryItem, Environment, KeyValue, HttpMethod, RequestFolder, isFolder, isRequest, ApiProject, TestPanelMode } from '@/store/types'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useToast } from '@/components/common/Toast'
-
-interface SearchFilters {
-  methods?: HttpMethod[]
-  dateRange?: { start?: Date; end?: Date }
-}
 
 // HTTP方法颜色
 const METHOD_COLORS: Record<HttpMethod, string> = {
@@ -160,8 +155,6 @@ export default function ApiSidebar() {
 
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchFilters, setSearchFilters] = useState<SearchFilters>({})
-  const [showFilters, setShowFilters] = useState(false)
 
   // 项目编辑状态
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
@@ -260,8 +253,9 @@ export default function ApiSidebar() {
   }
 
   const handleSelectHistory = (item: HistoryItem) => {
-    setCurrentRequest({
-      id: '',
+    // 临时加载历史请求，不保存到项目
+    const tempRequest = {
+      id: `temp-${item.id}`,
       name: '',
       method: item.request.method,
       url: item.request.url,
@@ -271,7 +265,8 @@ export default function ApiSidebar() {
       auth: item.request.auth,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    })
+    }
+    setCurrentRequest(tempRequest)
   }
 
   const handleExport = (projectId: string) => {
@@ -700,39 +695,19 @@ export default function ApiSidebar() {
   }
 
   // 搜索过滤请求
-  const filterRequestsBySearch = (folders: RequestFolder[], requests: SavedRequest[], query: string, filters?: SearchFilters): {
+  const filterRequestsBySearch = (folders: RequestFolder[], requests: SavedRequest[], query: string): {
     folders: RequestFolder[]
     requests: SavedRequest[]
   } => {
-    if (!query.trim() && !filters) return { folders, requests }
+    if (!query.trim()) return { folders, requests }
 
     const lowerQuery = query.toLowerCase()
-
-    const hasQuery = query.trim().length > 0
-    const hasMethodFilter = filters?.methods && filters.methods.length > 0
-    const hasDateFilter = filters?.dateRange
 
     const filterFolders = (folderList: RequestFolder[]): RequestFolder[] => {
       return folderList.map(f => {
         const filteredChildren = f.children.filter(c => {
           if (isRequest(c)) {
-            // 名称和URL匹配（无搜索词时默认通过）
-            let matches = !hasQuery || c.name.toLowerCase().includes(lowerQuery) || c.url.toLowerCase().includes(lowerQuery)
-            // HTTP方法过滤
-            if (hasMethodFilter) {
-              matches = matches && filters.methods!.includes(c.method)
-            }
-            // 日期范围过滤
-            if (hasDateFilter) {
-              const requestDate = new Date(c.updatedAt || c.createdAt)
-              if (filters!.dateRange!.start && requestDate < filters!.dateRange!.start) {
-                matches = false
-              }
-              if (filters!.dateRange!.end && requestDate > filters!.dateRange!.end) {
-                matches = false
-              }
-            }
-            return matches
+            return c.name.toLowerCase().includes(lowerQuery) || c.url.toLowerCase().includes(lowerQuery)
           }
           return true
         })
@@ -746,22 +721,9 @@ export default function ApiSidebar() {
       }).filter((f): f is RequestFolder => f !== null)
     }
 
-    const filteredRequests = requests.filter(r => {
-      let matches = !hasQuery || r.name.toLowerCase().includes(lowerQuery) || r.url.toLowerCase().includes(lowerQuery)
-      if (hasMethodFilter) {
-        matches = matches && filters.methods!.includes(r.method)
-      }
-      if (hasDateFilter) {
-        const requestDate = new Date(r.updatedAt || r.createdAt)
-        if (filters!.dateRange!.start && requestDate < filters!.dateRange!.start) {
-          matches = false
-        }
-        if (filters!.dateRange!.end && requestDate > filters!.dateRange!.end) {
-          matches = false
-        }
-      }
-      return matches
-    })
+    const filteredRequests = requests.filter(r =>
+      r.name.toLowerCase().includes(lowerQuery) || r.url.toLowerCase().includes(lowerQuery)
+    )
 
     return { folders: filterFolders(folders), requests: filteredRequests }
   }
@@ -769,25 +731,9 @@ export default function ApiSidebar() {
   const folderOptions = activeProject ? getFolderOptions(activeProject.requestFolders) : []
 
   // 应用搜索过滤
-  const filteredData = activeProject && (searchQuery || searchFilters.methods?.length || searchFilters.dateRange)
-    ? filterRequestsBySearch(activeProject.requestFolders, activeProject.rootRequests, searchQuery, searchFilters)
+  const filteredData = activeProject && searchQuery
+    ? filterRequestsBySearch(activeProject.requestFolders, activeProject.rootRequests, searchQuery)
     : { folders: activeProject?.requestFolders || [], requests: activeProject?.rootRequests || [] }
-
-  // HTTP方法选项
-  const httpMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
-
-  const toggleMethodFilter = (method: HttpMethod) => {
-    setSearchFilters(prev => ({
-      ...prev,
-      methods: prev.methods?.includes(method)
-        ? prev.methods.filter(m => m !== method)
-        : [...(prev.methods || []), method]
-    }))
-  }
-
-  const clearFilters = () => {
-    setSearchFilters({})
-  }
 
   return (
     <div className="h-full bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-700">
@@ -827,117 +773,8 @@ export default function ApiSidebar() {
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`p-1 rounded transition-colors ${showFilters ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-              title={t('api.filters')}
-            >
-              <Filter className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
-
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-600 space-y-2 animate-in slide-in-from-top-2 duration-200">
-            {/* HTTP Methods */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[12px] font-medium text-gray-600 dark:text-gray-400">{t('api.httpMethod')}</span>
-                {(searchFilters.methods?.length || 0) > 0 && (
-                  <button
-                    onClick={() => setSearchFilters(prev => ({ ...prev, methods: [] }))}
-                    className="text-[12px] text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
-                  >
-                    {t('common.clear')}
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {httpMethods.map(method => (
-                  <button
-                    key={method}
-                    onClick={() => toggleMethodFilter(method)}
-                    className={`px-1.5 py-0.5 rounded text-[12px] font-medium transition-all ${
-                      searchFilters.methods?.includes(method)
-                        ? `${METHOD_BG[method]} ${METHOD_COLORS[method]} ring-1 ring-current`
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    {method}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Date Range */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[12px] font-medium text-gray-600 dark:text-gray-400">{t('api.dateRange')}</span>
-                {searchFilters.dateRange && (
-                  <button
-                    onClick={() => setSearchFilters(prev => ({ ...prev, dateRange: undefined }))}
-                    className="text-[12px] text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
-                  >
-                    {t('common.clear')}
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="flex-1">
-                  <input
-                    type="date"
-                    value={searchFilters.dateRange?.start ? new Date(searchFilters.dateRange.start).toISOString().split('T')[0] : ''}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setSearchFilters(prev => ({
-                        ...prev,
-                        dateRange: {
-                          ...prev.dateRange,
-                          start: val ? new Date(val) : undefined,
-                          end: prev.dateRange?.end,
-                        }
-                      }))
-                    }}
-                    placeholder={t('api.startDate')}
-                    className="w-full px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-[12px] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-                <span className="text-[12px] text-gray-400">—</span>
-                <div className="flex-1">
-                  <input
-                    type="date"
-                    value={searchFilters.dateRange?.end ? new Date(searchFilters.dateRange.end).toISOString().split('T')[0] : ''}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setSearchFilters(prev => ({
-                        ...prev,
-                        dateRange: {
-                          ...prev.dateRange,
-                          start: prev.dateRange?.start,
-                          end: val ? new Date(new Date(val).getTime() + 86400000 - 1) : undefined,
-                        }
-                      }))
-                    }}
-                    placeholder={t('api.endDate')}
-                    className="w-full px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-[12px] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Clear All Filters */}
-            {(searchFilters.methods?.length || searchFilters.dateRange) && (
-              <button
-                onClick={clearFilters}
-                className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-[12px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                {t('api.clearAllFilters')}
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Content */}
@@ -1023,7 +860,7 @@ export default function ApiSidebar() {
             </div>
 
             {/* 项目内容（展开时） */}
-            {expandedProjects.has(project.id) && project.id === activeProjectId && activeProject && (
+            {expandedProjects.has(project.id) && (
               <div className="pb-1">
                 {/* 环境（在项目内） */}
                 <div className="ml-3">
@@ -1105,7 +942,7 @@ export default function ApiSidebar() {
                       <Folder className="w-4 h-4 text-amber-500" />
                       <span className="text-[12px] font-medium text-gray-600 dark:text-gray-400">{t('api.requests')}</span>
                       <span className="text-[12px] text-gray-400">
-                        {countRequests(activeProject.requestFolders, activeProject.rootRequests)}
+                        {countRequests(project.requestFolders, project.rootRequests)}
                       </span>
                     </div>
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
@@ -1160,8 +997,12 @@ export default function ApiSidebar() {
                         </div>
                       )}
                       <RequestTree
-                        folders={filteredData.folders}
-                        rootRequests={filteredData.requests}
+                        folders={searchQuery
+                          ? filterRequestsBySearch(project.requestFolders, project.rootRequests, searchQuery).folders
+                          : project.requestFolders}
+                        rootRequests={searchQuery
+                          ? filterRequestsBySearch(project.requestFolders, project.rootRequests, searchQuery).requests
+                          : project.rootRequests}
                         expandedFolders={expandedFolders}
                         onToggleFolder={toggleFolder}
                         onSelectRequest={handleSelectRequest}

@@ -190,6 +190,7 @@ export default function ApiWorkspace() {
     addHistory,
     getActiveProject,
     findRequestById,
+    setCurrentRequest,
     // Tab管理
     openTabs,
     activeTabId,
@@ -845,6 +846,35 @@ export default function ApiWorkspace() {
             className="flex items-center h-full overflow-x-auto scrollbar-hide flex-1"
             style={{ scrollBehavior: 'smooth' }}
           >
+            {/* 临时请求Tab */}
+            {isTempRequest && currentRequest && (
+              <div
+                key={currentRequest.id}
+                data-tab-id={currentRequest.id}
+                className="group flex items-center h-full px-2 border-r border-gray-200 dark:border-gray-700 cursor-pointer transition-colors flex-shrink-0 select-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                title={currentRequest.url || t('api.historyRequest')}
+              >
+                {/* 方法标签 */}
+                <span className={`text-[11px] font-semibold mr-1.5 ${METHOD_TAB_COLORS[currentRequest.method]}`}>
+                  {currentRequest.method}
+                </span>
+
+                {/* 名称 - 显示URL简短版本 */}
+                <span className="text-[11px] truncate max-w-[100px]">
+                  {currentRequest.url ? currentRequest.url.replace(/^https?:\/\//, '').replace(/^www\./, '').slice(0, 30) : t('api.history')}
+                </span>
+
+                {/* 关闭按钮 */}
+                <button
+                  onClick={() => setCurrentRequest(null)}
+                  className="ml-1.5 p-0.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title={t('common.close')}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
             {openTabs.map((tabId) => {
               const tabRequest = getTabRequest(tabId)
               if (!tabRequest) return null
@@ -942,7 +972,10 @@ export default function ApiWorkspace() {
   }
 
   // 显示空状态或Tab栏+内容
-  if (openTabs.length === 0) {
+  // 如果有临时请求（currentRequest存在但不在openTabs中），也显示编辑区
+  const isTempRequest = currentRequest && currentRequest.id.startsWith('temp-')
+
+  if (openTabs.length === 0 && !isTempRequest) {
     return (
       <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-800">
         <RequestTabsBar />
